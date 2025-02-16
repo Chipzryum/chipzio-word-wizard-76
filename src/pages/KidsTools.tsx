@@ -32,8 +32,8 @@ const KidsTools = () => {
       <header className="border-b">
         <div className="container py-6">
           <nav className="flex items-center gap-4">
-            <Link to="/" className="logo-gradient text-xl">
-              Chipzio
+            <Link to="/" className="text-muted-foreground hover:text-foreground">
+              Home
             </Link>
             <span className="text-muted-foreground">/</span>
             <span>Kids Book Tools</span>
@@ -56,20 +56,18 @@ const KidsTools = () => {
           </section>
 
           <section className="grid md:grid-cols-3 gap-6 animate-fade-up">
-            {/* Available tools first */}
-            <ToolCard
-              title="Word Search"
-              description="Generate word search puzzles"
-              icon={BookOpen}
-              href="/word-search"
-            />
-            {/* Coming Soon tools at the end */}
             <ToolCard
               title="Crossword Generator"
               description="Create custom crossword puzzles"
               icon={Puzzle}
               href="/crossword"
               isComingSoon
+            />
+            <ToolCard
+              title="Word Search"
+              description="Generate word search puzzles"
+              icon={BookOpen}
+              href="/word-search"
             />
             <ToolCard
               title="Connect the Dots"
