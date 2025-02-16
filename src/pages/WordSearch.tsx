@@ -6,7 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import {
   validateAndProcessInput,
   generateWordSearch,
-  type PuzzleGrid
+  type PuzzleGrid,
+  type WordPlacement
 } from "@/utils/wordSearchUtils";
 
 const WordSearch = () => {
