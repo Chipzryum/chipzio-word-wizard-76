@@ -32,8 +32,8 @@ const KidsTools = () => {
       <header className="border-b">
         <div className="container py-6">
           <nav className="flex items-center gap-4">
-            <Link to="/" className="logo-gradient text-xl">
-              <strong>Chipzio</strong>
+            <Link to="/" className="text-muted-foreground hover:text-foreground">
+              Home
             </Link>
             <span className="text-muted-foreground">/</span>
             <span>Kids Book Tools</span>

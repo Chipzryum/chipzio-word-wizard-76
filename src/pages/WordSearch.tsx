@@ -6,8 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   validateAndProcessInput,
   generateWordSearch,
-  type PuzzleGrid,
-  type WordPlacement
+  type PuzzleGrid
 } from "@/utils/wordSearchUtils";
 
 const WordSearch = () => {
@@ -51,45 +50,11 @@ const WordSearch = () => {
   };
 
   const downloadPuzzle = () => {
+    // TODO: Implement puzzle download
     toast({
       title: "Coming Soon",
       description: "Download functionality will be available soon!",
     });
-  };
-
-  const highlightWord = (placement: WordPlacement) => {
-    const { startPos, direction, length } = placement;
-    const points: { x: number; y: number }[] = [];
-    
-    // Calculate all points for the word
-    for (let i = 0; i < length; i++) {
-      points.push({
-        x: startPos.x + i * direction.x,
-        y: startPos.y + i * direction.y
-      });
-    }
-    
-    // Calculate oval dimensions
-    const minX = Math.min(...points.map(p => p.x)) - 0.5;
-    const maxX = Math.max(...points.map(p => p.x)) + 0.5;
-    const minY = Math.min(...points.map(p => p.y)) - 0.5;
-    const maxY = Math.max(...points.map(p => p.y)) + 0.5;
-    
-    const width = maxX - minX;
-    const height = maxY - minY;
-    const centerX = (minX + maxX) / 2;
-    const centerY = (minY + maxY) / 2;
-    
-    return (
-      <ellipse
-        cx={`${centerX * 100 / dimension}%`}
-        cy={`${centerY * 100 / dimension}%`}
-        rx={`${(width * 100 / dimension) / 2}%`}
-        ry={`${(height * 100 / dimension) / 2}%`}
-        className="fill-none stroke-red-500 stroke-2 opacity-50"
-        style={{ transform: 'rotateX(0deg)' }}
-      />
-    );
   };
 
   return (
@@ -98,7 +63,7 @@ const WordSearch = () => {
         <div className="container py-6">
           <nav className="flex items-center gap-4">
             <Link to="/" className="logo-gradient text-xl">
-              <strong>Chipzio</strong>
+              Chipzio
             </Link>
             <span className="text-muted-foreground">/</span>
             <Link
@@ -144,8 +109,8 @@ PUZZLE"
                   </label>
                   <input
                     type="range"
-                    min="7"
-                    max="19"
+                    min="8"
+                    max="25"
                     value={dimension}
                     onChange={(e) => setDimension(parseInt(e.target.value))}
                     className="w-full"
@@ -184,20 +149,9 @@ PUZZLE"
                 </button>
               </div>
 
-              <div className="aspect-square bg-white/50 rounded-lg flex items-center justify-center border relative">
+              <div className="aspect-square bg-white/50 rounded-lg flex items-center justify-center border">
                 {puzzle ? (
-                  <div className="grid h-full w-full place-items-center relative">
-                    {/* SVG overlay for answer highlights */}
-                    {showAnswers && (
-                      <svg className="absolute inset-0 w-full h-full">
-                        {puzzle.wordPlacements.map((placement, index) => (
-                          <g key={`highlight-${index}`}>
-                            {highlightWord(placement)}
-                          </g>
-                        ))}
-                      </svg>
-                    )}
-                    {/* Grid display */}
+                  <div className="grid h-full w-full place-items-center">
                     {puzzle.grid.map((row, y) => (
                       <div key={y} className="flex">
                         {row.map((letter, x) => (
