@@ -11,15 +11,17 @@ import {
 
 const WordSearch = () => {
   const [words, setWords] = useState<string[]>([]);
-  const [dimension, setDimension] = useState(15);
+  const [gridWidth, setGridWidth] = useState(15);
+  const [gridHeight, setGridHeight] = useState(15);
   const [showAnswers, setShowAnswers] = useState(false);
   const [puzzle, setPuzzle] = useState<PuzzleGrid | null>(null);
   const { toast } = useToast();
 
   const generatePuzzle = () => {
     try {
-      // Validate input
-      const validationResult = validateAndProcessInput(words.join('\n'), dimension);
+      // Use the larger dimension for validation to ensure words fit
+      const maxDimension = Math.max(gridWidth, gridHeight);
+      const validationResult = validateAndProcessInput(words.join('\n'), maxDimension);
       
       if (!validationResult.isValid) {
         validationResult.errors.forEach(error => {
@@ -32,8 +34,8 @@ const WordSearch = () => {
         return;
       }
 
-      // Generate puzzle
-      const newPuzzle = generateWordSearch(validationResult.words, dimension);
+      // Generate puzzle using the width for grid size
+      const newPuzzle = generateWordSearch(validationResult.words, gridWidth);
       setPuzzle(newPuzzle);
       
       toast({
@@ -50,7 +52,6 @@ const WordSearch = () => {
   };
 
   const downloadPuzzle = () => {
-    // TODO: Implement puzzle download
     toast({
       title: "Coming Soon",
       description: "Download functionality will be available soon!",
@@ -63,7 +64,7 @@ const WordSearch = () => {
         <div className="container py-6">
           <nav className="flex items-center gap-4">
             <Link to="/" className="logo-gradient text-xl">
-              Chipzio
+              <strong>Chipzio</strong>
             </Link>
             <span className="text-muted-foreground">/</span>
             <Link
@@ -103,18 +104,33 @@ PUZZLE"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Grid Size: {dimension}x{dimension}
-                  </label>
-                  <input
-                    type="range"
-                    min="8"
-                    max="25"
-                    value={dimension}
-                    onChange={(e) => setDimension(parseInt(e.target.value))}
-                    className="w-full"
-                  />
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Grid Width: {gridWidth}
+                    </label>
+                    <input
+                      type="range"
+                      min="7"
+                      max="19"
+                      value={gridWidth}
+                      onChange={(e) => setGridWidth(parseInt(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Grid Height: {gridHeight}
+                    </label>
+                    <input
+                      type="range"
+                      min="7"
+                      max="19"
+                      value={gridHeight}
+                      onChange={(e) => setGridHeight(parseInt(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex gap-4">
@@ -149,15 +165,19 @@ PUZZLE"
                 </button>
               </div>
 
-              <div className="aspect-square bg-white/50 rounded-lg flex items-center justify-center border">
+              <div className="bg-white/50 rounded-lg flex items-center justify-center border">
                 {puzzle ? (
-                  <div className="grid h-full w-full place-items-center">
+                  <div className="grid place-items-center w-full">
                     {puzzle.grid.map((row, y) => (
                       <div key={y} className="flex">
                         {row.map((letter, x) => (
                           <div
                             key={`${x}-${y}`}
-                            className="w-8 h-8 flex items-center justify-center font-medium"
+                            className={`w-8 flex items-center justify-center font-medium`}
+                            style={{
+                              height: "2rem", // Fixed height to prevent vertical stretching
+                              lineHeight: "2rem"
+                            }}
                           >
                             {letter}
                           </div>
@@ -166,7 +186,7 @@ PUZZLE"
                     ))}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground p-8">
                     Generate a puzzle to see preview
                   </p>
                 )}

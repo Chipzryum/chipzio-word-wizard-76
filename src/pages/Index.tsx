@@ -31,7 +31,9 @@ const Index = () => {
     <div className="min-h-screen flex flex-col">
       <header className="border-b">
         <div className="container py-6">
-          <h1 className="text-2xl font-bold">Chipzio</h1>
+          <h1 className="logo-gradient text-xl">
+            <strong>Chipzio</strong>
+          </h1>
         </div>
       </header>
 
