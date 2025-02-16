@@ -1,4 +1,3 @@
-
 // Validation types and interfaces
 export interface ValidationResult {
   isValid: boolean;
@@ -63,9 +62,9 @@ export function validateAndProcessInput(rawInput: string, gridSize: number): Val
 }
 
 // Puzzle generation functions
-export function generatePuzzleGrid(gridSize: number): PuzzleGrid {
+export function generatePuzzleGrid(width: number, height: number): PuzzleGrid {
   return {
-    grid: Array(gridSize).fill(null).map(() => Array(gridSize).fill(null)),
+    grid: Array(height).fill(null).map(() => Array(width).fill(null)),
     wordPlacements: []
   };
 }
@@ -76,13 +75,14 @@ export function canPlaceWord(
   pos: { x: number; y: number },
   dir: { x: number; y: number }
 ): boolean {
-  const gridSize = grid.length;
+  const height = grid.length;
+  const width = grid[0].length;
   let { x, y } = pos;
 
   // Check if word fits within grid bounds
   const endX = x + (word.length - 1) * dir.x;
   const endY = y + (word.length - 1) * dir.y;
-  if (endX < 0 || endX >= gridSize || endY < 0 || endY >= gridSize) {
+  if (endX < 0 || endX >= width || endY < 0 || endY >= height) {
     return false;
   }
 
@@ -99,8 +99,8 @@ export function canPlaceWord(
   return true;
 }
 
-export function generateWordSearch(validatedWords: string[], gridSize: number): PuzzleGrid {
-  const puzzle = generatePuzzleGrid(gridSize);
+export function generateWordSearch(validatedWords: string[], width: number, height: number): PuzzleGrid {
+  const puzzle = generatePuzzleGrid(width, height);
   const directions = [
     { x: 1, y: 0 },   // right
     { x: 0, y: 1 },   // down
@@ -119,12 +119,12 @@ export function generateWordSearch(validatedWords: string[], gridSize: number): 
   for (const word of sortedWords) {
     let placed = false;
     let attempts = 0;
-    const maxAttempts = gridSize * gridSize * directions.length;
+    const maxAttempts = width * height * directions.length;
 
     while (!placed && attempts < maxAttempts) {
       const pos = {
-        x: Math.floor(Math.random() * gridSize),
-        y: Math.floor(Math.random() * gridSize)
+        x: Math.floor(Math.random() * width),
+        y: Math.floor(Math.random() * height)
       };
       const direction = directions[Math.floor(Math.random() * directions.length)];
 

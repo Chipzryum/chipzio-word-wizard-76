@@ -1,4 +1,3 @@
-
 import { BookOpen, Puzzle, Link as LinkIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -57,17 +56,17 @@ const KidsTools = () => {
 
           <section className="grid md:grid-cols-3 gap-6 animate-fade-up">
             <ToolCard
+              title="Word Search"
+              description="Generate word search puzzles"
+              icon={BookOpen}
+              href="/word-search"
+            />
+            <ToolCard
               title="Crossword Generator"
               description="Create custom crossword puzzles"
               icon={Puzzle}
               href="/crossword"
               isComingSoon
-            />
-            <ToolCard
-              title="Word Search"
-              description="Generate word search puzzles"
-              icon={BookOpen}
-              href="/word-search"
             />
             <ToolCard
               title="Connect the Dots"
