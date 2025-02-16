@@ -1,5 +1,5 @@
 
-import { BookOpen, Puzzle } from "lucide-react";
+import { BookOpen, Puzzle, Link as LinkIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const ToolCard = ({ title, description, icon: Icon, href, isComingSoon = false }: {
@@ -26,12 +26,18 @@ const ToolCard = ({ title, description, icon: Icon, href, isComingSoon = false }
   </Link>
 );
 
-const Index = () => {
+const KidsTools = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b">
         <div className="container py-6">
-          <h1 className="text-2xl font-bold">Chipzio</h1>
+          <nav className="flex items-center gap-4">
+            <Link to="/" className="text-muted-foreground hover:text-foreground">
+              Home
+            </Link>
+            <span className="text-muted-foreground">/</span>
+            <span>Kids Book Tools</span>
+          </nav>
         </div>
       </header>
 
@@ -39,28 +45,35 @@ const Index = () => {
         <div className="container max-w-4xl">
           <section className="text-center mb-16 animate-fade-down">
             <span className="inline-block mb-4 px-3 py-1 rounded-full text-sm font-medium bg-chip text-chip-foreground">
-              Online Entrepreneur Tools
+              Kids Book Tools
             </span>
             <h1 className="text-4xl font-bold mb-4">
-              Create Engaging Content with Ease
+              Create Educational Content
             </h1>
             <p className="text-xl text-muted-foreground">
-              Professional tools to help you build and grow your online business
+              Tools to help you create engaging activities for children's books
             </p>
           </section>
 
-          <section className="grid md:grid-cols-2 gap-6 animate-fade-up">
+          <section className="grid md:grid-cols-3 gap-6 animate-fade-up">
             <ToolCard
-              title="Kids Book Tools"
-              description="Create engaging educational content for children's books"
-              icon={BookOpen}
-              href="/kids-tools"
+              title="Crossword Generator"
+              description="Create custom crossword puzzles"
+              icon={Puzzle}
+              href="/crossword"
+              isComingSoon
             />
             <ToolCard
-              title="Social Media Tools"
-              description="Generate captivating social media content"
-              icon={Puzzle}
-              href="/social-tools"
+              title="Word Search"
+              description="Generate word search puzzles"
+              icon={BookOpen}
+              href="/word-search"
+            />
+            <ToolCard
+              title="Connect the Dots"
+              description="Design connect-the-dots activities"
+              icon={LinkIcon}
+              href="/connect-dots"
               isComingSoon
             />
           </section>
@@ -70,4 +83,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default KidsTools;
