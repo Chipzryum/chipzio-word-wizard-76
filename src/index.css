@@ -11,7 +11,7 @@
     --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
+    --primary: 42 100% 50%;
     --primary-foreground: 0 0% 98%;
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
@@ -45,4 +45,8 @@
 
 .hover-lift {
   @apply transition-transform duration-300 hover:-translate-y-1;
+}
+
+.logo-gradient {
+  @apply bg-gradient-to-r from-[#FFB400] to-[#FFD700] bg-clip-text text-transparent font-bold;
 }

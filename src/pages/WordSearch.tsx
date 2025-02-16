@@ -22,8 +22,8 @@ const WordSearch = () => {
       <header className="border-b">
         <div className="container py-6">
           <nav className="flex items-center gap-4">
-            <Link to="/" className="text-muted-foreground hover:text-foreground">
-              Home
+            <Link to="/" className="logo-gradient text-xl">
+              Chipzio
             </Link>
             <span className="text-muted-foreground">/</span>
             <Link
@@ -45,7 +45,7 @@ const WordSearch = () => {
             <section className="glass-card rounded-xl p-6 animate-fade-up">
               <div className="flex items-center gap-3 mb-6">
                 <Book className="h-6 w-6" />
-                <h2 className="text-2xl font-semibold">Create Your Puzzle</h2>
+                <h2 className="text-2xl font-semibold">Create your Word Search</h2>
               </div>
 
               <div className="space-y-6">
@@ -69,8 +69,8 @@ PUZZLE"
                   </label>
                   <input
                     type="range"
-                    min="10"
-                    max="30"
+                    min="8"
+                    max="25"
                     value={dimension}
                     onChange={(e) => setDimension(parseInt(e.target.value))}
                     className="w-full"
