@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Download, Book } from "lucide-react";
@@ -20,7 +19,6 @@ const WordSearch = () => {
 
   const generatePuzzle = () => {
     try {
-      // Use the larger dimension for validation to ensure words fit
       const maxDimension = Math.max(gridWidth, gridHeight);
       const validationResult = validateAndProcessInput(words.join('\n'), maxDimension);
       
@@ -35,7 +33,6 @@ const WordSearch = () => {
         return;
       }
 
-      // Generate puzzle using both width and height
       const newPuzzle = generateWordSearch(validationResult.words, gridWidth, gridHeight);
       setPuzzle(newPuzzle);
       
@@ -59,7 +56,6 @@ const WordSearch = () => {
     });
   };
 
-  // Helper function to check if a cell is part of a word
   const isPartOfWord = (x: number, y: number, placement: WordPlacement): boolean => {
     const { startPos, direction, length } = placement;
     for (let i = 0; i < length; i++) {
@@ -72,25 +68,21 @@ const WordSearch = () => {
     return false;
   };
 
-  // Helper function to get all word placements that include this cell
   const getWordPlacementsForCell = (x: number, y: number): WordPlacement[] => {
     if (!puzzle || !showAnswers) return [];
     return puzzle.wordPlacements.filter(placement => isPartOfWord(x, y, placement));
   };
 
-  // Helper function to determine if this cell is the start of a word
   const isStartOfWord = (x: number, y: number, placement: WordPlacement): boolean => {
     return placement.startPos.x === x && placement.startPos.y === y;
   };
 
-  // Helper function to determine if this cell is the end of a word
   const isEndOfWord = (x: number, y: number, placement: WordPlacement): boolean => {
     const endX = placement.startPos.x + (placement.direction.x * (placement.length - 1));
     const endY = placement.startPos.y + (placement.direction.y * (placement.length - 1));
     return x === endX && y === endY;
   };
 
-  // Helper function to get the border radius classes for a cell
   const getCellBorderRadius = (x: number, y: number, placement: WordPlacement): string => {
     if (placement.length === 1) return "rounded-full";
     
@@ -119,6 +111,46 @@ const WordSearch = () => {
     return "";
   };
 
+  const WordHighlight = ({ placement }: { placement: WordPlacement }) => {
+    const { startPos, direction, length, word } = placement;
+    
+    const isHorizontal = direction.x !== 0;
+    const isDiagonal = direction.x !== 0 && direction.y !== 0;
+    
+    const width = isHorizontal ? `${length * 2}rem` : '2rem';
+    const height = direction.y !== 0 ? `${length * 2}rem` : '2rem';
+    
+    const left = `${startPos.x * 2}rem`;
+    const top = `${startPos.y * 2}rem`;
+    
+    let rotation = 0;
+    if (isDiagonal) {
+      if (direction.x === 1 && direction.y === 1) rotation = 45;
+      if (direction.x === -1 && direction.y === 1) rotation = -45;
+      if (direction.x === 1 && direction.y === -1) rotation = -45;
+      if (direction.x === -1 && direction.y === -1) rotation = 45;
+    }
+    else if (direction.x === -1) rotation = 180;
+    else if (direction.y === -1) rotation = -90;
+    else if (direction.y === 1) rotation = 90;
+
+    return (
+      <div
+        className={`absolute border-2 border-red-500 rounded-full transition-opacity ${
+          showAnswers ? 'opacity-100' : 'opacity-0'
+        }`}
+        style={{
+          width,
+          height: '2rem',
+          left,
+          top,
+          transform: `translate(-0.25rem, -0.25rem) ${isDiagonal ? `scaleX(${length})` : ''}`,
+          transformOrigin: 'left center',
+        }}
+      />
+    );
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b">
@@ -143,7 +175,6 @@ const WordSearch = () => {
       <main className="flex-1 py-12">
         <div className="container">
           <div className="grid lg:grid-cols-2 gap-8">
-            {/* Input Section */}
             <section className="glass-card rounded-xl p-6 animate-fade-up">
               <div className="flex items-center gap-3 mb-6">
                 <Book className="h-6 w-6" />
@@ -213,7 +244,6 @@ PUZZLE"
               </div>
             </section>
 
-            {/* Preview Section */}
             <section className="glass-card rounded-xl p-6 animate-fade-up">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-semibold">Preview</h2>
@@ -228,32 +258,20 @@ PUZZLE"
 
               <div className="bg-white/50 rounded-lg flex items-center justify-center border">
                 {puzzle ? (
-                  <div className="grid place-items-center w-full p-4">
+                  <div className="relative grid place-items-center w-full p-4">
+                    {puzzle.wordPlacements.map((placement, index) => (
+                      <WordHighlight key={`highlight-${index}`} placement={placement} />
+                    ))}
                     {puzzle.grid.map((row, y) => (
                       <div key={y} className="flex">
-                        {row.map((letter, x) => {
-                          const wordPlacements = getWordPlacementsForCell(x, y);
-                          return (
-                            <div
-                              key={`${x}-${y}`}
-                              className="relative"
-                            >
-                              {wordPlacements.map((placement, index) => (
-                                <div
-                                  key={index}
-                                  className={`absolute inset-0.5 border-2 border-red-500 transition-opacity ${
-                                    showAnswers ? "opacity-100" : "opacity-0"
-                                  } ${getCellBorderRadius(x, y, placement)}`}
-                                />
-                              ))}
-                              <div
-                                className="w-8 h-8 flex items-center justify-center font-medium"
-                              >
-                                {letter}
-                              </div>
-                            </div>
-                          );
-                        })}
+                        {row.map((letter, x) => (
+                          <div
+                            key={`${x}-${y}`}
+                            className="w-8 h-8 flex items-center justify-center font-medium"
+                          >
+                            {letter}
+                          </div>
+                        ))}
                       </div>
                     ))}
                   </div>
