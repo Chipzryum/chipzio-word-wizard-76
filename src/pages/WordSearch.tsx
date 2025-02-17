@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Download, Book } from "lucide-react";
@@ -56,73 +57,21 @@ const WordSearch = () => {
     });
   };
 
-  const isPartOfWord = (x: number, y: number, placement: WordPlacement): boolean => {
-    const { startPos, direction, length } = placement;
-    for (let i = 0; i < length; i++) {
-      const checkX = startPos.x + (direction.x * i);
-      const checkY = startPos.y + (direction.y * i);
-      if (checkX === x && checkY === y) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  const getWordPlacementsForCell = (x: number, y: number): WordPlacement[] => {
-    if (!puzzle || !showAnswers) return [];
-    return puzzle.wordPlacements.filter(placement => isPartOfWord(x, y, placement));
-  };
-
-  const isStartOfWord = (x: number, y: number, placement: WordPlacement): boolean => {
-    return placement.startPos.x === x && placement.startPos.y === y;
-  };
-
-  const isEndOfWord = (x: number, y: number, placement: WordPlacement): boolean => {
-    const endX = placement.startPos.x + (placement.direction.x * (placement.length - 1));
-    const endY = placement.startPos.y + (placement.direction.y * (placement.length - 1));
-    return x === endX && y === endY;
-  };
-
-  const getCellBorderRadius = (x: number, y: number, placement: WordPlacement): string => {
-    if (placement.length === 1) return "rounded-full";
-    
-    if (isStartOfWord(x, y, placement)) {
-      if (placement.direction.x === 1 && placement.direction.y === 0) return "rounded-l-full";
-      if (placement.direction.x === -1 && placement.direction.y === 0) return "rounded-r-full";
-      if (placement.direction.x === 0 && placement.direction.y === 1) return "rounded-t-full";
-      if (placement.direction.x === 0 && placement.direction.y === -1) return "rounded-b-full";
-      if (placement.direction.x === 1 && placement.direction.y === 1) return "rounded-tl-full";
-      if (placement.direction.x === -1 && placement.direction.y === 1) return "rounded-tr-full";
-      if (placement.direction.x === 1 && placement.direction.y === -1) return "rounded-bl-full";
-      if (placement.direction.x === -1 && placement.direction.y === -1) return "rounded-br-full";
-    }
-    
-    if (isEndOfWord(x, y, placement)) {
-      if (placement.direction.x === 1 && placement.direction.y === 0) return "rounded-r-full";
-      if (placement.direction.x === -1 && placement.direction.y === 0) return "rounded-l-full";
-      if (placement.direction.x === 0 && placement.direction.y === 1) return "rounded-b-full";
-      if (placement.direction.x === 0 && placement.direction.y === -1) return "rounded-t-full";
-      if (placement.direction.x === 1 && placement.direction.y === 1) return "rounded-br-full";
-      if (placement.direction.x === -1 && placement.direction.y === 1) return "rounded-bl-full";
-      if (placement.direction.x === 1 && placement.direction.y === -1) return "rounded-tr-full";
-      if (placement.direction.x === -1 && placement.direction.y === -1) return "rounded-tl-full";
-    }
-    
-    return "";
-  };
-
   const WordHighlight = ({ placement }: { placement: WordPlacement }) => {
-    const { startPos, direction, length, word } = placement;
+    const { startPos, direction, length } = placement;
     
     const isHorizontal = direction.x !== 0;
     const isDiagonal = direction.x !== 0 && direction.y !== 0;
     
+    // Calculate dimensions based on word length and direction
     const width = isHorizontal ? `${length * 2}rem` : '2rem';
     const height = direction.y !== 0 ? `${length * 2}rem` : '2rem';
     
+    // Position the highlight
     const left = `${startPos.x * 2}rem`;
     const top = `${startPos.y * 2}rem`;
     
+    // Calculate rotation angle based on direction
     let rotation = 0;
     if (isDiagonal) {
       if (direction.x === 1 && direction.y === 1) rotation = 45;
@@ -136,7 +85,7 @@ const WordSearch = () => {
 
     return (
       <div
-        className={`absolute border-2 border-red-500 rounded-full transition-opacity ${
+        className={`absolute backdrop-blur-none transition-opacity ${
           showAnswers ? 'opacity-100' : 'opacity-0'
         }`}
         style={{
@@ -144,10 +93,19 @@ const WordSearch = () => {
           height: '2rem',
           left,
           top,
-          transform: `translate(-0.25rem, -0.25rem) ${isDiagonal ? `scaleX(${length})` : ''}`,
+          transform: `translate(-0.25rem, -0.25rem)`,
           transformOrigin: 'left center',
         }}
-      />
+      >
+        <div 
+          className="absolute inset-0 border-2 border-red-500 rounded-full"
+          style={{
+            transform: isDiagonal ? `rotate(${rotation}deg) scaleX(${length})` : 
+                     rotation ? `rotate(${rotation}deg)` : 
+                     isHorizontal ? `scaleX(${length})` : `scaleY(${length})`
+          }}
+        />
+      </div>
     );
   };
 
