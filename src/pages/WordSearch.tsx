@@ -78,62 +78,45 @@ const WordSearch = () => {
     return puzzle.wordPlacements.filter(placement => isPartOfWord(x, y, placement));
   };
 
-  // Helper function to determine cell position in word
-  const getCellPosition = (x: number, y: number, placement: WordPlacement): 'start' | 'middle' | 'end' | null => {
-    const { startPos, direction, length } = placement;
-    
-    // Check if cell is part of the word
-    if (!isPartOfWord(x, y, placement)) return null;
-
-    // Calculate position in word
-    const dx = x - startPos.x;
-    const dy = y - startPos.y;
-    const position = direction.x !== 0 ? dx / direction.x : dy / direction.y;
-
-    if (position === 0) return 'start';
-    if (position === length - 1) return 'end';
-    return 'middle';
+  // Helper function to determine if this cell is the start of a word
+  const isStartOfWord = (x: number, y: number, placement: WordPlacement): boolean => {
+    return placement.startPos.x === x && placement.startPos.y === y;
   };
 
-  // Helper function to get border styles for a cell
-  const getCellBorderStyles = (x: number, y: number, placement: WordPlacement): string => {
-    const position = getCellPosition(x, y, placement);
-    const { direction } = placement;
-    
-    if (!position) return '';
+  // Helper function to determine if this cell is the end of a word
+  const isEndOfWord = (x: number, y: number, placement: WordPlacement): boolean => {
+    const endX = placement.startPos.x + (placement.direction.x * (placement.length - 1));
+    const endY = placement.startPos.y + (placement.direction.y * (placement.length - 1));
+    return x === endX && y === endY;
+  };
 
-    // Base border width and style
-    let borderStyles = 'border-2 border-red-500 ';
-
-    // For horizontal words
-    if (direction.x !== 0 && direction.y === 0) {
-      if (position === 'start') return borderStyles + 'rounded-l-full border-r-0';
-      if (position === 'end') return borderStyles + 'rounded-r-full border-l-0';
-      return borderStyles + 'border-l-0 border-r-0';
+  // Helper function to get the border radius classes for a cell
+  const getCellBorderRadius = (x: number, y: number, placement: WordPlacement): string => {
+    if (placement.length === 1) return "rounded-full";
+    
+    if (isStartOfWord(x, y, placement)) {
+      if (placement.direction.x === 1 && placement.direction.y === 0) return "rounded-l-full";
+      if (placement.direction.x === -1 && placement.direction.y === 0) return "rounded-r-full";
+      if (placement.direction.x === 0 && placement.direction.y === 1) return "rounded-t-full";
+      if (placement.direction.x === 0 && placement.direction.y === -1) return "rounded-b-full";
+      if (placement.direction.x === 1 && placement.direction.y === 1) return "rounded-tl-full";
+      if (placement.direction.x === -1 && placement.direction.y === 1) return "rounded-tr-full";
+      if (placement.direction.x === 1 && placement.direction.y === -1) return "rounded-bl-full";
+      if (placement.direction.x === -1 && placement.direction.y === -1) return "rounded-br-full";
     }
     
-    // For vertical words
-    if (direction.x === 0 && direction.y !== 0) {
-      if (position === 'start') return borderStyles + 'rounded-t-full border-b-0';
-      if (position === 'end') return borderStyles + 'rounded-b-full border-t-0';
-      return borderStyles + 'border-t-0 border-b-0';
+    if (isEndOfWord(x, y, placement)) {
+      if (placement.direction.x === 1 && placement.direction.y === 0) return "rounded-r-full";
+      if (placement.direction.x === -1 && placement.direction.y === 0) return "rounded-l-full";
+      if (placement.direction.x === 0 && placement.direction.y === 1) return "rounded-b-full";
+      if (placement.direction.x === 0 && placement.direction.y === -1) return "rounded-t-full";
+      if (placement.direction.x === 1 && placement.direction.y === 1) return "rounded-br-full";
+      if (placement.direction.x === -1 && placement.direction.y === 1) return "rounded-bl-full";
+      if (placement.direction.x === 1 && placement.direction.y === -1) return "rounded-tr-full";
+      if (placement.direction.x === -1 && placement.direction.y === -1) return "rounded-tl-full";
     }
     
-    // For diagonal words (top-left to bottom-right)
-    if (direction.x === 1 && direction.y === 1) {
-      if (position === 'start') return borderStyles + 'rounded-tl-full';
-      if (position === 'end') return borderStyles + 'rounded-br-full';
-      return borderStyles;
-    }
-    
-    // For diagonal words (top-right to bottom-left)
-    if (direction.x === -1 && direction.y === 1) {
-      if (position === 'start') return borderStyles + 'rounded-tr-full';
-      if (position === 'end') return borderStyles + 'rounded-bl-full';
-      return borderStyles;
-    }
-
-    return borderStyles;
+    return "";
   };
 
   return (
@@ -258,12 +241,9 @@ PUZZLE"
                               {wordPlacements.map((placement, index) => (
                                 <div
                                   key={index}
-                                  className={`absolute inset-0.5 transition-opacity ${
-                                    showAnswers ? 'opacity-100' : 'opacity-0'
-                                  } ${getCellBorderStyles(x, y, placement)}`}
-                                  style={{
-                                    zIndex: index
-                                  }}
+                                  className={`absolute inset-0.5 border-2 border-red-500 transition-opacity ${
+                                    showAnswers ? "opacity-100" : "opacity-0"
+                                  } ${getCellBorderRadius(x, y, placement)}`}
                                 />
                               ))}
                               <div
