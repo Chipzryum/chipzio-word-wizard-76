@@ -1,3 +1,4 @@
+
 // Validation types and interfaces
 export interface ValidationResult {
   isValid: boolean;
@@ -105,12 +106,13 @@ export function generateWordSearch(validatedWords: string[], width: number, heig
     { x: 1, y: 0 },   // right
     { x: 0, y: 1 },   // down
     { x: 1, y: 1 },   // diagonal right-down
-    { x: -1, y: 1 },  // diagonal left-down
-    { x: -1, y: 0 },  // left
     { x: 0, y: -1 },  // up
-    { x: -1, y: -1 }, // diagonal left-up
     { x: 1, y: -1 }   // diagonal right-up
   ];
+  // Removed:
+  // { x: -1, y: 0 },   // left
+  // { x: -1, y: 1 },   // diagonal left-down
+  // { x: -1, y: -1 },  // diagonal left-up
 
   // Sort words by length (longest first)
   const sortedWords = [...validatedWords].sort((a, b) => b.length - a.length);
