@@ -20,6 +20,7 @@ const WordSearch = () => {
 
   const generatePuzzle = () => {
     try {
+      // Use the larger dimension for validation to ensure words fit
       const maxDimension = Math.max(gridWidth, gridHeight);
       const validationResult = validateAndProcessInput(words.join('\n'), maxDimension);
       
@@ -34,6 +35,7 @@ const WordSearch = () => {
         return;
       }
 
+      // Generate puzzle using both width and height
       const newPuzzle = generateWordSearch(validationResult.words, gridWidth, gridHeight);
       setPuzzle(newPuzzle);
       
@@ -57,36 +59,64 @@ const WordSearch = () => {
     });
   };
 
-  // Strike-through line component
-  const StrikeLine = ({ placement }: { placement: WordPlacement }) => {
+  // Helper function to check if a cell is part of a word
+  const isPartOfWord = (x: number, y: number, placement: WordPlacement): boolean => {
     const { startPos, direction, length } = placement;
-    
-    // Calculate line length (in rem units)
-    const lineLength = length * 2; // 2rem per cell
-    
-    // Calculate rotation angle based on direction
-    let rotation = 0;
-    if (direction.x === 1 && direction.y === 0) rotation = 0;        // right
-    else if (direction.x === 0 && direction.y === 1) rotation = 90;  // down
-    else if (direction.x === 0 && direction.y === -1) rotation = 90; // up
-    else if (direction.x === 1 && direction.y === 1) rotation = 45;  // diagonal right-down
-    else if (direction.x === 1 && direction.y === -1) rotation = -45; // diagonal right-up
+    for (let i = 0; i < length; i++) {
+      const checkX = startPos.x + (direction.x * i);
+      const checkY = startPos.y + (direction.y * i);
+      if (checkX === x && checkY === y) {
+        return true;
+      }
+    }
+    return false;
+  };
 
-    return (
-      <div
-        className={`absolute transition-opacity ${showAnswers ? 'opacity-100' : 'opacity-0'}`}
-        style={{
-          left: `${startPos.x * 2}rem`,
-          top: `${startPos.y * 2}rem`,
-          width: `${lineLength}rem`,
-          height: '2px',
-          backgroundColor: 'rgba(239, 68, 68, 0.75)', // red-500 with opacity
-          transformOrigin: '0 center',
-          transform: `translateY(1rem) rotate(${rotation}deg)`,
-          zIndex: 10
-        }}
-      />
-    );
+  // Helper function to get all word placements that include this cell
+  const getWordPlacementsForCell = (x: number, y: number): WordPlacement[] => {
+    if (!puzzle || !showAnswers) return [];
+    return puzzle.wordPlacements.filter(placement => isPartOfWord(x, y, placement));
+  };
+
+  // Helper function to determine if this cell is the start of a word
+  const isStartOfWord = (x: number, y: number, placement: WordPlacement): boolean => {
+    return placement.startPos.x === x && placement.startPos.y === y;
+  };
+
+  // Helper function to determine if this cell is the end of a word
+  const isEndOfWord = (x: number, y: number, placement: WordPlacement): boolean => {
+    const endX = placement.startPos.x + (placement.direction.x * (placement.length - 1));
+    const endY = placement.startPos.y + (placement.direction.y * (placement.length - 1));
+    return x === endX && y === endY;
+  };
+
+  // Helper function to get the border radius classes for a cell
+  const getCellBorderRadius = (x: number, y: number, placement: WordPlacement): string => {
+    if (placement.length === 1) return "rounded-full";
+    
+    if (isStartOfWord(x, y, placement)) {
+      if (placement.direction.x === 1 && placement.direction.y === 0) return "rounded-l-full";
+      if (placement.direction.x === -1 && placement.direction.y === 0) return "rounded-r-full";
+      if (placement.direction.x === 0 && placement.direction.y === 1) return "rounded-t-full";
+      if (placement.direction.x === 0 && placement.direction.y === -1) return "rounded-b-full";
+      if (placement.direction.x === 1 && placement.direction.y === 1) return "rounded-tl-full";
+      if (placement.direction.x === -1 && placement.direction.y === 1) return "rounded-tr-full";
+      if (placement.direction.x === 1 && placement.direction.y === -1) return "rounded-bl-full";
+      if (placement.direction.x === -1 && placement.direction.y === -1) return "rounded-br-full";
+    }
+    
+    if (isEndOfWord(x, y, placement)) {
+      if (placement.direction.x === 1 && placement.direction.y === 0) return "rounded-r-full";
+      if (placement.direction.x === -1 && placement.direction.y === 0) return "rounded-l-full";
+      if (placement.direction.x === 0 && placement.direction.y === 1) return "rounded-b-full";
+      if (placement.direction.x === 0 && placement.direction.y === -1) return "rounded-t-full";
+      if (placement.direction.x === 1 && placement.direction.y === 1) return "rounded-br-full";
+      if (placement.direction.x === -1 && placement.direction.y === 1) return "rounded-bl-full";
+      if (placement.direction.x === 1 && placement.direction.y === -1) return "rounded-tr-full";
+      if (placement.direction.x === -1 && placement.direction.y === -1) return "rounded-tl-full";
+    }
+    
+    return "";
   };
 
   return (
@@ -198,20 +228,32 @@ PUZZLE"
 
               <div className="bg-white/50 rounded-lg flex items-center justify-center border">
                 {puzzle ? (
-                  <div className="relative grid place-items-center w-full p-4">
-                    {puzzle.wordPlacements.map((placement, index) => (
-                      <StrikeLine key={`strike-${index}`} placement={placement} />
-                    ))}
+                  <div className="grid place-items-center w-full p-4">
                     {puzzle.grid.map((row, y) => (
                       <div key={y} className="flex">
-                        {row.map((letter, x) => (
-                          <div
-                            key={`${x}-${y}`}
-                            className="w-8 h-8 flex items-center justify-center font-medium"
-                          >
-                            {letter}
-                          </div>
-                        ))}
+                        {row.map((letter, x) => {
+                          const wordPlacements = getWordPlacementsForCell(x, y);
+                          return (
+                            <div
+                              key={`${x}-${y}`}
+                              className="relative"
+                            >
+                              {wordPlacements.map((placement, index) => (
+                                <div
+                                  key={index}
+                                  className={`absolute inset-0.5 border-2 border-red-500 transition-opacity ${
+                                    showAnswers ? "opacity-100" : "opacity-0"
+                                  } ${getCellBorderRadius(x, y, placement)}`}
+                                />
+                              ))}
+                              <div
+                                className="w-8 h-8 flex items-center justify-center font-medium"
+                              >
+                                {letter}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     ))}
                   </div>
