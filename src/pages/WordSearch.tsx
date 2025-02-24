@@ -8,6 +8,7 @@ import {
   type PuzzleGrid,
   type WordPlacement
 } from "@/utils/wordSearchUtils";
+import { DownloadPuzzleDialog } from "@/components/DownloadPuzzleDialog";
 
 const WordSearch = () => {
   const [words, setWords] = useState<string[]>([]);
@@ -15,6 +16,7 @@ const WordSearch = () => {
   const [gridHeight, setGridHeight] = useState(15);
   const [showAnswers, setShowAnswers] = useState(false);
   const [puzzle, setPuzzle] = useState<PuzzleGrid | null>(null);
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false);
   const { toast } = useToast();
 
   const generatePuzzle = () => {
@@ -48,13 +50,6 @@ const WordSearch = () => {
         description: error instanceof Error ? error.message : "Failed to generate puzzle",
       });
     }
-  };
-
-  const downloadPuzzle = () => {
-    toast({
-      title: "Coming Soon",
-      description: "Download functionality will be available soon!",
-    });
   };
 
   const isPartOfWord = (x: number, y: number, placement: WordPlacement): boolean => {
@@ -179,7 +174,7 @@ PUZZLE"
                     Generate Puzzle
                   </button>
                   <button
-                    onClick={downloadPuzzle}
+                    onClick={() => setShowDownloadDialog(true)}
                     className="flex items-center justify-center gap-2 bg-secondary text-secondary-foreground hover:opacity-90 transition rounded-lg px-4 py-2"
                     disabled={!puzzle}
                   >
@@ -307,6 +302,12 @@ PUZZLE"
           </div>
         </div>
       </main>
+
+      <DownloadPuzzleDialog
+        open={showDownloadDialog}
+        onClose={() => setShowDownloadDialog(false)}
+        puzzle={puzzle}
+      />
     </div>
   );
 };
