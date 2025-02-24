@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Download, Book } from "lucide-react";
@@ -21,7 +20,8 @@ const WordSearch = () => {
   const generatePuzzle = () => {
     try {
       const maxDimension = Math.max(gridWidth, gridHeight);
-      const validationResult = validateAndProcessInput(words.join('\n'), maxDimension);
+      const processedInput = words.join('\n').replace(/I/g, 'Ɪ');
+      const validationResult = validateAndProcessInput(processedInput, maxDimension);
 
       if (!validationResult.isValid) {
         validationResult.errors.forEach(error => {
@@ -57,7 +57,6 @@ const WordSearch = () => {
     });
   };
 
-  // Helper function to check if a cell is part of a word
   const isPartOfWord = (x: number, y: number, placement: WordPlacement): boolean => {
     const { startPos, direction, length } = placement;
     for (let i = 0; i < length; i++) {
@@ -70,23 +69,20 @@ const WordSearch = () => {
     return false;
   };
 
-  // Helper function to get all word placements that include this cell
   const getWordPlacementsForCell = (x: number, y: number): WordPlacement[] => {
     if (!puzzle) return [];
     return puzzle.wordPlacements.filter(placement => isPartOfWord(x, y, placement));
   };
 
-  // Helper function to determine styles for a cell
   const getCellStyles = (x: number, y: number, placements: WordPlacement[]): string => {
     if (placements.length === 0) return "";
-    if (!showAnswers) return ""; // Don't show any styles when answers are hidden
+    if (!showAnswers) return "";
 
     let styles = [];
     let hasDiagonal = false;
     let diagonalDirection = '';
 
     placements.forEach(placement => {
-      // Check if word is diagonal
       if (placement.direction.x !== 0 && placement.direction.y !== 0) {
         hasDiagonal = true;
         diagonalDirection = placement.direction.x === placement.direction.y ? 'up-to-down' : 'down-to-up';
@@ -125,7 +121,6 @@ const WordSearch = () => {
       <main className="flex-1 py-12">
         <div className="container">
           <div className="grid lg:grid-cols-2 gap-8">
-            {/* Input Section */}
             <section className="glass-card rounded-xl p-6 animate-fade-up">
               <div className="flex items-center gap-3 mb-6">
                 <Book className="h-6 w-6" />
@@ -195,7 +190,6 @@ PUZZLE"
               </div>
             </section>
 
-            {/* Preview Section */}
             <section className="glass-card rounded-xl p-6 animate-fade-up">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-semibold">Preview</h2>

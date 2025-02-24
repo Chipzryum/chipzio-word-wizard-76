@@ -1,4 +1,3 @@
-
 // Validation types and interfaces
 export interface ValidationResult {
   isValid: boolean;
@@ -166,12 +165,14 @@ export function generateWordSearch(validatedWords: string[], width: number, heig
 }
 
 function fillEmptySpaces(grid: string[][]): void {
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const letters = 'ABCDEFGHJKLMNOPQRSTUVWXYZꞮ'; // Replaced I with Ɪ in the letters list
   
   for (let y = 0; y < grid.length; y++) {
     for (let x = 0; x < grid[y].length; x++) {
       if (grid[y][x] === null) {
         grid[y][x] = letters[Math.floor(Math.random() * letters.length)];
+      } else if (grid[y][x] === 'I') {
+        grid[y][x] = 'Ɪ'; // Replace any existing 'I' with 'Ɪ'
       }
     }
   }
