@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Download, Book } from "lucide-react";
@@ -78,6 +79,7 @@ const WordSearch = () => {
   // Helper function to determine styles for a cell
   const getCellStyles = (x: number, y: number, placements: WordPlacement[]): string => {
     if (placements.length === 0) return "";
+    if (!showAnswers) return ""; // Don't show any styles when answers are hidden
 
     let styles = [];
     let hasDiagonal = false;
@@ -220,6 +222,8 @@ PUZZLE"
                           top: 50%;
                           left: -20%;
                           transform: rotate(45deg);
+                          opacity: ${showAnswers ? 1 : 0};
+                          transition: opacity 0.2s ease;
                         }
                         .diagonal-word.down-to-up::before {
                           content: '';
@@ -230,6 +234,8 @@ PUZZLE"
                           top: 50%;
                           left: -20%;
                           transform: rotate(-45deg);
+                          opacity: ${showAnswers ? 1 : 0};
+                          transition: opacity 0.2s ease;
                         }
                         .horizontal-line {
                           position: absolute;
@@ -274,7 +280,7 @@ PUZZLE"
                             >
                               {hasHorizontalWord && <div className="horizontal-line" />}
                               {hasVerticalWord && <div className="vertical-line" />}
-                              {showAnswers && wordPlacements.length === 0 ? "•" : letter}
+                              {letter}
                             </div>
                           );
                         })}
