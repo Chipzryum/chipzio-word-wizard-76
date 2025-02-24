@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Download, Book } from "lucide-react";
@@ -20,10 +19,9 @@ const WordSearch = () => {
 
   const generatePuzzle = () => {
     try {
-      // Use the larger dimension for validation to ensure words fit
       const maxDimension = Math.max(gridWidth, gridHeight);
       const validationResult = validateAndProcessInput(words.join('\n'), maxDimension);
-      
+
       if (!validationResult.isValid) {
         validationResult.errors.forEach(error => {
           toast({
@@ -35,10 +33,9 @@ const WordSearch = () => {
         return;
       }
 
-      // Generate puzzle using both width and height
       const newPuzzle = generateWordSearch(validationResult.words, gridWidth, gridHeight);
       setPuzzle(newPuzzle);
-      
+
       toast({
         title: "Success",
         description: "Puzzle generated successfully!",
@@ -74,49 +71,32 @@ const WordSearch = () => {
 
   // Helper function to get all word placements that include this cell
   const getWordPlacementsForCell = (x: number, y: number): WordPlacement[] => {
-    if (!puzzle || !showAnswers) return [];
+    if (!puzzle) return [];
     return puzzle.wordPlacements.filter(placement => isPartOfWord(x, y, placement));
   };
 
-  // Helper function to determine if this cell is the start of a word
-  const isStartOfWord = (x: number, y: number, placement: WordPlacement): boolean => {
-    return placement.startPos.x === x && placement.startPos.y === y;
-  };
+  // Helper function to determine styles for a cell
+  const getCellStyles = (x: number, y: number, placements: WordPlacement[]): string => {
+    if (placements.length === 0) return "";
 
-  // Helper function to determine if this cell is the end of a word
-  const isEndOfWord = (x: number, y: number, placement: WordPlacement): boolean => {
-    const endX = placement.startPos.x + (placement.direction.x * (placement.length - 1));
-    const endY = placement.startPos.y + (placement.direction.y * (placement.length - 1));
-    return x === endX && y === endY;
-  };
+    let styles = [];
+    let hasDiagonal = false;
+    let diagonalDirection = '';
 
-  // Helper function to get the border radius classes for a cell
-  const getCellBorderRadius = (x: number, y: number, placement: WordPlacement): string => {
-    if (placement.length === 1) return "rounded-full";
-    
-    if (isStartOfWord(x, y, placement)) {
-      if (placement.direction.x === 1 && placement.direction.y === 0) return "rounded-l-full";
-      if (placement.direction.x === -1 && placement.direction.y === 0) return "rounded-r-full";
-      if (placement.direction.x === 0 && placement.direction.y === 1) return "rounded-t-full";
-      if (placement.direction.x === 0 && placement.direction.y === -1) return "rounded-b-full";
-      if (placement.direction.x === 1 && placement.direction.y === 1) return "rounded-tl-full";
-      if (placement.direction.x === -1 && placement.direction.y === 1) return "rounded-tr-full";
-      if (placement.direction.x === 1 && placement.direction.y === -1) return "rounded-bl-full";
-      if (placement.direction.x === -1 && placement.direction.y === -1) return "rounded-br-full";
+    placements.forEach(placement => {
+      // Check if word is diagonal
+      if (placement.direction.x !== 0 && placement.direction.y !== 0) {
+        hasDiagonal = true;
+        diagonalDirection = placement.direction.x === placement.direction.y ? 'up-to-down' : 'down-to-up';
+      }
+    });
+
+    let baseStyles = "relative ";
+    if (hasDiagonal) {
+      baseStyles += `diagonal-word ${diagonalDirection} `;
     }
-    
-    if (isEndOfWord(x, y, placement)) {
-      if (placement.direction.x === 1 && placement.direction.y === 0) return "rounded-r-full";
-      if (placement.direction.x === -1 && placement.direction.y === 0) return "rounded-l-full";
-      if (placement.direction.x === 0 && placement.direction.y === 1) return "rounded-b-full";
-      if (placement.direction.x === 0 && placement.direction.y === -1) return "rounded-t-full";
-      if (placement.direction.x === 1 && placement.direction.y === 1) return "rounded-br-full";
-      if (placement.direction.x === -1 && placement.direction.y === 1) return "rounded-bl-full";
-      if (placement.direction.x === 1 && placement.direction.y === -1) return "rounded-tr-full";
-      if (placement.direction.x === -1 && placement.direction.y === -1) return "rounded-tl-full";
-    }
-    
-    return "";
+
+    return baseStyles;
   };
 
   return (
@@ -229,28 +209,72 @@ PUZZLE"
               <div className="bg-white/50 rounded-lg flex items-center justify-center border">
                 {puzzle ? (
                   <div className="grid place-items-center w-full p-4">
+                    <style>
+                      {`
+                        .diagonal-word.up-to-down::before {
+                          content: '';
+                          position: absolute;
+                          width: 140%;
+                          height: 2px;
+                          background-color: rgb(239 68 68);
+                          top: 50%;
+                          left: -20%;
+                          transform: rotate(45deg);
+                        }
+                        .diagonal-word.down-to-up::before {
+                          content: '';
+                          position: absolute;
+                          width: 140%;
+                          height: 2px;
+                          background-color: rgb(239 68 68);
+                          top: 50%;
+                          left: -20%;
+                          transform: rotate(-45deg);
+                        }
+                        .horizontal-line {
+                          position: absolute;
+                          height: 2px;
+                          background-color: rgb(239 68 68);
+                          top: 50%;
+                          left: 0;
+                          right: 0;
+                          transform: translateY(-50%);
+                          opacity: 0;
+                          transition: opacity 0.2s ease;
+                        }
+                        .vertical-line {
+                          position: absolute;
+                          width: 2px;
+                          background-color: rgb(239 68 68);
+                          top: 0;
+                          bottom: 0;
+                          left: 50%;
+                          transform: translateX(-50%);
+                          opacity: 0;
+                          transition: opacity 0.2s ease;
+                        }
+                        .show-line .horizontal-line,
+                        .show-line .vertical-line {
+                          opacity: 1;
+                        }
+                      `}
+                    </style>
                     {puzzle.grid.map((row, y) => (
                       <div key={y} className="flex">
                         {row.map((letter, x) => {
                           const wordPlacements = getWordPlacementsForCell(x, y);
+                          const cellStyles = getCellStyles(x, y, wordPlacements);
+                          const hasHorizontalWord = wordPlacements.some(p => p.direction.x !== 0 && p.direction.y === 0);
+                          const hasVerticalWord = wordPlacements.some(p => p.direction.x === 0 && p.direction.y !== 0);
+
                           return (
                             <div
                               key={`${x}-${y}`}
-                              className="relative"
+                              className={`w-8 h-8 flex items-center justify-center font-medium relative ${cellStyles} ${showAnswers ? 'show-line' : ''}`}
                             >
-                              {wordPlacements.map((placement, index) => (
-                                <div
-                                  key={index}
-                                  className={`absolute inset-0.5 border-2 border-red-500 transition-opacity ${
-                                    showAnswers ? "opacity-100" : "opacity-0"
-                                  } ${getCellBorderRadius(x, y, placement)}`}
-                                />
-                              ))}
-                              <div
-                                className="w-8 h-8 flex items-center justify-center font-medium"
-                              >
-                                {letter}
-                              </div>
+                              {hasHorizontalWord && <div className="horizontal-line" />}
+                              {hasVerticalWord && <div className="vertical-line" />}
+                              {showAnswers && wordPlacements.length === 0 ? "•" : letter}
                             </div>
                           );
                         })}
@@ -263,7 +287,7 @@ PUZZLE"
                   </p>
                 )}
               </div>
-              
+
               {puzzle && (
                 <div className="mt-4">
                   <h3 className="font-medium mb-2">Words to find:</h3>
