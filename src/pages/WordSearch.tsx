@@ -202,6 +202,10 @@ PUZZLE"
                   <div className="grid place-items-center w-full p-4">
                     <style>
                       {`
+                        @font-face {
+                          font-family: 'New Peninim MT';
+                          src: url('/fonts/NewPeninimMT-Regular.ttf') format('truetype');
+                        }
                         .diagonal-word.up-to-down::before {
                           content: '';
                           position: absolute;
@@ -266,6 +270,7 @@ PUZZLE"
                             <div
                               key={`${x}-${y}`}
                               className={`w-8 h-8 flex items-center justify-center font-medium relative ${cellStyles} ${showAnswers ? 'show-line' : ''}`}
+                              style={{ fontFamily: 'New Peninim MT' }}
                             >
                               {hasHorizontalWord && <div className="horizontal-line" />}
                               {hasVerticalWord && <div className="vertical-line" />}

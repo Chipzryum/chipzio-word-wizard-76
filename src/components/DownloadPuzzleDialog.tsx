@@ -12,7 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
-import { pdf, Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { pdf, Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
+
+// Register the New Peninim MT font for PDF generation
+Font.register({
+  family: 'New Peninim MT',
+  src: '/fonts/NewPeninimMT-Regular.ttf'
+});
 
 const PAGE_SIZES = {
   'A3': { width: 841.89, height: 1190.55 },
@@ -37,6 +43,7 @@ const styles = StyleSheet.create({
   page: {
     padding: 40,
     fontSize: 12,
+    fontFamily: 'New Peninim MT',
   },
   title: {
     fontSize: 24,
@@ -156,6 +163,14 @@ export function DownloadPuzzleDialog({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <style>
+          {`
+            @font-face {
+              font-family: 'New Peninim MT';
+              src: url('/fonts/NewPeninimMT-Regular.ttf') format('truetype');
+            }
+          `}
+        </style>
         <DialogHeader>
           <DialogTitle>Download Puzzle</DialogTitle>
           <DialogDescription>
@@ -245,7 +260,7 @@ export function DownloadPuzzleDialog({
               >
                 <div className="absolute inset-0 p-4">
                   <div className="w-full h-full flex flex-col">
-                    <div className="text-center font-bold mb-2 text-xs">{title}</div>
+                    <div className="text-center font-bold mb-2 text-xs" style={{ fontFamily: 'New Peninim MT' }}>{title}</div>
                     <div className="flex-1 grid place-items-center">
                       <div className="grid grid-cols-1 gap-0.5">
                         {puzzle?.grid.map((row, i) => (
@@ -254,6 +269,7 @@ export function DownloadPuzzleDialog({
                               <div
                                 key={`${i}-${j}`}
                                 className="w-2 h-2 flex items-center justify-center text-[4px]"
+                                style={{ fontFamily: 'New Peninim MT' }}
                               >
                                 {cell}
                               </div>
@@ -262,7 +278,7 @@ export function DownloadPuzzleDialog({
                         ))}
                       </div>
                     </div>
-                    <div className="mt-2 text-[6px] flex flex-wrap gap-1">
+                    <div className="mt-2 text-[6px] flex flex-wrap gap-1" style={{ fontFamily: 'New Peninim MT' }}>
                       {puzzle?.wordPlacements.map(({ word }, i) => (
                         <span key={i} className="mr-1">{word}</span>
                       ))}
