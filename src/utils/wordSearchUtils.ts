@@ -1,3 +1,4 @@
+
 // Validation types and interfaces
 export interface ValidationResult {
   isValid: boolean;
