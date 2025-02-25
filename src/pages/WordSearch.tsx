@@ -265,7 +265,7 @@ PUZZLE"
                           return (
                             <div
                               key={`${x}-${y}`}
-                              className={`w-8 h-8 flex items-center justify-center font-medium relative ${cellStyles} ${showAnswers ? 'show-line' : ''} font-serif`}
+                              className={`w-8 h-8 flex items-center justify-center font-medium relative ${cellStyles} ${showAnswers ? 'show-line' : ''}`}
                             >
                               {hasHorizontalWord && <div className="horizontal-line" />}
                               {hasVerticalWord && <div className="vertical-line" />}
