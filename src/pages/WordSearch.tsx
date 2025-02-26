@@ -22,7 +22,7 @@ const WordSearch = () => {
   const generatePuzzle = () => {
     try {
       const maxDimension = Math.max(gridWidth, gridHeight);
-      const processedInput = words.join('\n').replace(/I/g, 'Ɪ');
+      const processedInput = words.join('\n');
       const validationResult = validateAndProcessInput(processedInput, maxDimension);
 
       if (!validationResult.isValid) {
