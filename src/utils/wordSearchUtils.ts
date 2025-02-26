@@ -1,3 +1,4 @@
+
 // Validation types and interfaces
 export interface ValidationResult {
   isValid: boolean;
@@ -41,7 +42,7 @@ export function validateAndProcessInput(rawInput: string, gridSize: number): Val
       );
     }
 
-    // Check for valid characters
+    // Check for valid characters (now allowing I)
     if (!/^[A-Z]+$/.test(word)) {
       validationResult.isValid = false;
       validationResult.errors.push(
@@ -108,10 +109,6 @@ export function generateWordSearch(validatedWords: string[], width: number, heig
     { x: 0, y: -1 },  // up
     { x: 1, y: -1 }   // diagonal right-up
   ];
-  // Removed:
-  // { x: -1, y: 0 },   // left
-  // { x: -1, y: 1 },   // diagonal left-down
-  // { x: -1, y: -1 },  // diagonal left-up
 
   // Sort words by length (longest first)
   const sortedWords = [...validatedWords].sort((a, b) => b.length - a.length);
@@ -165,14 +162,12 @@ export function generateWordSearch(validatedWords: string[], width: number, heig
 }
 
 function fillEmptySpaces(grid: string[][]): void {
-  const letters = 'ABCDEFGHJKLMNOPQRSTUVWXYZꞮ'; // Replaced I with Ɪ in the letters list
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   
   for (let y = 0; y < grid.length; y++) {
     for (let x = 0; x < grid[y].length; x++) {
       if (grid[y][x] === null) {
         grid[y][x] = letters[Math.floor(Math.random() * letters.length)];
-      } else if (grid[y][x] === 'I') {
-        grid[y][x] = 'Ɪ'; // Replace any existing 'I' with 'Ɪ'
       }
     }
   }

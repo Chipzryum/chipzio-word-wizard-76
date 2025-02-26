@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Dialog,
@@ -43,7 +42,7 @@ const styles = StyleSheet.create({
   page: {
     padding: 40,
     fontSize: 12,
-    fontFamily: 'New Peninim MT',
+    fontFamily: 'Times-Roman',
   },
   title: {
     fontSize: 24,
@@ -260,7 +259,7 @@ export function DownloadPuzzleDialog({
               >
                 <div className="absolute inset-0 p-4">
                   <div className="w-full h-full flex flex-col">
-                    <div className="text-center font-bold mb-2 text-xs" style={{ fontFamily: 'New Peninim MT' }}>{title}</div>
+                    <div className="text-center font-bold mb-2 text-xs font-serif">{title}</div>
                     <div className="flex-1 grid place-items-center">
                       <div className="grid grid-cols-1 gap-0.5">
                         {puzzle?.grid.map((row, i) => (
@@ -268,8 +267,7 @@ export function DownloadPuzzleDialog({
                             {row.map((cell, j) => (
                               <div
                                 key={`${i}-${j}`}
-                                className="w-2 h-2 flex items-center justify-center text-[4px]"
-                                style={{ fontFamily: 'New Peninim MT' }}
+                                className="w-2 h-2 flex items-center justify-center text-[4px] font-serif"
                               >
                                 {cell}
                               </div>
@@ -278,7 +276,7 @@ export function DownloadPuzzleDialog({
                         ))}
                       </div>
                     </div>
-                    <div className="mt-2 text-[6px] flex flex-wrap gap-1" style={{ fontFamily: 'New Peninim MT' }}>
+                    <div className="mt-2 text-[6px] flex flex-wrap gap-1 font-serif">
                       {puzzle?.wordPlacements.map(({ word }, i) => (
                         <span key={i} className="mr-1">{word}</span>
                       ))}
