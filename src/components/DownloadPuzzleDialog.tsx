@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Dialog,
@@ -12,12 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { pdf, Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
-
-// Register the New Peninim MT font for PDF generation
-Font.register({
-  family: 'New Peninim MT',
-  src: '/fonts/NewPeninimMT-Regular.ttf'
-});
 
 const PAGE_SIZES = {
   'A3': { width: 841.89, height: 1190.55 },
@@ -38,15 +33,23 @@ const UNITS = {
 type PageSize = keyof typeof PAGE_SIZES;
 type Unit = keyof typeof UNITS;
 
+// Constants for PDF layout
+const PDF_MARGIN = 40;
+const CELL_SIZE = 20;
+const TITLE_FONT_SIZE = 24;
+const GRID_FONT_SIZE = 12;
+const WORD_LIST_FONT_SIZE = 12;
+const TITLE_MARGIN = 20;
+
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
-    fontSize: 12,
+    padding: PDF_MARGIN,
+    fontSize: GRID_FONT_SIZE,
     fontFamily: 'Times-Roman',
   },
   title: {
-    fontSize: 24,
-    marginBottom: 20,
+    fontSize: TITLE_FONT_SIZE,
+    marginBottom: TITLE_MARGIN,
     textAlign: 'center',
   },
   grid: {
@@ -60,8 +63,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   cell: {
-    width: 20,
-    height: 20,
+    width: CELL_SIZE,
+    height: CELL_SIZE,
     textAlign: 'center',
     display: 'flex',
     alignItems: 'center',
@@ -71,6 +74,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     columns: 4,
     columnGap: 20,
+    fontSize: WORD_LIST_FONT_SIZE,
   },
 });
 
@@ -93,6 +97,11 @@ export function DownloadPuzzleDialog({
 
   const currentWidth = selectedSize === "Custom" ? customWidth : PAGE_SIZES[selectedSize].width;
   const currentHeight = selectedSize === "Custom" ? customHeight : PAGE_SIZES[selectedSize].height;
+
+  // Calculate preview scaling
+  const contentWidth = currentWidth - (2 * PDF_MARGIN);
+  const contentHeight = currentHeight - (2 * PDF_MARGIN);
+  const previewScaleFactor = Math.min(300 / currentWidth, 400 / currentHeight);
 
   const handleSizeChange = (size: PageSize) => {
     setSelectedSize(size);
@@ -162,14 +171,6 @@ export function DownloadPuzzleDialog({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <style>
-          {`
-            @font-face {
-              font-family: 'New Peninim MT';
-              src: url('/fonts/NewPeninimMT-Regular.ttf') format('truetype');
-            }
-          `}
-        </style>
         <DialogHeader>
           <DialogTitle>Download Puzzle</DialogTitle>
           <DialogDescription>
@@ -253,21 +254,40 @@ export function DownloadPuzzleDialog({
               <div 
                 className="relative bg-gray-50 border"
                 style={{
-                  width: '100%',
-                  paddingTop: `${(currentHeight / currentWidth) * 100}%`
+                  width: `${currentWidth * previewScaleFactor}px`,
+                  height: `${currentHeight * previewScaleFactor}px`,
+                  margin: '0 auto',
                 }}
               >
-                <div className="absolute inset-0 p-4">
+                <div 
+                  className="absolute"
+                  style={{
+                    inset: `${PDF_MARGIN * previewScaleFactor}px`,
+                  }}
+                >
                   <div className="w-full h-full flex flex-col">
-                    <div className="text-center font-bold mb-2 text-xs font-serif">{title}</div>
+                    <div 
+                      className="text-center font-bold font-serif"
+                      style={{
+                        fontSize: `${TITLE_FONT_SIZE * previewScaleFactor}px`,
+                        marginBottom: `${TITLE_MARGIN * previewScaleFactor}px`,
+                      }}
+                    >
+                      {title}
+                    </div>
                     <div className="flex-1 grid place-items-center">
-                      <div className="grid grid-cols-1 gap-0.5">
+                      <div className="grid grid-cols-1">
                         {puzzle?.grid.map((row, i) => (
-                          <div key={i} className="flex gap-0.5">
+                          <div key={i} className="flex">
                             {row.map((cell, j) => (
                               <div
                                 key={`${i}-${j}`}
-                                className="w-2 h-2 flex items-center justify-center text-[4px] font-serif"
+                                className="flex items-center justify-center font-serif"
+                                style={{
+                                  width: `${CELL_SIZE * previewScaleFactor}px`,
+                                  height: `${CELL_SIZE * previewScaleFactor}px`,
+                                  fontSize: `${GRID_FONT_SIZE * previewScaleFactor}px`,
+                                }}
                               >
                                 {cell}
                               </div>
@@ -276,9 +296,14 @@ export function DownloadPuzzleDialog({
                         ))}
                       </div>
                     </div>
-                    <div className="mt-2 text-[6px] flex flex-wrap gap-1 font-serif">
+                    <div 
+                      className="mt-4 flex flex-wrap gap-2 font-serif"
+                      style={{
+                        fontSize: `${WORD_LIST_FONT_SIZE * previewScaleFactor}px`,
+                      }}
+                    >
                       {puzzle?.wordPlacements.map(({ word }, i) => (
-                        <span key={i} className="mr-1">{word}</span>
+                        <span key={i}>{word}</span>
                       ))}
                     </div>
                   </div>
