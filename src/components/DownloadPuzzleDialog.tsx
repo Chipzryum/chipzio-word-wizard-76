@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { pdf, Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
@@ -38,6 +39,13 @@ const PDF_MARGIN = 40;
 const BORDER_WIDTH = 2;
 const BASE_PADDING = 20;
 
+// Default font size multipliers
+const DEFAULT_TITLE_MULTIPLIER = 1.0;      // 24-36pt
+const DEFAULT_SUBTITLE_MULTIPLIER = 1.0;    // 16-24pt
+const DEFAULT_INSTRUCTION_MULTIPLIER = 1.0; // 10-14pt
+const DEFAULT_CELL_MULTIPLIER = 1.0;        // Dynamic based on grid size
+const DEFAULT_WORDLIST_MULTIPLIER = 1.0;    // 8-12pt
+
 interface DownloadPuzzleDialogProps {
   open: boolean;
   onClose: () => void;
@@ -56,6 +64,13 @@ export function DownloadPuzzleDialog({
   const [selectedUnit, setSelectedUnit] = useState<Unit>("Points");
   const [customWidth, setCustomWidth] = useState(PAGE_SIZES.A4.width);
   const [customHeight, setCustomHeight] = useState(PAGE_SIZES.A4.height);
+  
+  // Size multiplier sliders
+  const [titleSizeMultiplier, setTitleSizeMultiplier] = useState(DEFAULT_TITLE_MULTIPLIER);
+  const [subtitleSizeMultiplier, setSubtitleSizeMultiplier] = useState(DEFAULT_SUBTITLE_MULTIPLIER);
+  const [instructionSizeMultiplier, setInstructionSizeMultiplier] = useState(DEFAULT_INSTRUCTION_MULTIPLIER);
+  const [cellSizeMultiplier, setCellSizeMultiplier] = useState(DEFAULT_CELL_MULTIPLIER);
+  const [wordListSizeMultiplier, setWordListSizeMultiplier] = useState(DEFAULT_WORDLIST_MULTIPLIER);
 
   const currentWidth = selectedSize === "Custom" ? customWidth : PAGE_SIZES[selectedSize].width;
   const currentHeight = selectedSize === "Custom" ? customHeight : PAGE_SIZES[selectedSize].height;
@@ -71,7 +86,7 @@ export function DownloadPuzzleDialog({
   const heightScale = previewContainerHeight / currentHeight;
   const previewScaleFactor = Math.min(widthScale, heightScale);
 
-  // Calculate font sizes based on page dimensions
+  // Calculate font sizes based on page dimensions and multipliers
   const calculateFontSizes = () => {
     // Base sizes for A4
     const a4Width = PAGE_SIZES.A4.width;
@@ -79,16 +94,16 @@ export function DownloadPuzzleDialog({
     const sizeRatio = Math.sqrt((currentWidth * currentHeight) / (a4Width * a4Height));
     
     return {
-      titleSize: Math.max(24, Math.min(36, Math.floor(36 * sizeRatio))),
-      subtitleSize: Math.max(16, Math.min(24, Math.floor(24 * sizeRatio))),
-      instructionSize: Math.max(10, Math.min(14, Math.floor(14 * sizeRatio))),
-      wordListSize: Math.max(8, Math.min(12, Math.floor(12 * sizeRatio))),
+      titleSize: Math.max(20, Math.min(42, Math.floor(36 * sizeRatio * titleSizeMultiplier))),
+      subtitleSize: Math.max(14, Math.min(30, Math.floor(24 * sizeRatio * subtitleSizeMultiplier))),
+      instructionSize: Math.max(8, Math.min(18, Math.floor(14 * sizeRatio * instructionSizeMultiplier))),
+      wordListSize: Math.max(6, Math.min(16, Math.floor(12 * sizeRatio * wordListSizeMultiplier))),
     };
   };
 
   const fontSizes = calculateFontSizes();
   
-  // Calculate grid cell size based on page dimensions and grid size
+  // Calculate grid cell size based on page dimensions, grid size, and the cell size multiplier
   const calculateGridCellSize = () => {
     if (!puzzle) return 20;
     
@@ -106,12 +121,15 @@ export function DownloadPuzzleDialog({
     const cellSizeByWidth = availableWidth / gridWidth;
     const cellSizeByHeight = availableHeight / gridHeight;
     
-    return Math.min(cellSizeByWidth, cellSizeByHeight);
+    const baseSize = Math.min(cellSizeByWidth, cellSizeByHeight);
+    
+    // Apply the cell size multiplier
+    return baseSize * cellSizeMultiplier;
   };
 
   const cellSize = calculateGridCellSize();
 
-  // Create styles for PDF dynamically based on page size
+  // Create styles for PDF dynamically based on page size and multipliers
   const createPDFStyles = () => {
     return StyleSheet.create({
       page: {
@@ -160,7 +178,7 @@ export function DownloadPuzzleDialog({
         justifyContent: 'center',
         borderWidth: 0.5,
         borderColor: '#000',
-        fontSize: Math.min(cellSize * 0.6, fontSizes.wordListSize),
+        fontSize: Math.min(cellSize * 0.6, fontSizes.wordListSize * 1.5),
       },
       wordList: {
         marginTop: 20,
@@ -248,6 +266,11 @@ export function DownloadPuzzleDialog({
     }
   };
 
+  // Format slider value for display
+  const formatSliderValue = (value: number) => {
+    return `${(value * 100).toFixed(0)}%`;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -268,6 +291,18 @@ export function DownloadPuzzleDialog({
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter main title"
               />
+              <div className="flex items-center justify-between mt-2">
+                <Label htmlFor="titleSize" className="text-xs">Size: {formatSliderValue(titleSizeMultiplier)}</Label>
+                <Slider 
+                  id="titleSize"
+                  min={0.5} 
+                  max={1.5} 
+                  step={0.1}
+                  value={[titleSizeMultiplier]} 
+                  onValueChange={(value) => setTitleSizeMultiplier(value[0])}
+                  className="w-32"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -278,6 +313,18 @@ export function DownloadPuzzleDialog({
                 onChange={(e) => setSubtitle(e.target.value)}
                 placeholder="Enter subtitle"
               />
+              <div className="flex items-center justify-between mt-2">
+                <Label htmlFor="subtitleSize" className="text-xs">Size: {formatSliderValue(subtitleSizeMultiplier)}</Label>
+                <Slider 
+                  id="subtitleSize"
+                  min={0.5} 
+                  max={1.5} 
+                  step={0.1}
+                  value={[subtitleSizeMultiplier]} 
+                  onValueChange={(value) => setSubtitleSizeMultiplier(value[0])}
+                  className="w-32"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -288,6 +335,18 @@ export function DownloadPuzzleDialog({
                 onChange={(e) => setInstruction(e.target.value)}
                 placeholder="Enter instruction text"
               />
+              <div className="flex items-center justify-between mt-2">
+                <Label htmlFor="instructionSize" className="text-xs">Size: {formatSliderValue(instructionSizeMultiplier)}</Label>
+                <Slider 
+                  id="instructionSize"
+                  min={0.5} 
+                  max={1.5} 
+                  step={0.1}
+                  value={[instructionSizeMultiplier]} 
+                  onValueChange={(value) => setInstructionSizeMultiplier(value[0])}
+                  className="w-32"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -303,6 +362,38 @@ export function DownloadPuzzleDialog({
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cellSize">Letter Size</Label>
+              <div className="flex items-center justify-between">
+                <span className="text-xs">{formatSliderValue(cellSizeMultiplier)}</span>
+                <Slider 
+                  id="cellSize"
+                  min={0.7} 
+                  max={1.5} 
+                  step={0.1}
+                  value={[cellSizeMultiplier]} 
+                  onValueChange={(value) => setCellSizeMultiplier(value[0])}
+                  className="w-full mx-2"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="wordListSize">Word List Size</Label>
+              <div className="flex items-center justify-between">
+                <span className="text-xs">{formatSliderValue(wordListSizeMultiplier)}</span>
+                <Slider 
+                  id="wordListSize"
+                  min={0.7} 
+                  max={1.5} 
+                  step={0.1}
+                  value={[wordListSizeMultiplier]} 
+                  onValueChange={(value) => setWordListSizeMultiplier(value[0])}
+                  className="w-full mx-2"
+                />
+              </div>
             </div>
 
             {selectedSize === "Custom" && (
@@ -402,7 +493,7 @@ export function DownloadPuzzleDialog({
                               style={{
                                 width: `${cellSize * previewScaleFactor}px`,
                                 height: `${cellSize * previewScaleFactor}px`,
-                                fontSize: `${Math.min(cellSize * 0.6, fontSizes.wordListSize) * previewScaleFactor}px`,
+                                fontSize: `${Math.min(cellSize * 0.6, fontSizes.wordListSize * 1.5) * previewScaleFactor}px`,
                               }}
                             >
                               {cell}
