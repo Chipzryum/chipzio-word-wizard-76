@@ -132,9 +132,14 @@ export function DownloadPuzzleDialog({
   const currentWidth = selectedSize === "Custom" ? customWidth : PAGE_SIZES[selectedSize].width;
   const currentHeight = selectedSize === "Custom" ? customHeight : PAGE_SIZES[selectedSize].height;
 
-  // Calculate preview scaling
+  // Calculate the maximum preview size that maintains aspect ratio
   const previewContainerWidth = 300; // Fixed width for preview container
-  const previewScaleFactor = previewContainerWidth / (currentWidth - (2 * PDF_MARGIN));
+  const previewContainerHeight = 400; // Fixed height for preview container
+  
+  // Calculate scaling to fit within the preview container while maintaining aspect ratio
+  const widthScale = previewContainerWidth / currentWidth;
+  const heightScale = previewContainerHeight / currentHeight;
+  const previewScaleFactor = Math.min(widthScale, heightScale);
 
   // Calculate grid cell size based on page dimensions and grid size
   const calculateGridCellSize = () => {
@@ -342,13 +347,14 @@ export function DownloadPuzzleDialog({
 
           <div className="space-y-4">
             <Label>Preview</Label>
-            <div className="border rounded-lg p-4 bg-white">
+            <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center">
               <div 
                 className="relative border-2 border-black bg-white p-4"
                 style={{
-                  width: `${(currentWidth - 2 * PDF_MARGIN) * previewScaleFactor}px`,
-                  height: `${(currentHeight - 2 * PDF_MARGIN) * previewScaleFactor}px`,
-                  margin: '0 auto',
+                  width: `${currentWidth * previewScaleFactor}px`,
+                  height: `${currentHeight * previewScaleFactor}px`,
+                  maxWidth: '100%',
+                  maxHeight: '380px',
                 }}
               >
                 <div className="flex flex-col h-full">
