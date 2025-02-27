@@ -35,11 +35,16 @@ type Unit = keyof typeof UNITS;
 
 // Constants for PDF layout
 const PDF_MARGIN = 40;
-const CELL_SIZE = 20;
-const TITLE_FONT_SIZE = 24;
+const TITLE_FONT_SIZE = 36;
+const SUBTITLE_FONT_SIZE = 24;
+const INSTRUCTION_FONT_SIZE = 14;
 const GRID_FONT_SIZE = 12;
 const WORD_LIST_FONT_SIZE = 12;
-const TITLE_MARGIN = 20;
+const TITLE_MARGIN = 10;
+const SUBTITLE_MARGIN = 10;
+const INSTRUCTION_MARGIN = 20;
+const WORD_LIST_MARGIN = 30;
+const BORDER_WIDTH = 2;
 
 const styles = StyleSheet.create({
   page: {
@@ -47,9 +52,26 @@ const styles = StyleSheet.create({
     fontSize: GRID_FONT_SIZE,
     fontFamily: 'Times-Roman',
   },
+  container: {
+    flex: 1,
+    border: BORDER_WIDTH,
+    padding: 20,
+  },
   title: {
     fontSize: TITLE_FONT_SIZE,
     marginBottom: TITLE_MARGIN,
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  subtitle: {
+    fontSize: SUBTITLE_FONT_SIZE,
+    marginBottom: SUBTITLE_MARGIN,
+    textAlign: 'center',
+    fontFamily: 'Times-Italic',
+  },
+  instruction: {
+    fontSize: INSTRUCTION_FONT_SIZE,
+    marginBottom: INSTRUCTION_MARGIN,
     textAlign: 'center',
   },
   grid: {
@@ -57,23 +79,33 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
+    marginBottom: 20,
   },
   row: {
     display: 'flex',
     flexDirection: 'row',
   },
   cell: {
-    width: CELL_SIZE,
-    height: CELL_SIZE,
+    width: GRID_FONT_SIZE * 2,
+    height: GRID_FONT_SIZE * 2,
     textAlign: 'center',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 0.5,
+    borderColor: '#000',
+    fontSize: GRID_FONT_SIZE,
   },
   wordList: {
-    marginTop: 20,
-    columns: 4,
-    columnGap: 20,
+    marginTop: WORD_LIST_MARGIN,
+    display: 'flex',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  wordItem: {
+    marginHorizontal: 15,
+    marginVertical: 5,
     fontSize: WORD_LIST_FONT_SIZE,
   },
 });
@@ -90,6 +122,8 @@ export function DownloadPuzzleDialog({
   puzzle,
 }: DownloadPuzzleDialogProps) {
   const [title, setTitle] = useState("Word Search Puzzle");
+  const [subtitle, setSubtitle] = useState("word search");
+  const [instruction, setInstruction] = useState("Can you find all the words?");
   const [selectedSize, setSelectedSize] = useState<PageSize>("A4");
   const [selectedUnit, setSelectedUnit] = useState<Unit>("Points");
   const [customWidth, setCustomWidth] = useState(PAGE_SIZES.A4.width);
@@ -99,9 +133,28 @@ export function DownloadPuzzleDialog({
   const currentHeight = selectedSize === "Custom" ? customHeight : PAGE_SIZES[selectedSize].height;
 
   // Calculate preview scaling
-  const contentWidth = currentWidth - (2 * PDF_MARGIN);
-  const contentHeight = currentHeight - (2 * PDF_MARGIN);
-  const previewScaleFactor = Math.min(300 / currentWidth, 400 / currentHeight);
+  const previewContainerWidth = 300; // Fixed width for preview container
+  const previewScaleFactor = previewContainerWidth / (currentWidth - (2 * PDF_MARGIN));
+
+  // Calculate grid cell size based on page dimensions and grid size
+  const calculateGridCellSize = () => {
+    if (!puzzle) return GRID_FONT_SIZE * 2;
+    
+    const contentWidth = currentWidth - (2 * PDF_MARGIN) - (2 * 20) - (2 * BORDER_WIDTH);
+    const contentHeight = currentHeight - (2 * PDF_MARGIN) - (2 * 20) - (2 * BORDER_WIDTH) 
+      - TITLE_FONT_SIZE - SUBTITLE_FONT_SIZE - INSTRUCTION_FONT_SIZE - WORD_LIST_MARGIN - WORD_LIST_FONT_SIZE * 3;
+    
+    const gridWidth = puzzle.grid[0].length;
+    const gridHeight = puzzle.grid.length;
+    
+    // Use the smaller dimension to ensure the grid fits
+    const cellSizeByWidth = contentWidth / gridWidth;
+    const cellSizeByHeight = contentHeight / gridHeight;
+    
+    return Math.min(cellSizeByWidth, cellSizeByHeight);
+  };
+
+  const cellSize = calculateGridCellSize();
 
   const handleSizeChange = (size: PageSize) => {
     setSelectedSize(size);
@@ -132,25 +185,44 @@ export function DownloadPuzzleDialog({
     if (!puzzle) return;
 
     try {
+      // Create dynamic styles for the PDF to adjust cell size
+      const dynamicStyles = StyleSheet.create({
+        cell: {
+          width: cellSize,
+          height: cellSize,
+          textAlign: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderWidth: 0.5,
+          borderColor: '#000',
+          fontSize: Math.min(cellSize * 0.6, GRID_FONT_SIZE),
+        },
+      });
+
       const blob = await pdf(
         <Document>
           <Page size={[currentWidth, currentHeight]} style={styles.page}>
-            <Text style={styles.title}>{title}</Text>
-            <View style={styles.grid}>
-              {puzzle.grid.map((row, i) => (
-                <View key={i} style={styles.row}>
-                  {row.map((cell, j) => (
-                    <Text key={`${i}-${j}`} style={styles.cell}>
-                      {cell}
-                    </Text>
-                  ))}
-                </View>
-              ))}
-            </View>
-            <View style={styles.wordList}>
-              {puzzle.wordPlacements.map(({ word }, index) => (
-                <Text key={index}>{word}</Text>
-              ))}
+            <View style={styles.container}>
+              <Text style={styles.title}>{title.toUpperCase()}</Text>
+              <Text style={styles.subtitle}>{subtitle.toLowerCase()}</Text>
+              <Text style={styles.instruction}>{instruction}</Text>
+              <View style={styles.grid}>
+                {puzzle.grid.map((row, i) => (
+                  <View key={i} style={styles.row}>
+                    {row.map((cell, j) => (
+                      <Text key={`${i}-${j}`} style={dynamicStyles.cell}>
+                        {cell}
+                      </Text>
+                    ))}
+                  </View>
+                ))}
+              </View>
+              <View style={styles.wordList}>
+                {puzzle.wordPlacements.map(({ word }, index) => (
+                  <Text key={index} style={styles.wordItem}>{word.toLowerCase()}</Text>
+                ))}
+              </View>
             </View>
           </Page>
         </Document>
@@ -181,12 +253,32 @@ export function DownloadPuzzleDialog({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="title">Puzzle Title</Label>
+              <Label htmlFor="title">Main Title</Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter puzzle title"
+                placeholder="Enter main title"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="subtitle">Subtitle</Label>
+              <Input
+                id="subtitle"
+                value={subtitle}
+                onChange={(e) => setSubtitle(e.target.value)}
+                placeholder="Enter subtitle"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="instruction">Instruction</Label>
+              <Input
+                id="instruction"
+                value={instruction}
+                onChange={(e) => setInstruction(e.target.value)}
+                placeholder="Enter instruction text"
               />
             </div>
 
@@ -252,60 +344,75 @@ export function DownloadPuzzleDialog({
             <Label>Preview</Label>
             <div className="border rounded-lg p-4 bg-white">
               <div 
-                className="relative bg-gray-50 border"
+                className="relative border-2 border-black bg-white p-4"
                 style={{
-                  width: `${currentWidth * previewScaleFactor}px`,
-                  height: `${currentHeight * previewScaleFactor}px`,
+                  width: `${(currentWidth - 2 * PDF_MARGIN) * previewScaleFactor}px`,
+                  height: `${(currentHeight - 2 * PDF_MARGIN) * previewScaleFactor}px`,
                   margin: '0 auto',
                 }}
               >
-                <div 
-                  className="absolute"
-                  style={{
-                    inset: `${PDF_MARGIN * previewScaleFactor}px`,
-                  }}
-                >
-                  <div className="w-full h-full flex flex-col">
-                    <div 
-                      className="text-center font-bold font-serif"
-                      style={{
-                        fontSize: `${TITLE_FONT_SIZE * previewScaleFactor}px`,
-                        marginBottom: `${TITLE_MARGIN * previewScaleFactor}px`,
-                      }}
-                    >
-                      {title}
-                    </div>
-                    <div className="flex-1 grid place-items-center">
-                      <div className="grid grid-cols-1">
-                        {puzzle?.grid.map((row, i) => (
-                          <div key={i} className="flex">
-                            {row.map((cell, j) => (
-                              <div
-                                key={`${i}-${j}`}
-                                className="flex items-center justify-center font-serif"
-                                style={{
-                                  width: `${CELL_SIZE * previewScaleFactor}px`,
-                                  height: `${CELL_SIZE * previewScaleFactor}px`,
-                                  fontSize: `${GRID_FONT_SIZE * previewScaleFactor}px`,
-                                }}
-                              >
-                                {cell}
-                              </div>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div 
-                      className="mt-4 flex flex-wrap gap-2 font-serif"
-                      style={{
-                        fontSize: `${WORD_LIST_FONT_SIZE * previewScaleFactor}px`,
-                      }}
-                    >
-                      {puzzle?.wordPlacements.map(({ word }, i) => (
-                        <span key={i}>{word}</span>
+                <div className="flex flex-col h-full">
+                  <div 
+                    className="text-center font-bold font-serif"
+                    style={{
+                      fontSize: `${TITLE_FONT_SIZE * previewScaleFactor}px`,
+                      marginBottom: `${TITLE_MARGIN * previewScaleFactor}px`,
+                    }}
+                  >
+                    {title.toUpperCase()}
+                  </div>
+                  
+                  <div 
+                    className="text-center font-serif italic"
+                    style={{
+                      fontSize: `${SUBTITLE_FONT_SIZE * previewScaleFactor}px`,
+                      marginBottom: `${SUBTITLE_MARGIN * previewScaleFactor}px`,
+                    }}
+                  >
+                    {subtitle.toLowerCase()}
+                  </div>
+                  
+                  <div 
+                    className="text-center font-serif"
+                    style={{
+                      fontSize: `${INSTRUCTION_FONT_SIZE * previewScaleFactor}px`,
+                      marginBottom: `${INSTRUCTION_MARGIN * previewScaleFactor}px`,
+                    }}
+                  >
+                    {instruction}
+                  </div>
+                  
+                  <div className="flex-1 grid place-items-center mb-4">
+                    <div className="grid grid-cols-1">
+                      {puzzle?.grid.map((row, i) => (
+                        <div key={i} className="flex">
+                          {row.map((cell, j) => (
+                            <div
+                              key={`${i}-${j}`}
+                              className="flex items-center justify-center font-serif border border-black"
+                              style={{
+                                width: `${cellSize * previewScaleFactor}px`,
+                                height: `${cellSize * previewScaleFactor}px`,
+                                fontSize: `${Math.min(cellSize * 0.6, GRID_FONT_SIZE) * previewScaleFactor}px`,
+                              }}
+                            >
+                              {cell}
+                            </div>
+                          ))}
+                        </div>
                       ))}
                     </div>
+                  </div>
+                  
+                  <div 
+                    className="flex flex-wrap justify-center gap-2 font-serif"
+                    style={{
+                      fontSize: `${WORD_LIST_FONT_SIZE * previewScaleFactor}px`,
+                    }}
+                  >
+                    {puzzle?.wordPlacements.map(({ word }, i) => (
+                      <span key={i} className="mx-3 my-1">{word.toLowerCase()}</span>
+                    ))}
                   </div>
                 </div>
               </div>
