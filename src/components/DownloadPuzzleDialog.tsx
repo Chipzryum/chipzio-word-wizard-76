@@ -44,6 +44,7 @@ const DEFAULT_TITLE_MULTIPLIER = 1.0;      // 24-36pt
 const DEFAULT_SUBTITLE_MULTIPLIER = 1.0;    // 16-24pt
 const DEFAULT_INSTRUCTION_MULTIPLIER = 1.0; // 10-14pt
 const DEFAULT_CELL_MULTIPLIER = 1.0;        // Dynamic based on grid size
+const DEFAULT_LETTER_SIZE_MULTIPLIER = 1.0; // For letters within the grid
 const DEFAULT_WORDLIST_MULTIPLIER = 1.0;    // 8-12pt
 
 interface DownloadPuzzleDialogProps {
@@ -70,6 +71,7 @@ export function DownloadPuzzleDialog({
   const [subtitleSizeMultiplier, setSubtitleSizeMultiplier] = useState(DEFAULT_SUBTITLE_MULTIPLIER);
   const [instructionSizeMultiplier, setInstructionSizeMultiplier] = useState(DEFAULT_INSTRUCTION_MULTIPLIER);
   const [cellSizeMultiplier, setCellSizeMultiplier] = useState(DEFAULT_CELL_MULTIPLIER);
+  const [letterSizeMultiplier, setLetterSizeMultiplier] = useState(DEFAULT_LETTER_SIZE_MULTIPLIER);
   const [wordListSizeMultiplier, setWordListSizeMultiplier] = useState(DEFAULT_WORDLIST_MULTIPLIER);
 
   const currentWidth = selectedSize === "Custom" ? customWidth : PAGE_SIZES[selectedSize].width;
@@ -128,6 +130,15 @@ export function DownloadPuzzleDialog({
   };
 
   const cellSize = calculateGridCellSize();
+  
+  // Calculate letter size separately, based on cell size and letter size multiplier
+  const calculateLetterSize = () => {
+    // Base letter size is a percentage of cell size
+    const baseLetterSize = cellSize * 0.6;
+    return baseLetterSize * letterSizeMultiplier;
+  };
+  
+  const letterSize = calculateLetterSize();
 
   // Create styles for PDF dynamically based on page size and multipliers
   const createPDFStyles = () => {
@@ -178,7 +189,7 @@ export function DownloadPuzzleDialog({
         justifyContent: 'center',
         borderWidth: 0.5,
         borderColor: '#000',
-        fontSize: Math.min(cellSize * 0.6, fontSizes.wordListSize * 1.5),
+        fontSize: letterSize, // Now using separate letter size
       },
       wordList: {
         marginTop: 20,
@@ -365,7 +376,7 @@ export function DownloadPuzzleDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cellSize">Letter Size</Label>
+              <Label htmlFor="cellSize">Grid Cell Size</Label>
               <div className="flex items-center justify-between">
                 <span className="text-xs">{formatSliderValue(cellSizeMultiplier)}</span>
                 <Slider 
@@ -375,6 +386,22 @@ export function DownloadPuzzleDialog({
                   step={0.1}
                   value={[cellSizeMultiplier]} 
                   onValueChange={(value) => setCellSizeMultiplier(value[0])}
+                  className="w-full mx-2"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="letterSize">Letter Size (in Grid)</Label>
+              <div className="flex items-center justify-between">
+                <span className="text-xs">{formatSliderValue(letterSizeMultiplier)}</span>
+                <Slider 
+                  id="letterSize"
+                  min={0.5} 
+                  max={1.5} 
+                  step={0.1}
+                  value={[letterSizeMultiplier]} 
+                  onValueChange={(value) => setLetterSizeMultiplier(value[0])}
                   className="w-full mx-2"
                 />
               </div>
@@ -493,7 +520,7 @@ export function DownloadPuzzleDialog({
                               style={{
                                 width: `${cellSize * previewScaleFactor}px`,
                                 height: `${cellSize * previewScaleFactor}px`,
-                                fontSize: `${Math.min(cellSize * 0.6, fontSizes.wordListSize * 1.5) * previewScaleFactor}px`,
+                                fontSize: `${letterSize * previewScaleFactor}px`, // Using the separate letter size
                               }}
                             >
                               {cell}
