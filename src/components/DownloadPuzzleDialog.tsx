@@ -191,7 +191,7 @@ export function DownloadPuzzleDialog({
         marginTop: getVerticalOffset(titleOffset),
         textAlign: 'center',
         fontWeight: 'bold',
-        display: showTitle ? 'block' : 'none',
+        display: showTitle ? 'flex' : 'none',
       },
       subtitle: {
         fontSize: fontSizes.subtitleSize,
@@ -199,14 +199,14 @@ export function DownloadPuzzleDialog({
         marginTop: getVerticalOffset(subtitleOffset),
         textAlign: 'center',
         fontFamily: 'Times-Italic',
-        display: showSubtitle ? 'block' : 'none',
+        display: showSubtitle ? 'flex' : 'none',
       },
       instruction: {
         fontSize: fontSizes.instructionSize,
         marginBottom: 20,
         marginTop: getVerticalOffset(instructionOffset),
         textAlign: 'center',
-        display: showInstruction ? 'block' : 'none',
+        display: showInstruction ? 'flex' : 'none',
       },
       grid: {
         width: '100%',
@@ -232,13 +232,11 @@ export function DownloadPuzzleDialog({
         fontSize: letterSize,
       },
       wordList: {
-        marginTop: 20,
-        display: 'flex',
+        marginTop: getVerticalOffset(wordListOffset),
+        display: showWordList ? 'flex' : 'none',
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'center',
-        marginTop: getVerticalOffset(wordListOffset),
-        display: showWordList ? 'flex' : 'none',
       },
       wordItem: {
         marginHorizontal: 15,
