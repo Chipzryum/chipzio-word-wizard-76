@@ -39,14 +39,15 @@ type Unit = keyof typeof UNITS;
 const PDF_MARGIN = 40;
 const BORDER_WIDTH = 2;
 const BASE_PADDING = 20;
+const MAX_OFFSET = 15; // Maximum offset in units (x10 pts)
 
 // Default font size multipliers
-const DEFAULT_TITLE_MULTIPLIER = 1.0;      // 24-36pt
-const DEFAULT_SUBTITLE_MULTIPLIER = 1.0;    // 16-24pt
-const DEFAULT_INSTRUCTION_MULTIPLIER = 1.0; // 10-14pt
-const DEFAULT_CELL_MULTIPLIER = 1.0;        // Dynamic based on grid size
-const DEFAULT_LETTER_SIZE_MULTIPLIER = 1.0; // For letters within the grid
-const DEFAULT_WORDLIST_MULTIPLIER = 1.0;    // 8-12pt
+const DEFAULT_TITLE_MULTIPLIER = 1.0;
+const DEFAULT_SUBTITLE_MULTIPLIER = 1.0;
+const DEFAULT_INSTRUCTION_MULTIPLIER = 1.0;
+const DEFAULT_CELL_MULTIPLIER = 1.0;
+const DEFAULT_LETTER_SIZE_MULTIPLIER = 1.0;
+const DEFAULT_WORDLIST_MULTIPLIER = 1.0;
 
 interface DownloadPuzzleDialogProps {
   open: boolean;
@@ -167,10 +168,11 @@ export function DownloadPuzzleDialog({
   
   const letterSize = calculateLetterSize();
 
-  // Calculate vertical position offset
+  // Calculate vertical position offset with boundary checking
   const getVerticalOffset = (offset: number) => {
-    // Each unit is 10 points (or equivalent in other units)
-    return offset * 10;
+    // Limit the offset to prevent elements from going off page
+    // Each unit is 10 points
+    return Math.max(-PDF_MARGIN, Math.min(offset * 10, contentHeight / 2));
   };
 
   // Create styles for PDF dynamically based on page size and multipliers
@@ -184,6 +186,7 @@ export function DownloadPuzzleDialog({
         flex: 1,
         border: BORDER_WIDTH,
         padding: BASE_PADDING,
+        position: 'relative',
       },
       title: {
         fontSize: fontSizes.titleSize,
@@ -192,6 +195,7 @@ export function DownloadPuzzleDialog({
         textAlign: 'center',
         fontWeight: 'bold',
         display: showTitle ? 'flex' : 'none',
+        position: 'relative',
       },
       subtitle: {
         fontSize: fontSizes.subtitleSize,
@@ -200,6 +204,7 @@ export function DownloadPuzzleDialog({
         textAlign: 'center',
         fontFamily: 'Times-Italic',
         display: showSubtitle ? 'flex' : 'none',
+        position: 'relative',
       },
       instruction: {
         fontSize: fontSizes.instructionSize,
@@ -207,6 +212,7 @@ export function DownloadPuzzleDialog({
         marginTop: getVerticalOffset(instructionOffset),
         textAlign: 'center',
         display: showInstruction ? 'flex' : 'none',
+        position: 'relative',
       },
       grid: {
         width: '100%',
@@ -215,6 +221,7 @@ export function DownloadPuzzleDialog({
         alignItems: 'center',
         marginBottom: 20,
         marginTop: getVerticalOffset(gridOffset),
+        position: 'relative',
       },
       row: {
         display: 'flex',
@@ -237,6 +244,7 @@ export function DownloadPuzzleDialog({
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'center',
+        position: 'relative',
       },
       wordItem: {
         marginHorizontal: 15,
@@ -324,25 +332,25 @@ export function DownloadPuzzleDialog({
     return `${(value * 100).toFixed(0)}%`;
   };
 
-  // Handle element positioning
+  // Handle element positioning with boundary limits
   const moveElement = (element: string, direction: 'up' | 'down') => {
     const step = direction === 'up' ? -1 : 1;
     
     switch(element) {
       case 'title':
-        setTitleOffset(prev => prev + step);
+        setTitleOffset(prev => Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, prev + step)));
         break;
       case 'subtitle':
-        setSubtitleOffset(prev => prev + step);
+        setSubtitleOffset(prev => Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, prev + step)));
         break;
       case 'instruction':
-        setInstructionOffset(prev => prev + step);
+        setInstructionOffset(prev => Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, prev + step)));
         break;
       case 'grid':
-        setGridOffset(prev => prev + step);
+        setGridOffset(prev => Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, prev + step)));
         break;
       case 'wordList':
-        setWordListOffset(prev => prev + step);
+        setWordListOffset(prev => Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, prev + step)));
         break;
     }
   };
@@ -747,7 +755,7 @@ export function DownloadPuzzleDialog({
             <Label>Preview</Label>
             <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center">
               <div 
-                className="relative border-2 border-black bg-white p-4"
+                className="relative border-2 border-black bg-white p-4 overflow-hidden"
                 style={{
                   width: `${currentWidth * previewScaleFactor}px`,
                   height: `${currentHeight * previewScaleFactor}px`,
@@ -763,6 +771,7 @@ export function DownloadPuzzleDialog({
                         fontSize: `${fontSizes.titleSize * previewScaleFactor}px`,
                         marginBottom: `${10 * previewScaleFactor}px`,
                         marginTop: `${getVerticalOffset(titleOffset) * previewScaleFactor}px`,
+                        position: 'relative',
                       }}
                     >
                       {title.toUpperCase()}
@@ -776,6 +785,7 @@ export function DownloadPuzzleDialog({
                         fontSize: `${fontSizes.subtitleSize * previewScaleFactor}px`,
                         marginBottom: `${10 * previewScaleFactor}px`,
                         marginTop: `${getVerticalOffset(subtitleOffset) * previewScaleFactor}px`,
+                        position: 'relative',
                       }}
                     >
                       {subtitle.toLowerCase()}
@@ -789,6 +799,7 @@ export function DownloadPuzzleDialog({
                         fontSize: `${fontSizes.instructionSize * previewScaleFactor}px`,
                         marginBottom: `${20 * previewScaleFactor}px`,
                         marginTop: `${getVerticalOffset(instructionOffset) * previewScaleFactor}px`,
+                        position: 'relative',
                       }}
                     >
                       {instruction}
@@ -799,6 +810,7 @@ export function DownloadPuzzleDialog({
                     className="flex-1 grid place-items-center mb-4"
                     style={{
                       marginTop: `${getVerticalOffset(gridOffset) * previewScaleFactor}px`,
+                      position: 'relative',
                     }}
                   >
                     <div className="grid grid-cols-1">
@@ -828,6 +840,7 @@ export function DownloadPuzzleDialog({
                       style={{
                         fontSize: `${fontSizes.wordListSize * previewScaleFactor}px`,
                         marginTop: `${getVerticalOffset(wordListOffset) * previewScaleFactor}px`,
+                        position: 'relative',
                       }}
                     >
                       {puzzle?.wordPlacements.map(({ word }, i) => (
