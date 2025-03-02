@@ -1,4 +1,3 @@
-
 // Validation types and interfaces
 export interface ValidationResult {
   isValid: boolean;
@@ -171,4 +170,95 @@ function fillEmptySpaces(grid: string[][]): void {
       }
     }
   }
+}
+
+// Export puzzle as an image
+export function exportPuzzleAsImage(puzzle: PuzzleGrid, filename: string): void {
+  // Create a canvas element
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Could not get canvas context');
+  
+  const cellSize = 32; // Size of each cell in pixels
+  const padding = 40; // Padding around the grid
+  const wordListPadding = 20; // Padding between grid and word list
+  const wordListFontSize = 16;
+  
+  const gridWidth = puzzle.grid[0].length * cellSize;
+  const gridHeight = puzzle.grid.length * cellSize;
+  
+  // Calculate word list dimensions
+  const wordsPerRow = 3;
+  const wordRows = Math.ceil(puzzle.wordPlacements.length / wordsPerRow);
+  const wordListHeight = wordRows * (wordListFontSize + 10);
+  
+  // Set canvas dimensions
+  canvas.width = Math.max(gridWidth, wordsPerRow * 120) + (padding * 2);
+  canvas.height = gridHeight + wordListHeight + padding * 2 + wordListPadding;
+  
+  // Fill background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw title
+  ctx.fillStyle = '#000000';
+  ctx.font = 'bold 24px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('Word Search Puzzle', canvas.width / 2, padding / 2);
+  
+  // Draw grid
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 1;
+  
+  const startX = (canvas.width - gridWidth) / 2;
+  const startY = padding;
+  
+  // Draw cells
+  for (let y = 0; y < puzzle.grid.length; y++) {
+    for (let x = 0; x < puzzle.grid[y].length; x++) {
+      const cellX = startX + (x * cellSize);
+      const cellY = startY + (y * cellSize);
+      
+      // Draw cell border
+      ctx.strokeRect(cellX, cellY, cellSize, cellSize);
+      
+      // Draw letter
+      ctx.font = 'bold 18px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(
+        puzzle.grid[y][x],
+        cellX + cellSize / 2,
+        cellY + cellSize / 2
+      );
+    }
+  }
+  
+  // Draw word list
+  ctx.font = `${wordListFontSize}px Arial`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  
+  const wordListY = startY + gridHeight + wordListPadding;
+  const wordsTitle = "Words to find:";
+  ctx.font = 'bold 18px Arial';
+  ctx.fillText(wordsTitle, startX, wordListY);
+  
+  ctx.font = `${wordListFontSize}px Arial`;
+  for (let i = 0; i < puzzle.wordPlacements.length; i++) {
+    const rowIndex = Math.floor(i / wordsPerRow);
+    const colIndex = i % wordsPerRow;
+    
+    const wordX = startX + (colIndex * (canvas.width - padding * 2) / wordsPerRow);
+    const wordY = wordListY + 30 + (rowIndex * (wordListFontSize + 10));
+    
+    ctx.fillText(puzzle.wordPlacements[i].word, wordX, wordY);
+  }
+  
+  // Export as image
+  const dataUrl = canvas.toDataURL('image/png');
+  const link = document.createElement('a');
+  link.download = `${filename}.png`;
+  link.href = dataUrl;
+  link.click();
 }

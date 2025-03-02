@@ -6,7 +6,8 @@ import {
   validateAndProcessInput,
   generateWordSearch,
   type PuzzleGrid,
-  type WordPlacement
+  type WordPlacement,
+  exportPuzzleAsImage
 } from "@/utils/wordSearchUtils";
 import { DownloadPuzzleDialog } from "@/components/DownloadPuzzleDialog";
 
@@ -92,6 +93,24 @@ const WordSearch = () => {
     return baseStyles;
   };
 
+  const handleDownloadImage = () => {
+    if (!puzzle) return;
+    
+    try {
+      exportPuzzleAsImage(puzzle, "word-search-puzzle");
+      toast({
+        title: "Success",
+        description: "Puzzle image downloaded successfully!",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to download puzzle image",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b">
@@ -173,14 +192,24 @@ PUZZLE"
                   >
                     Generate Puzzle
                   </button>
-                  <button
-                    onClick={() => setShowDownloadDialog(true)}
-                    className="flex items-center justify-center gap-2 bg-secondary text-secondary-foreground hover:opacity-90 transition rounded-lg px-4 py-2"
-                    disabled={!puzzle}
-                  >
-                    <Download className="h-4 w-4" />
-                    Download
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowDownloadDialog(true)}
+                      className="flex items-center justify-center gap-2 bg-secondary text-secondary-foreground hover:opacity-90 transition rounded-lg px-4 py-2"
+                      disabled={!puzzle}
+                    >
+                      <Download className="h-4 w-4" />
+                      PDF
+                    </button>
+                    <button
+                      onClick={handleDownloadImage}
+                      className="flex items-center justify-center gap-2 bg-secondary text-secondary-foreground hover:opacity-90 transition rounded-lg px-4 py-2"
+                      disabled={!puzzle}
+                    >
+                      <Download className="h-4 w-4" />
+                      Image
+                    </button>
+                  </div>
                 </div>
               </div>
             </section>
