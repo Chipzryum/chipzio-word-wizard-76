@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Dialog,
@@ -39,7 +38,7 @@ type Unit = keyof typeof UNITS;
 const PDF_MARGIN = 40;
 const BORDER_WIDTH = 2;
 const BASE_PADDING = 20;
-const MAX_OFFSET = 15; // Maximum offset in units (x10 pts)
+const MAX_OFFSET = 10; // Reduced maximum offset to prevent elements from going outside the page
 
 // Default font size multipliers
 const DEFAULT_TITLE_MULTIPLIER = 1.0;
@@ -168,15 +167,29 @@ export function DownloadPuzzleDialog({
   
   const letterSize = calculateLetterSize();
 
-  // Calculate vertical position offset with boundary checking
+  // Calculate vertical position offset with improved boundary checking
   const getVerticalOffset = (offset: number) => {
-    // Limit the offset to prevent elements from going off page
-    // Each unit is 10 points
-    return Math.max(-PDF_MARGIN, Math.min(offset * 10, contentHeight / 2));
+    // Each unit is 10 points, limit to prevent going off page
+    const maxAllowedOffset = Math.min(MAX_OFFSET, (contentHeight / 4) / 10);
+    return Math.max(-maxAllowedOffset, Math.min(offset * 10, maxAllowedOffset * 10));
   };
 
   // Create styles for PDF dynamically based on page size and multipliers
   const createPDFStyles = () => {
+    // Calculate the maximum content height to ensure one-page printing
+    const totalContentHeight = calculateTotalContentHeight();
+    const adjustmentFactor = totalContentHeight > contentHeight ? contentHeight / totalContentHeight : 1;
+    
+    const adjustedFontSizes = {
+      titleSize: Math.max(12, Math.min(36, Math.floor(fontSizes.titleSize * adjustmentFactor))),
+      subtitleSize: Math.max(8, Math.min(24, Math.floor(fontSizes.subtitleSize * adjustmentFactor))),
+      instructionSize: Math.max(6, Math.min(14, Math.floor(fontSizes.instructionSize * adjustmentFactor))),
+      wordListSize: Math.max(6, Math.min(12, Math.floor(fontSizes.wordListSize * adjustmentFactor))),
+    };
+    
+    // Adjust cell size if needed to fit on one page
+    const adjustedCellSize = cellSize * adjustmentFactor;
+    
     return StyleSheet.create({
       page: {
         padding: PDF_MARGIN,
@@ -189,7 +202,7 @@ export function DownloadPuzzleDialog({
         position: 'relative',
       },
       title: {
-        fontSize: fontSizes.titleSize,
+        fontSize: adjustedFontSizes.titleSize,
         marginBottom: 10,
         marginTop: getVerticalOffset(titleOffset),
         textAlign: 'center',
@@ -198,7 +211,7 @@ export function DownloadPuzzleDialog({
         position: 'relative',
       },
       subtitle: {
-        fontSize: fontSizes.subtitleSize,
+        fontSize: adjustedFontSizes.subtitleSize,
         marginBottom: 10,
         marginTop: getVerticalOffset(subtitleOffset),
         textAlign: 'center',
@@ -207,7 +220,7 @@ export function DownloadPuzzleDialog({
         position: 'relative',
       },
       instruction: {
-        fontSize: fontSizes.instructionSize,
+        fontSize: adjustedFontSizes.instructionSize,
         marginBottom: 20,
         marginTop: getVerticalOffset(instructionOffset),
         textAlign: 'center',
@@ -228,15 +241,15 @@ export function DownloadPuzzleDialog({
         flexDirection: 'row',
       },
       cell: {
-        width: cellSize,
-        height: cellSize,
+        width: adjustedCellSize,
+        height: adjustedCellSize,
         textAlign: 'center',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 0.5,
         borderColor: '#000',
-        fontSize: letterSize,
+        fontSize: adjustedCellSize * 0.6 * letterSizeMultiplier,
       },
       wordList: {
         marginTop: getVerticalOffset(wordListOffset),
@@ -249,9 +262,36 @@ export function DownloadPuzzleDialog({
       wordItem: {
         marginHorizontal: 15,
         marginVertical: 5,
-        fontSize: fontSizes.wordListSize,
+        fontSize: adjustedFontSizes.wordListSize,
       },
     });
+  };
+
+  // Calculate total height of all content to ensure one-page fitting
+  const calculateTotalContentHeight = () => {
+    if (!puzzle) return 0;
+    
+    let totalHeight = 0;
+    
+    // Add height for visible elements
+    if (showTitle) totalHeight += fontSizes.titleSize + 20 + Math.abs(getVerticalOffset(titleOffset));
+    if (showSubtitle) totalHeight += fontSizes.subtitleSize + 20 + Math.abs(getVerticalOffset(subtitleOffset));
+    if (showInstruction) totalHeight += fontSizes.instructionSize + 30 + Math.abs(getVerticalOffset(instructionOffset));
+    
+    // Add grid height
+    const gridHeight = puzzle.grid.length * cellSize + Math.abs(getVerticalOffset(gridOffset));
+    totalHeight += gridHeight + 40;
+    
+    // Add word list height
+    if (showWordList) {
+      const wordRows = Math.ceil(puzzle.wordPlacements.length / 6);
+      totalHeight += wordRows * (fontSizes.wordListSize + 10) + Math.abs(getVerticalOffset(wordListOffset));
+    }
+    
+    // Add margins and padding
+    totalHeight += PDF_MARGIN * 2 + BASE_PADDING * 2 + BORDER_WIDTH * 2;
+    
+    return totalHeight;
   };
 
   const handleSizeChange = (size: PageSize) => {
@@ -332,25 +372,26 @@ export function DownloadPuzzleDialog({
     return `${(value * 100).toFixed(0)}%`;
   };
 
-  // Handle element positioning with boundary limits
+  // Handle element positioning with improved boundary limits
   const moveElement = (element: string, direction: 'up' | 'down') => {
     const step = direction === 'up' ? -1 : 1;
+    const maxAllowedOffset = Math.min(MAX_OFFSET, (contentHeight / 4) / 10);
     
     switch(element) {
       case 'title':
-        setTitleOffset(prev => Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, prev + step)));
+        setTitleOffset(prev => Math.max(-maxAllowedOffset, Math.min(maxAllowedOffset, prev + step)));
         break;
       case 'subtitle':
-        setSubtitleOffset(prev => Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, prev + step)));
+        setSubtitleOffset(prev => Math.max(-maxAllowedOffset, Math.min(maxAllowedOffset, prev + step)));
         break;
       case 'instruction':
-        setInstructionOffset(prev => Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, prev + step)));
+        setInstructionOffset(prev => Math.max(-maxAllowedOffset, Math.min(maxAllowedOffset, prev + step)));
         break;
       case 'grid':
-        setGridOffset(prev => Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, prev + step)));
+        setGridOffset(prev => Math.max(-maxAllowedOffset, Math.min(maxAllowedOffset, prev + step)));
         break;
       case 'wordList':
-        setWordListOffset(prev => Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, prev + step)));
+        setWordListOffset(prev => Math.max(-maxAllowedOffset, Math.min(maxAllowedOffset, prev + step)));
         break;
     }
   };
@@ -684,7 +725,7 @@ export function DownloadPuzzleDialog({
                     <Button
                       type="button"
                       size="icon"
-                      className="h-8 w-8"
+8                      className="h-8 w-8"
                       onClick={() => moveElement('wordList', 'down')}
                     >
                       <ChevronDown className="h-4 w-4" />
