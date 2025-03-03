@@ -14,7 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { pdf, Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
-import { ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronUp, ChevronDown, Save, Download, CheckCircle2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const PAGE_SIZES = {
   'A3': { width: 841.89, height: 1190.55 },
@@ -37,7 +38,7 @@ type Unit = keyof typeof UNITS;
 
 // Constants for PDF layout
 const PDF_MARGIN = 40;
-const BORDER_WIDTH = 2;
+const BORDER_WIDTH = 1; // Changed from 2 to 1 to fix the invalid border style issue
 const BASE_PADDING = 20;
 const MAX_OFFSET = 5; // Reduced maximum offset to prevent elements from going outside the page
 
@@ -91,6 +92,13 @@ export function DownloadPuzzleDialog({
 
   // Track which element is being positioned
   const [positioningElement, setPositioningElement] = useState<string | null>(null);
+  
+  // State for saving layout and loading status
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isPDFReady, setIsPDFReady] = useState(false);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+  
+  const { toast } = useToast();
 
   const currentWidth = selectedSize === "Custom" ? customWidth : PAGE_SIZES[selectedSize].width;
   const currentHeight = selectedSize === "Custom" ? customHeight : PAGE_SIZES[selectedSize].height;
@@ -198,7 +206,8 @@ export function DownloadPuzzleDialog({
       },
       container: {
         flex: 1,
-        border: BORDER_WIDTH,
+        borderWidth: BORDER_WIDTH, // Using correct border style value now
+        borderColor: '#000',
         padding: BASE_PADDING,
         position: 'relative',
       },
@@ -320,11 +329,21 @@ export function DownloadPuzzleDialog({
     return (points / UNITS[selectedUnit]).toFixed(2);
   };
 
-  const handleDownload = async () => {
-    if (!puzzle) return;
-
+  const handleSaveLayout = async () => {
+    if (!puzzle) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No puzzle to save. Please generate a puzzle first.",
+      });
+      return;
+    }
+    
+    setIsGenerating(true);
+    
     try {
       const pdfStyles = createPDFStyles();
+      console.log("Creating PDF with styles:", pdfStyles);
       
       const blob = await pdf(
         <Document>
@@ -355,16 +374,69 @@ export function DownloadPuzzleDialog({
           </Page>
         </Document>
       ).toBlob();
+      
+      console.log("PDF blob generated successfully:", blob);
+      setPdfBlob(blob);
+      setIsPDFReady(true);
+      
+      toast({
+        title: "PDF Ready",
+        description: "Your layout has been saved. Click 'Download PDF' to download.",
+        icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+      });
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to generate PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
-      const url = URL.createObjectURL(blob);
+  const handleDownload = async () => {
+    if (!puzzle) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No puzzle to download. Please generate a puzzle first.",
+      });
+      return;
+    }
+    
+    if (!isPDFReady || !pdfBlob) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please save the layout first by clicking 'Save Layout'.",
+      });
+      return;
+    }
+    
+    try {
+      const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
       link.download = `${title.toLowerCase().replace(/\s+/g, '-')}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Success",
+        description: "PDF downloaded successfully!",
+        icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+      });
+      
       onClose();
     } catch (error) {
-      console.error('Failed to generate PDF:', error);
+      console.error('Failed to download PDF:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to download PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
+      });
     }
   };
 
@@ -911,7 +983,27 @@ export function DownloadPuzzleDialog({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleDownload} disabled={!puzzle}>Download PDF</Button>
+          <Button 
+            onClick={handleSaveLayout} 
+            disabled={!puzzle || isGenerating}
+            className="mr-2"
+            variant="secondary"
+          >
+            {isGenerating ? "Saving..." : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Save Layout
+              </>
+            )}
+          </Button>
+          <Button 
+            onClick={handleDownload} 
+            disabled={!puzzle || !isPDFReady}
+            variant="default"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Download PDF
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
