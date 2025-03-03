@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Dialog,
@@ -423,6 +424,7 @@ export function DownloadPuzzleDialog({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-6">
+            {/* Title Controls */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Button
@@ -488,6 +490,7 @@ export function DownloadPuzzleDialog({
               )}
             </div>
 
+            {/* Subtitle Controls */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Button
@@ -553,6 +556,7 @@ export function DownloadPuzzleDialog({
               )}
             </div>
 
+            {/* Instruction Controls */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Button
@@ -618,6 +622,7 @@ export function DownloadPuzzleDialog({
               )}
             </div>
 
+            {/* Page Size Controls */}
             <div className="space-y-2">
               <Label>Page Size</Label>
               <select
@@ -633,6 +638,7 @@ export function DownloadPuzzleDialog({
               </select>
             </div>
 
+            {/* Word Search Grid Controls */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="cellSize" className="w-24">Word Search</Label>
@@ -692,6 +698,7 @@ export function DownloadPuzzleDialog({
               </div>
             </div>
 
+            {/* Word List Controls */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Button
@@ -725,7 +732,7 @@ export function DownloadPuzzleDialog({
                     <Button
                       type="button"
                       size="icon"
-8                      className="h-8 w-8"
+                      className="h-8 w-8"
                       onClick={() => moveElement('wordList', 'down')}
                     >
                       <ChevronDown className="h-4 w-4" />
@@ -749,6 +756,7 @@ export function DownloadPuzzleDialog({
               )}
             </div>
 
+            {/* Custom Page Size Controls */}
             {selectedSize === "Custom" && (
               <>
                 <div className="space-y-2">
@@ -792,6 +800,7 @@ export function DownloadPuzzleDialog({
             )}
           </div>
 
+          {/* Preview Section */}
           <div className="space-y-4">
             <Label>Preview</Label>
             <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center">
