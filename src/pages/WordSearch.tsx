@@ -175,7 +175,9 @@ PUZZLE"
                   </button>
                   <button
                     onClick={() => setShowDownloadDialog(true)}
-                    className="flex items-center justify-center gap-2 bg-secondary text-secondary-foreground hover:opacity-90 transition rounded-lg px-4 py-2"
+                    className={`flex items-center justify-center gap-2 ${
+                      puzzle ? "bg-secondary text-secondary-foreground hover:opacity-90" : "bg-secondary/50 text-secondary-foreground/50 cursor-not-allowed"
+                    } transition rounded-lg px-4 py-2`}
                     disabled={!puzzle}
                   >
                     <Download className="h-4 w-4" />
