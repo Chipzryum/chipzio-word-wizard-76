@@ -1,4 +1,4 @@
-<lov-code>
+
 import { useState } from "react";
 import {
   Dialog,
@@ -885,4 +885,35 @@ export function DownloadPuzzleDialog({
                   </div>
                   
                   {showWordList && (
-                    
+                    <div 
+                      className="flex flex-wrap justify-center gap-2 font-serif"
+                      style={{
+                        fontSize: `${fontSizes.wordListSize * previewScaleFactor}px`,
+                        marginTop: `${getVerticalOffset(wordListOffset) * previewScaleFactor}px`,
+                        position: 'relative',
+                      }}
+                    >
+                      {puzzle?.wordPlacements.map(({ word }, i) => (
+                        <span key={i} className="mx-3 my-1">{word.toLowerCase()}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="mt-2 text-xs text-center text-muted-foreground">
+                {convertFromPoints(currentWidth)} × {convertFromPoints(currentHeight)} {selectedUnit.toLowerCase()}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter className="mt-6">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleDownload} disabled={!puzzle}>Download PDF</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
