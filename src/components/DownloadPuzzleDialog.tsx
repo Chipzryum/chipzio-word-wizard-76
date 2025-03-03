@@ -39,7 +39,7 @@ type Unit = keyof typeof UNITS;
 const PDF_MARGIN = 40;
 const BORDER_WIDTH = 2;
 const BASE_PADDING = 20;
-const MAX_OFFSET = 10; // Reduced maximum offset to prevent elements from going outside the page
+const MAX_OFFSET = 5; // Reduced maximum offset to prevent elements from going outside the page
 
 // Default font size multipliers
 const DEFAULT_TITLE_MULTIPLIER = 1.0;
@@ -114,11 +114,11 @@ export function DownloadPuzzleDialog({
     const sizeRatio = Math.sqrt((currentWidth * currentHeight) / (a4Width * a4Height));
     
     return {
-      titleSize: Math.max(20, Math.min(42, Math.floor(36 * sizeRatio * titleSizeMultiplier))),
-      subtitleSize: Math.max(14, Math.min(30, Math.floor(24 * sizeRatio * subtitleSizeMultiplier))),
-      instructionSize: Math.max(8, Math.min(18, Math.floor(14 * sizeRatio * instructionSizeMultiplier))),
-      // Make word list size more responsive to multiplier (x2 effect)
-      wordListSize: Math.max(6, Math.min(24, Math.floor(12 * sizeRatio * (wordListSizeMultiplier * 2)))),
+      titleSize: Math.max(20, Math.min(48, Math.floor(36 * sizeRatio * titleSizeMultiplier))),
+      subtitleSize: Math.max(14, Math.min(36, Math.floor(24 * sizeRatio * subtitleSizeMultiplier))),
+      instructionSize: Math.max(8, Math.min(24, Math.floor(14 * sizeRatio * instructionSizeMultiplier))),
+      // Make word list size more responsive to multiplier
+      wordListSize: Math.max(6, Math.min(28, Math.floor(12 * sizeRatio * wordListSizeMultiplier))),
     };
   };
 
@@ -127,10 +127,10 @@ export function DownloadPuzzleDialog({
   // Calculate space needed for elements
   const calculateSpaceNeeded = () => {
     let space = 0;
-    if (showTitle) space += fontSizes.titleSize + 10;
-    if (showSubtitle) space += fontSizes.subtitleSize + 10;
-    if (showInstruction) space += fontSizes.instructionSize + 20;
-    if (showWordList) space += fontSizes.wordListSize * 3;
+    if (showTitle) space += fontSizes.titleSize * titleSizeMultiplier + 10;
+    if (showSubtitle) space += fontSizes.subtitleSize * subtitleSizeMultiplier + 10;
+    if (showInstruction) space += fontSizes.instructionSize * instructionSizeMultiplier + 20;
+    if (showWordList) space += fontSizes.wordListSize * wordListSizeMultiplier * 3;
     return space;
   };
 
@@ -171,7 +171,7 @@ export function DownloadPuzzleDialog({
   // Calculate vertical position offset with improved boundary checking
   const getVerticalOffset = (offset: number) => {
     // Each unit is 10 points, limit to prevent going off page
-    const maxAllowedOffset = Math.min(MAX_OFFSET, (contentHeight / 4) / 10);
+    const maxAllowedOffset = Math.min(MAX_OFFSET, (contentHeight / 6) / 10);
     return Math.max(-maxAllowedOffset, Math.min(offset * 10, maxAllowedOffset * 10));
   };
 
@@ -274,19 +274,19 @@ export function DownloadPuzzleDialog({
     
     let totalHeight = 0;
     
-    // Add height for visible elements
-    if (showTitle) totalHeight += fontSizes.titleSize + 20 + Math.abs(getVerticalOffset(titleOffset));
-    if (showSubtitle) totalHeight += fontSizes.subtitleSize + 20 + Math.abs(getVerticalOffset(subtitleOffset));
-    if (showInstruction) totalHeight += fontSizes.instructionSize + 30 + Math.abs(getVerticalOffset(instructionOffset));
+    // Add height for visible elements with their actual multipliers
+    if (showTitle) totalHeight += fontSizes.titleSize * titleSizeMultiplier + 20 + Math.abs(getVerticalOffset(titleOffset));
+    if (showSubtitle) totalHeight += fontSizes.subtitleSize * subtitleSizeMultiplier + 20 + Math.abs(getVerticalOffset(subtitleOffset));
+    if (showInstruction) totalHeight += fontSizes.instructionSize * instructionSizeMultiplier + 30 + Math.abs(getVerticalOffset(instructionOffset));
     
-    // Add grid height
+    // Add grid height with cell size multiplier
     const gridHeight = puzzle.grid.length * cellSize + Math.abs(getVerticalOffset(gridOffset));
     totalHeight += gridHeight + 40;
     
-    // Add word list height
+    // Add word list height with word list multiplier
     if (showWordList) {
       const wordRows = Math.ceil(puzzle.wordPlacements.length / 6);
-      totalHeight += wordRows * (fontSizes.wordListSize + 10) + Math.abs(getVerticalOffset(wordListOffset));
+      totalHeight += wordRows * (fontSizes.wordListSize * wordListSizeMultiplier + 10) + Math.abs(getVerticalOffset(wordListOffset));
     }
     
     // Add margins and padding
@@ -376,7 +376,7 @@ export function DownloadPuzzleDialog({
   // Handle element positioning with improved boundary limits
   const moveElement = (element: string, direction: 'up' | 'down') => {
     const step = direction === 'up' ? -1 : 1;
-    const maxAllowedOffset = Math.min(MAX_OFFSET, (contentHeight / 4) / 10);
+    const maxAllowedOffset = Math.min(MAX_OFFSET, (contentHeight / 6) / 10);
     
     switch(element) {
       case 'title':
@@ -479,7 +479,7 @@ export function DownloadPuzzleDialog({
                     <Slider 
                       id="titleSize"
                       min={0.5} 
-                      max={1.5} 
+                      max={2.0} 
                       step={0.1}
                       value={[titleSizeMultiplier]} 
                       onValueChange={(value) => setTitleSizeMultiplier(value[0])}
@@ -545,7 +545,7 @@ export function DownloadPuzzleDialog({
                     <Slider 
                       id="subtitleSize"
                       min={0.5} 
-                      max={1.5} 
+                      max={2.0} 
                       step={0.1}
                       value={[subtitleSizeMultiplier]} 
                       onValueChange={(value) => setSubtitleSizeMultiplier(value[0])}
@@ -611,7 +611,7 @@ export function DownloadPuzzleDialog({
                     <Slider 
                       id="instructionSize"
                       min={0.5} 
-                      max={1.5} 
+                      max={2.0} 
                       step={0.1}
                       value={[instructionSizeMultiplier]} 
                       onValueChange={(value) => setInstructionSizeMultiplier(value[0])}
@@ -746,7 +746,7 @@ export function DownloadPuzzleDialog({
                   <Slider 
                     id="wordListSize"
                     min={0.5} 
-                    max={2.0} 
+                    max={3.0} 
                     step={0.1}
                     value={[wordListSizeMultiplier]} 
                     onValueChange={(value) => setWordListSizeMultiplier(value[0])}

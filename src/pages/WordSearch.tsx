@@ -92,24 +92,6 @@ const WordSearch = () => {
     return baseStyles;
   };
 
-  const handleDownloadImage = () => {
-    if (!puzzle) return;
-    
-    try {
-      // exportPuzzleAsImage(puzzle, "word-search-puzzle");
-      toast({
-        title: "Success",
-        description: "Puzzle image downloaded successfully!",
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to download puzzle image",
-      });
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b">
