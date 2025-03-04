@@ -38,9 +38,9 @@ type Unit = keyof typeof UNITS;
 
 // Constants for PDF layout
 const PDF_MARGIN = 40;
-const BORDER_WIDTH = 1; // Changed from 2 to 1 to fix the invalid border style issue
+const BORDER_WIDTH = 1; // Using 1 to fix the invalid border style issue
 const BASE_PADDING = 20;
-const MAX_OFFSET = 5; // Reduced maximum offset to prevent elements from going outside the page
+const MAX_OFFSET = 5; // Reduced maximum offset to prevent elements going outside the page
 
 // Default font size multipliers
 const DEFAULT_TITLE_MULTIPLIER = 1.0;
@@ -206,7 +206,7 @@ export function DownloadPuzzleDialog({
       },
       container: {
         flex: 1,
-        borderWidth: BORDER_WIDTH, // Using correct border style value now
+        borderWidth: BORDER_WIDTH,
         borderColor: '#000',
         padding: BASE_PADDING,
         position: 'relative',
@@ -382,7 +382,6 @@ export function DownloadPuzzleDialog({
       toast({
         title: "PDF Ready",
         description: "Your layout has been saved. Click 'Download PDF' to download.",
-        icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
       });
     } catch (error) {
       console.error('Failed to generate PDF:', error);
@@ -426,7 +425,6 @@ export function DownloadPuzzleDialog({
       toast({
         title: "Success",
         description: "PDF downloaded successfully!",
-        icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
       });
       
       onClose();
@@ -1009,3 +1007,4 @@ export function DownloadPuzzleDialog({
     </Dialog>
   );
 }
+
