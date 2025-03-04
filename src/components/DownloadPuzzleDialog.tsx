@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Dialog,
@@ -61,6 +60,7 @@ export function DownloadPuzzleDialog({
   onClose,
   puzzle,
 }: DownloadPuzzleDialogProps) {
+  
   const [title, setTitle] = useState("Word Search Puzzle");
   const [subtitle, setSubtitle] = useState("word search");
   const [instruction, setInstruction] = useState("Can you find all the words?");
@@ -438,12 +438,10 @@ export function DownloadPuzzleDialog({
     }
   };
 
-  // Format slider value for display
   const formatSliderValue = (value: number) => {
     return `${(value * 100).toFixed(0)}%`;
   };
 
-  // Handle element positioning with improved boundary limits
   const moveElement = (element: string, direction: 'up' | 'down') => {
     const step = direction === 'up' ? -1 : 1;
     const maxAllowedOffset = Math.min(MAX_OFFSET, (contentHeight / 6) / 10);
@@ -467,13 +465,11 @@ export function DownloadPuzzleDialog({
     }
   };
 
-  // Helper for position display
   const getPositionValue = (offset: number) => {
     if (offset === 0) return '0';
     return offset > 0 ? `+${offset}` : `${offset}`;
   };
 
-  // Toggle positioning controls
   const togglePositioning = (element: string) => {
     if (positioningElement === element) {
       setPositioningElement(null);
@@ -493,6 +489,7 @@ export function DownloadPuzzleDialog({
         </DialogHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
           <div className="space-y-6">
             {/* Title Controls */}
             <div className="space-y-2">
@@ -888,123 +885,4 @@ export function DownloadPuzzleDialog({
                     <div 
                       className="text-center font-bold font-serif"
                       style={{
-                        fontSize: `${fontSizes.titleSize * previewScaleFactor}px`,
-                        marginBottom: `${10 * previewScaleFactor}px`,
-                        marginTop: `${getVerticalOffset(titleOffset) * previewScaleFactor}px`,
-                        position: 'relative',
-                      }}
-                    >
-                      {title.toUpperCase()}
-                    </div>
-                  )}
-                  
-                  {showSubtitle && (
-                    <div 
-                      className="text-center font-serif italic"
-                      style={{
-                        fontSize: `${fontSizes.subtitleSize * previewScaleFactor}px`,
-                        marginBottom: `${10 * previewScaleFactor}px`,
-                        marginTop: `${getVerticalOffset(subtitleOffset) * previewScaleFactor}px`,
-                        position: 'relative',
-                      }}
-                    >
-                      {subtitle.toLowerCase()}
-                    </div>
-                  )}
-                  
-                  {showInstruction && (
-                    <div 
-                      className="text-center font-serif"
-                      style={{
-                        fontSize: `${fontSizes.instructionSize * previewScaleFactor}px`,
-                        marginBottom: `${20 * previewScaleFactor}px`,
-                        marginTop: `${getVerticalOffset(instructionOffset) * previewScaleFactor}px`,
-                        position: 'relative',
-                      }}
-                    >
-                      {instruction}
-                    </div>
-                  )}
-                  
-                  <div 
-                    className="flex-1 grid place-items-center mb-4"
-                    style={{
-                      marginTop: `${getVerticalOffset(gridOffset) * previewScaleFactor}px`,
-                      position: 'relative',
-                    }}
-                  >
-                    <div className="grid grid-cols-1">
-                      {puzzle?.grid.map((row, i) => (
-                        <div key={i} className="flex">
-                          {row.map((cell, j) => (
-                            <div
-                              key={`${i}-${j}`}
-                              className="flex items-center justify-center font-serif border border-black"
-                              style={{
-                                width: `${cellSize * previewScaleFactor}px`,
-                                height: `${cellSize * previewScaleFactor}px`,
-                                fontSize: `${letterSize * previewScaleFactor}px`,
-                              }}
-                            >
-                              {cell}
-                            </div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {showWordList && (
-                    <div 
-                      className="flex flex-wrap justify-center gap-2 font-serif"
-                      style={{
-                        fontSize: `${fontSizes.wordListSize * previewScaleFactor}px`,
-                        marginTop: `${getVerticalOffset(wordListOffset) * previewScaleFactor}px`,
-                        position: 'relative',
-                      }}
-                    >
-                      {puzzle?.wordPlacements.map(({ word }, i) => (
-                        <span key={i} className="mx-3 my-1">{word.toLowerCase()}</span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="mt-2 text-xs text-center text-muted-foreground">
-                {convertFromPoints(currentWidth)} × {convertFromPoints(currentHeight)} {selectedUnit.toLowerCase()}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter className="mt-6">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSaveLayout} 
-            disabled={!puzzle || isGenerating}
-            className="mr-2"
-            variant="secondary"
-          >
-            {isGenerating ? "Saving..." : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Save Layout
-              </>
-            )}
-          </Button>
-          <Button 
-            onClick={handleDownload} 
-            disabled={!puzzle || !isPDFReady}
-            variant="default"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Download PDF
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
+                        fontSize: `${font
