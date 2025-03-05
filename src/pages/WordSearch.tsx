@@ -8,7 +8,7 @@ import {
   type PuzzleGrid,
   type WordPlacement
 } from "@/utils/wordSearchUtils";
-import { DownloadPuzzleDialog } from "@/components/DownloadPuzzleDialog";
+import { DownloadPuzzleDialog } from "@/components/download-puzzle";
 
 const WordSearch = () => {
   const [words, setWords] = useState<string[]>([]);

@@ -57,6 +57,22 @@ export const PuzzlePDFPreview = ({
 }: PuzzlePDFPreviewProps) => {
   if (!puzzle) return null;
   
+  // Calculate font sizes based on page dimensions and multipliers
+  const calculateFontSizes = () => {
+    // Base sizes for A4
+    const a4Width = 595.28;
+    const a4Height = 841.89;
+    const sizeRatio = Math.sqrt((currentWidth * currentHeight) / (a4Width * a4Height));
+    
+    return {
+      titleSize: Math.max(20, Math.min(48, Math.floor(36 * sizeRatio * titleSizeMultiplier))),
+      subtitleSize: Math.max(14, Math.min(36, Math.floor(24 * sizeRatio * subtitleSizeMultiplier))),
+      instructionSize: Math.max(8, Math.min(24, Math.floor(14 * sizeRatio * instructionSizeMultiplier))),
+      wordListSize: Math.max(6, Math.min(28, Math.floor(12 * sizeRatio * wordListSizeMultiplier))),
+    };
+  };
+
+  const fontSizes = calculateFontSizes();
   const pdfStyles = createPDFStyles();
   
   return (
@@ -97,8 +113,6 @@ export const PuzzlePDFPreview = ({
     const totalContentHeight = calculateTotalContentHeight();
     const adjustmentFactor = totalContentHeight > contentHeight ? contentHeight / totalContentHeight : 1;
 
-    const fontSizes = calculateFontSizes();
-    
     const adjustedFontSizes = {
       titleSize: Math.max(12, Math.min(36, Math.floor(fontSizes.titleSize * adjustmentFactor))),
       subtitleSize: Math.max(8, Math.min(24, Math.floor(fontSizes.subtitleSize * adjustmentFactor))),
@@ -111,6 +125,9 @@ export const PuzzlePDFPreview = ({
     
     // Cap the letter size multiplier to prevent disappearing text
     const cappedLetterSizeMultiplier = Math.min(letterSizeMultiplier, 1.3);
+    console.log("Creating PDF with letterSizeMultiplier:", letterSizeMultiplier);
+    console.log("Creating PDF with cellSize:", adjustedCellSize);
+    console.log("Creating PDF with cappedLetterSizeMultiplier:", cappedLetterSizeMultiplier);
     
     return StyleSheet.create({
       page: {
@@ -219,25 +236,10 @@ export const PuzzlePDFPreview = ({
     return totalHeight;
   }
 
-  // Calculate font sizes based on page dimensions and multipliers
-  function calculateFontSizes() {
-    // Base sizes for A4
-    const a4Width = 595.28;
-    const a4Height = 841.89;
-    const sizeRatio = Math.sqrt((currentWidth * currentHeight) / (a4Width * a4Height));
-    
-    return {
-      titleSize: Math.max(20, Math.min(48, Math.floor(36 * sizeRatio * titleSizeMultiplier))),
-      subtitleSize: Math.max(14, Math.min(36, Math.floor(24 * sizeRatio * subtitleSizeMultiplier))),
-      instructionSize: Math.max(8, Math.min(24, Math.floor(14 * sizeRatio * instructionSizeMultiplier))),
-      wordListSize: Math.max(6, Math.min(28, Math.floor(12 * sizeRatio * wordListSizeMultiplier))),
-    };
-  }
-
   // Calculate vertical position offset with improved boundary checking
   function getVerticalOffset(offset: number) {
     // Each unit is 10 points, limit to prevent going off page
     const maxAllowedOffset = Math.min(5, (contentHeight / 6) / 10);
     return Math.max(-maxAllowedOffset, Math.min(offset * 10, maxAllowedOffset * 10));
   }
-}
+};
