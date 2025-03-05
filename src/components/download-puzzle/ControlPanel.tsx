@@ -17,50 +17,78 @@ import { PAGE_SIZES, PAGE_SIZE_OPTIONS, DEFAULT_VALUES, MAX_MULTIPLIERS } from "
 
 interface ControlPanelProps {
   title: string;
+  setTitle: (value: string) => void;
+  
   subtitle: string;
+  setSubtitle: (value: string) => void;
+  
   instruction: string;
-  pageSizeOption: string;
+  setInstruction: (value: string) => void;
+  
   showTitle: boolean;
+  setShowTitle: (value: boolean) => void;
+  
   showSubtitle: boolean;
+  setShowSubtitle: (value: boolean) => void;
+  
   showInstruction: boolean;
+  setShowInstruction: (value: boolean) => void;
+  
   showGrid: boolean;
+  setShowGrid: (value: boolean) => void;
+  
   showWordList: boolean;
+  setShowWordList: (value: boolean) => void;
+  
+  selectedSize: string;
+  handleSizeChange: (size: string) => void;
+  
+  selectedUnit: string;
+  setSelectedUnit: (unit: string) => void;
+  
+  currentWidth: number;
+  currentHeight: number;
+  
+  handleDimensionChange: (dimension: "width" | "height", value: string) => void;
+  convertFromPoints: (points: number) => string;
+  
   letterSizeMultiplier: number;
+  setLetterSizeMultiplier: (value: number) => void;
+  
   titleSizeMultiplier: number;
+  setTitleSizeMultiplier: (value: number) => void;
+  
   subtitleSizeMultiplier: number;
+  setSubtitleSizeMultiplier: (value: number) => void;
+  
   instructionSizeMultiplier: number;
+  setInstructionSizeMultiplier: (value: number) => void;
+  
   wordListSizeMultiplier: number;
+  setWordListSizeMultiplier: (value: number) => void;
+  
+  cellSizeMultiplier: number;
+  setCellSizeMultiplier: (value: number) => void;
+  
   titleOffset: number;
   subtitleOffset: number;
   instructionOffset: number;
   gridOffset: number;
   wordListOffset: number;
-  setTitle: (value: string) => void;
-  setSubtitle: (value: string) => void;
-  setInstruction: (value: string) => void;
-  setPageSizeOption: (value: string) => void;
-  setShowTitle: (value: boolean) => void;
-  setShowSubtitle: (value: boolean) => void;
-  setShowInstruction: (value: boolean) => void;
-  setShowGrid: (value: boolean) => void;
-  setShowWordList: (value: boolean) => void;
-  setLetterSizeMultiplier: (value: number) => void;
-  setTitleSizeMultiplier: (value: number) => void;
-  setSubtitleSizeMultiplier: (value: number) => void;
-  setInstructionSizeMultiplier: (value: number) => void;
-  setWordListSizeMultiplier: (value: number) => void;
-  setTitleOffset: (value: number) => void;
-  setSubtitleOffset: (value: number) => void;
-  setInstructionOffset: (value: number) => void;
-  setGridOffset: (value: number) => void;
-  setWordListOffset: (value: number) => void;
+  
+  positioningElement: string | null;
+  togglePositioning: (element: string) => void;
+  moveElement: (element: string, direction: 'up' | 'down') => void;
+  
+  formatSliderValue: (value: number) => string;
+  getPositionValue: (offset: number) => string;
 }
 
 export const ControlPanel = ({
   title,
   subtitle,
   instruction,
-  pageSizeOption,
+  selectedSize,
   showTitle,
   showSubtitle,
   showInstruction,
@@ -71,6 +99,7 @@ export const ControlPanel = ({
   subtitleSizeMultiplier,
   instructionSizeMultiplier,
   wordListSizeMultiplier,
+  cellSizeMultiplier,
   titleOffset,
   subtitleOffset,
   instructionOffset,
@@ -79,7 +108,7 @@ export const ControlPanel = ({
   setTitle,
   setSubtitle,
   setInstruction,
-  setPageSizeOption,
+  handleSizeChange,
   setShowTitle,
   setShowSubtitle,
   setShowInstruction,
@@ -90,11 +119,18 @@ export const ControlPanel = ({
   setSubtitleSizeMultiplier,
   setInstructionSizeMultiplier,
   setWordListSizeMultiplier,
-  setTitleOffset,
-  setSubtitleOffset,
-  setInstructionOffset,
-  setGridOffset,
-  setWordListOffset,
+  setCellSizeMultiplier,
+  selectedUnit,
+  setSelectedUnit,
+  currentWidth,
+  currentHeight,
+  handleDimensionChange,
+  convertFromPoints,
+  formatSliderValue,
+  getPositionValue,
+  positioningElement,
+  togglePositioning,
+  moveElement
 }: ControlPanelProps) => {
   return (
     <div className="p-4 overflow-y-auto max-h-[60vh]">
@@ -195,8 +231,8 @@ export const ControlPanel = ({
             <div className="grid gap-2">
               <Label>Page Size</Label>
               <Select
-                value={pageSizeOption}
-                onValueChange={(value) => setPageSizeOption(value)}
+                value={selectedSize}
+                onValueChange={(value) => handleSizeChange(value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select size" />
@@ -221,7 +257,7 @@ export const ControlPanel = ({
                   min={-5}
                   max={5}
                   step={1}
-                  onValueChange={(value) => setTitleOffset(value[0])}
+                  onValueChange={(value) => moveElement('title', value[0] > titleOffset ? 'down' : 'up')}
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Up</span>
@@ -238,7 +274,7 @@ export const ControlPanel = ({
                   min={-5}
                   max={5}
                   step={1}
-                  onValueChange={(value) => setSubtitleOffset(value[0])}
+                  onValueChange={(value) => moveElement('subtitle', value[0] > subtitleOffset ? 'down' : 'up')}
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Up</span>
@@ -255,7 +291,7 @@ export const ControlPanel = ({
                   min={-5}
                   max={5}
                   step={1}
-                  onValueChange={(value) => setInstructionOffset(value[0])}
+                  onValueChange={(value) => moveElement('instruction', value[0] > instructionOffset ? 'down' : 'up')}
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Up</span>
@@ -272,7 +308,7 @@ export const ControlPanel = ({
                   min={-5}
                   max={5}
                   step={1}
-                  onValueChange={(value) => setGridOffset(value[0])}
+                  onValueChange={(value) => moveElement('grid', value[0] > gridOffset ? 'down' : 'up')}
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Up</span>
@@ -289,7 +325,7 @@ export const ControlPanel = ({
                   min={-5}
                   max={5}
                   step={1}
-                  onValueChange={(value) => setWordListOffset(value[0])}
+                  onValueChange={(value) => moveElement('wordList', value[0] > wordListOffset ? 'down' : 'up')}
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Up</span>
@@ -313,7 +349,7 @@ export const ControlPanel = ({
               />
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>50%</span>
-                <span>{letterSizeMultiplier * 100}%</span>
+                <span>{(letterSizeMultiplier * 100).toFixed(0)}%</span>
                 <span>150%</span>
               </div>
             </div>
@@ -330,7 +366,7 @@ export const ControlPanel = ({
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>50%</span>
-                  <span>{titleSizeMultiplier * 100}%</span>
+                  <span>{(titleSizeMultiplier * 100).toFixed(0)}%</span>
                   <span>150%</span>
                 </div>
               </div>
@@ -348,7 +384,7 @@ export const ControlPanel = ({
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>50%</span>
-                  <span>{subtitleSizeMultiplier * 100}%</span>
+                  <span>{(subtitleSizeMultiplier * 100).toFixed(0)}%</span>
                   <span>150%</span>
                 </div>
               </div>
@@ -368,7 +404,7 @@ export const ControlPanel = ({
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>50%</span>
-                  <span>{instructionSizeMultiplier * 100}%</span>
+                  <span>{(instructionSizeMultiplier * 100).toFixed(0)}%</span>
                   <span>150%</span>
                 </div>
               </div>
@@ -388,7 +424,25 @@ export const ControlPanel = ({
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>50%</span>
-                  <span>{wordListSizeMultiplier * 100}%</span>
+                  <span>{(wordListSizeMultiplier * 100).toFixed(0)}%</span>
+                  <span>150%</span>
+                </div>
+              </div>
+            )}
+            
+            {showGrid && (
+              <div className="grid gap-2">
+                <Label>Cell Size</Label>
+                <Slider
+                  value={[cellSizeMultiplier * 100]}
+                  min={50}
+                  max={150}
+                  step={10}
+                  onValueChange={(value) => setCellSizeMultiplier(value[0] / 100)}
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>50%</span>
+                  <span>{(cellSizeMultiplier * 100).toFixed(0)}%</span>
                   <span>150%</span>
                 </div>
               </div>

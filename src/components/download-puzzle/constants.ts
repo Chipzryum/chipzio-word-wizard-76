@@ -7,6 +7,20 @@ export const PAGE_SIZES = {
   TABLOID: { width: 792, height: 1224 },
 };
 
+// Unit conversion factors
+export const UNITS = {
+  Points: 1,
+  Inches: 72,
+  Millimeters: 2.83465,
+  Centimeters: 28.3465,
+};
+
+// PDF document constants
+export const PDF_MARGIN = 40;
+export const BORDER_WIDTH = 1;
+export const BASE_PADDING = 20;
+export const MAX_OFFSET = 5;
+
 // Default values for controlling the PDF layout
 export const DEFAULT_VALUES = {
   title: "WORD SEARCH",
@@ -24,6 +38,15 @@ export const DEFAULT_VALUES = {
   wordListOffset: 0,
 };
 
+// Default multiplier values
+export const DEFAULT_TITLE_MULTIPLIER = 1;
+export const DEFAULT_SUBTITLE_MULTIPLIER = 1;
+export const DEFAULT_INSTRUCTION_MULTIPLIER = 1;
+export const DEFAULT_CELL_MULTIPLIER = 1;
+export const DEFAULT_LETTER_SIZE_MULTIPLIER = 1;
+export const DEFAULT_WORDLIST_MULTIPLIER = 1;
+export const MAX_LETTER_SIZE = 1.3;
+
 // Standard page size options for UI dropdowns
 export const PAGE_SIZE_OPTIONS = [
   { label: "A4", value: "A4" },
@@ -40,3 +63,7 @@ export const MAX_MULTIPLIERS = {
   instruction: 1.5,
   wordList: 1.5,
 };
+
+// TypeScript types
+export type PageSize = keyof typeof PAGE_SIZES | "Custom";
+export type Unit = keyof typeof UNITS;
