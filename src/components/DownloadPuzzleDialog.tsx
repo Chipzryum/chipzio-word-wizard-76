@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
-import { pdf, Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { pdf, Document, Page, Text, View, StyleSheet, PDFViewer } from "@react-pdf/renderer";
 import { ChevronUp, ChevronDown, Save, Download, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -37,7 +38,7 @@ type Unit = keyof typeof UNITS;
 
 // Constants for PDF layout
 const PDF_MARGIN = 40;
-const BORDER_WIDTH = 1; // Using 1 to fix the invalid border style issue
+const BORDER_WIDTH = 1; // Fixed border width to prevent style issues
 const BASE_PADDING = 20;
 const MAX_OFFSET = 5; // Reduced maximum offset to prevent elements going outside the page
 
@@ -48,6 +49,9 @@ const DEFAULT_INSTRUCTION_MULTIPLIER = 1.0;
 const DEFAULT_CELL_MULTIPLIER = 1.0;
 const DEFAULT_LETTER_SIZE_MULTIPLIER = 1.0;
 const DEFAULT_WORDLIST_MULTIPLIER = 1.0;
+
+// Maximum letter size to prevent disappearing text
+const MAX_LETTER_SIZE = 1.3;
 
 interface DownloadPuzzleDialogProps {
   open: boolean;
@@ -82,6 +86,7 @@ export function DownloadPuzzleDialog({
   const [showSubtitle, setShowSubtitle] = useState(true);
   const [showInstruction, setShowInstruction] = useState(true);
   const [showWordList, setShowWordList] = useState(true);
+  const [showGrid, setShowGrid] = useState(true);
 
   // Position offsets for elements
   const [titleOffset, setTitleOffset] = useState(0);
@@ -97,6 +102,9 @@ export function DownloadPuzzleDialog({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPDFReady, setIsPDFReady] = useState(false);
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+  
+  // State for live preview
+  const [showLivePreview, setShowLivePreview] = useState(false);
   
   const { toast } = useToast();
 
@@ -171,7 +179,11 @@ export function DownloadPuzzleDialog({
   const calculateLetterSize = () => {
     // Base letter size is a percentage of cell size
     const baseLetterSize = cellSize * 0.6;
-    return baseLetterSize * letterSizeMultiplier;
+    
+    // Cap the letter size multiplier to prevent disappearing text
+    const cappedMultiplier = Math.min(letterSizeMultiplier, MAX_LETTER_SIZE);
+    
+    return baseLetterSize * cappedMultiplier;
   };
   
   const letterSize = calculateLetterSize();
@@ -198,6 +210,9 @@ export function DownloadPuzzleDialog({
     
     // Adjust cell size if needed to fit on one page
     const adjustedCellSize = cellSize * adjustmentFactor;
+    
+    // Cap the letter size multiplier to prevent disappearing text
+    const cappedLetterSizeMultiplier = Math.min(letterSizeMultiplier, MAX_LETTER_SIZE);
     
     return StyleSheet.create({
       page: {
@@ -239,7 +254,7 @@ export function DownloadPuzzleDialog({
       },
       grid: {
         width: '100%',
-        display: 'flex',
+        display: showGrid ? 'flex' : 'none',
         flexDirection: 'column',
         alignItems: 'center',
         marginBottom: 20,
@@ -253,13 +268,15 @@ export function DownloadPuzzleDialog({
       cell: {
         width: adjustedCellSize,
         height: adjustedCellSize,
-        textAlign: 'center',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderWidth: 0.5,
-        borderColor: '#000',
-        fontSize: adjustedCellSize * 0.6 * letterSizeMultiplier,
+        fontSize: adjustedCellSize * 0.6 * cappedLetterSizeMultiplier,
+        textAlign: 'center',
+      },
+      letter: {
+        textAlign: 'center',
+        alignSelf: 'center',
       },
       wordList: {
         marginTop: getVerticalOffset(wordListOffset),
@@ -288,9 +305,11 @@ export function DownloadPuzzleDialog({
     if (showSubtitle) totalHeight += fontSizes.subtitleSize * subtitleSizeMultiplier + 20 + Math.abs(getVerticalOffset(subtitleOffset));
     if (showInstruction) totalHeight += fontSizes.instructionSize * instructionSizeMultiplier + 30 + Math.abs(getVerticalOffset(instructionOffset));
     
-    // Add grid height with cell size multiplier
-    const gridHeight = puzzle.grid.length * cellSize + Math.abs(getVerticalOffset(gridOffset));
-    totalHeight += gridHeight + 40;
+    // Add grid height with cell size multiplier if grid is shown
+    if (showGrid) {
+      const gridHeight = puzzle.grid.length * cellSize + Math.abs(getVerticalOffset(gridOffset));
+      totalHeight += gridHeight + 40;
+    }
     
     // Add word list height with word list multiplier
     if (showWordList) {
@@ -304,12 +323,52 @@ export function DownloadPuzzleDialog({
     return totalHeight;
   };
 
+  // Create a PDF Document component
+  const PuzzlePDF = () => {
+    if (!puzzle) return null;
+    
+    const pdfStyles = createPDFStyles();
+    
+    return (
+      <Document>
+        <Page size={[currentWidth, currentHeight]} style={pdfStyles.page}>
+          <View style={pdfStyles.container}>
+            {showTitle && <Text style={pdfStyles.title}>{title.toUpperCase()}</Text>}
+            {showSubtitle && <Text style={pdfStyles.subtitle}>{subtitle.toLowerCase()}</Text>}
+            {showInstruction && <Text style={pdfStyles.instruction}>{instruction}</Text>}
+            {showGrid && (
+              <View style={pdfStyles.grid}>
+                {puzzle.grid.map((row, i) => (
+                  <View key={i} style={pdfStyles.row}>
+                    {row.map((cell, j) => (
+                      <View key={`${i}-${j}`} style={pdfStyles.cell}>
+                        <Text style={pdfStyles.letter}>{cell}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ))}
+              </View>
+            )}
+            {showWordList && (
+              <View style={pdfStyles.wordList}>
+                {puzzle.wordPlacements.map(({ word }, index) => (
+                  <Text key={index} style={pdfStyles.wordItem}>{word.toLowerCase()}</Text>
+                ))}
+              </View>
+            )}
+          </View>
+        </Page>
+      </Document>
+    );
+  };
+
   const handleSizeChange = (size: PageSize) => {
     setSelectedSize(size);
     if (size !== "Custom") {
       setCustomWidth(PAGE_SIZES[size].width);
       setCustomHeight(PAGE_SIZES[size].height);
     }
+    setIsPDFReady(false);
   };
 
   const handleDimensionChange = (dimension: "width" | "height", value: string) => {
@@ -323,6 +382,7 @@ export function DownloadPuzzleDialog({
       setCustomHeight(pointValue);
     }
     setSelectedSize("Custom");
+    setIsPDFReady(false);
   };
 
   const convertFromPoints = (points: number) => {
@@ -342,42 +402,19 @@ export function DownloadPuzzleDialog({
     setIsGenerating(true);
     
     try {
-      const pdfStyles = createPDFStyles();
-      console.log("Creating PDF with styles:", pdfStyles);
+      console.log("Creating PDF with letterSizeMultiplier:", letterSizeMultiplier);
+      console.log("Creating PDF with cellSize:", cellSize);
       
-      const blob = await pdf(
-        <Document>
-          <Page size={[currentWidth, currentHeight]} style={pdfStyles.page}>
-            <View style={pdfStyles.container}>
-              {showTitle && <Text style={pdfStyles.title}>{title.toUpperCase()}</Text>}
-              {showSubtitle && <Text style={pdfStyles.subtitle}>{subtitle.toLowerCase()}</Text>}
-              {showInstruction && <Text style={pdfStyles.instruction}>{instruction}</Text>}
-              <View style={pdfStyles.grid}>
-                {puzzle.grid.map((row, i) => (
-                  <View key={i} style={pdfStyles.row}>
-                    {row.map((cell, j) => (
-                      <Text key={`${i}-${j}`} style={pdfStyles.cell}>
-                        {cell}
-                      </Text>
-                    ))}
-                  </View>
-                ))}
-              </View>
-              {showWordList && (
-                <View style={pdfStyles.wordList}>
-                  {puzzle.wordPlacements.map(({ word }, index) => (
-                    <Text key={index} style={pdfStyles.wordItem}>{word.toLowerCase()}</Text>
-                  ))}
-                </View>
-              )}
-            </View>
-          </Page>
-        </Document>
-      ).toBlob();
+      // Cap the letter size multiplier
+      const cappedLetterSizeMultiplier = Math.min(letterSizeMultiplier, MAX_LETTER_SIZE);
+      console.log("Creating PDF with cappedLetterSizeMultiplier:", cappedLetterSizeMultiplier);
+      
+      const blob = await pdf(<PuzzlePDF />).toBlob();
       
       console.log("PDF blob generated successfully:", blob);
       setPdfBlob(blob);
       setIsPDFReady(true);
+      setShowLivePreview(true);
       
       toast({
         title: "PDF Ready",
@@ -463,6 +500,7 @@ export function DownloadPuzzleDialog({
         setWordListOffset(prev => Math.max(-maxAllowedOffset, Math.min(maxAllowedOffset, prev + step)));
         break;
     }
+    setIsPDFReady(false);
   };
 
   const getPositionValue = (offset: number) => {
@@ -477,6 +515,18 @@ export function DownloadPuzzleDialog({
       setPositioningElement(element);
     }
   };
+
+  // Update effect to reset PDF status whenever settings change
+  useEffect(() => {
+    setIsPDFReady(false);
+    setShowLivePreview(false);
+  }, [
+    titleSizeMultiplier, subtitleSizeMultiplier, instructionSizeMultiplier,
+    cellSizeMultiplier, letterSizeMultiplier, wordListSizeMultiplier,
+    showTitle, showSubtitle, showInstruction, showWordList, showGrid,
+    titleOffset, subtitleOffset, instructionOffset, gridOffset, wordListOffset,
+    title, subtitle, instruction, selectedSize, customWidth, customHeight
+  ]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -708,13 +758,21 @@ export function DownloadPuzzleDialog({
             {/* Word Search Grid Controls */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Label htmlFor="cellSize" className="w-24">Word Search</Label>
+                <Button
+                  type="button"
+                  variant={showGrid ? "default" : "outline"}
+                  className="w-24 h-8"
+                  onClick={() => setShowGrid(!showGrid)}
+                >
+                  {showGrid ? "Grid" : "Grid Off"}
+                </Button>
                 <Button
                   type="button"
                   variant={positioningElement === 'grid' ? "secondary" : "outline"}
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => togglePositioning('grid')}
+                  disabled={!showGrid}
                 >
                   {getPositionValue(gridOffset)}
                 </Button>
@@ -739,30 +797,34 @@ export function DownloadPuzzleDialog({
                   </>
                 )}
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs">Grid Size: {formatSliderValue(cellSizeMultiplier)}</span>
-                <Slider 
-                  id="cellSize"
-                  min={0.7} 
-                  max={1.5} 
-                  step={0.1}
-                  value={[cellSizeMultiplier]} 
-                  onValueChange={(value) => setCellSizeMultiplier(value[0])}
-                  className="w-32"
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs">Letter Size: {formatSliderValue(letterSizeMultiplier)}</span>
-                <Slider 
-                  id="letterSize"
-                  min={0.5} 
-                  max={1.5} 
-                  step={0.1}
-                  value={[letterSizeMultiplier]} 
-                  onValueChange={(value) => setLetterSizeMultiplier(value[0])}
-                  className="w-32"
-                />
-              </div>
+              {showGrid && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs">Grid Size: {formatSliderValue(cellSizeMultiplier)}</span>
+                    <Slider 
+                      id="cellSize"
+                      min={0.7} 
+                      max={1.5} 
+                      step={0.1}
+                      value={[cellSizeMultiplier]} 
+                      onValueChange={(value) => setCellSizeMultiplier(value[0])}
+                      className="w-32"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs">Letter Size: {formatSliderValue(letterSizeMultiplier)} {letterSizeMultiplier > MAX_LETTER_SIZE ? "(will be capped)" : ""}</span>
+                    <Slider 
+                      id="letterSize"
+                      min={0.5} 
+                      max={1.5} 
+                      step={0.1}
+                      value={[letterSizeMultiplier]} 
+                      onValueChange={(value) => setLetterSizeMultiplier(value[0])}
+                      className="w-32"
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Word List Controls */}
@@ -870,19 +932,129 @@ export function DownloadPuzzleDialog({
           {/* Preview Section */}
           <div className="space-y-4">
             <Label>Preview</Label>
-            <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center">
-              <div 
-                className="relative border-2 border-black bg-white p-4 overflow-hidden"
-                style={{
-                  width: `${currentWidth * previewScaleFactor}px`,
-                  height: `${currentHeight * previewScaleFactor}px`,
-                  maxWidth: '100%',
-                  maxHeight: '380px',
-                }}
+            <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto">
+              {showLivePreview && isPDFReady ? (
+                <div className="w-full h-full flex-1">
+                  <PDFViewer width="100%" height="100%" className="border-0">
+                    <PuzzlePDF />
+                  </PDFViewer>
+                </div>
+              ) : (
+                <div 
+                  className="relative border-2 border-black bg-white p-4 overflow-hidden"
+                  style={{
+                    width: `${currentWidth * previewScaleFactor}px`,
+                    height: `${currentHeight * previewScaleFactor}px`,
+                    maxWidth: '100%',
+                    maxHeight: '380px',
+                  }}
+                >
+                  <div className="flex flex-col h-full">
+                    {showTitle && (
+                      <div 
+                        className="text-center font-bold font-serif"
+                        style={{
+                          fontSize: `${fontSizes.titleSize * previewScaleFactor * titleSizeMultiplier}px`,
+                          marginTop: `${getVerticalOffset(titleOffset) * previewScaleFactor}px`,
+                        }}
+                      >
+                        {title.toUpperCase()}
+                      </div>
+                    )}
+                    {showSubtitle && (
+                      <div 
+                        className="text-center italic font-serif"
+                        style={{
+                          fontSize: `${fontSizes.subtitleSize * previewScaleFactor * subtitleSizeMultiplier}px`,
+                          marginTop: `${getVerticalOffset(subtitleOffset) * previewScaleFactor}px`,
+                        }}
+                      >
+                        {subtitle.toLowerCase()}
+                      </div>
+                    )}
+                    {showInstruction && (
+                      <div 
+                        className="text-center mb-4"
+                        style={{
+                          fontSize: `${fontSizes.instructionSize * previewScaleFactor * instructionSizeMultiplier}px`,
+                          marginTop: `${getVerticalOffset(instructionOffset) * previewScaleFactor}px`,
+                        }}
+                      >
+                        {instruction}
+                      </div>
+                    )}
+                    {showGrid && puzzle && (
+                      <div 
+                        className="flex flex-col items-center justify-center"
+                        style={{
+                          marginTop: `${getVerticalOffset(gridOffset) * previewScaleFactor}px`,
+                        }}
+                      >
+                        {puzzle.grid.map((row, i) => (
+                          <div key={i} className="flex">
+                            {row.map((letter, j) => (
+                              <div
+                                key={`${i}-${j}`}
+                                className="flex items-center justify-center"
+                                style={{
+                                  width: `${cellSize * previewScaleFactor}px`,
+                                  height: `${cellSize * previewScaleFactor}px`,
+                                  fontSize: `${letterSize * previewScaleFactor}px`,
+                                }}
+                              >
+                                {letter}
+                              </div>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {showWordList && puzzle && (
+                      <div 
+                        className="flex flex-wrap justify-center mt-4"
+                        style={{
+                          marginTop: `${getVerticalOffset(wordListOffset) * previewScaleFactor}px`,
+                          fontSize: `${fontSizes.wordListSize * previewScaleFactor * wordListSizeMultiplier}px`,
+                        }}
+                      >
+                        {puzzle.wordPlacements.map(({ word }, index) => (
+                          <span key={index} className="mx-2">{word.toLowerCase()}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex gap-4 mt-4">
+              <Button
+                type="button"
+                className="flex items-center gap-2 flex-1"
+                onClick={handleSaveLayout}
+                disabled={isGenerating || !puzzle}
               >
-                <div className="flex flex-col h-full">
-                  {showTitle && (
-                    <div 
-                      className="text-center font-bold font-serif"
-                      style={{
-                        fontSize: `${font
+                <Save className="h-4 w-4" />
+                {isGenerating ? "Generating..." : "Save Layout"}
+              </Button>
+              <Button
+                type="button"
+                variant={isPDFReady ? "default" : "outline"}
+                className="flex items-center gap-2 flex-1"
+                onClick={handleDownload}
+                disabled={!isPDFReady || !pdfBlob}
+              >
+                <Download className="h-4 w-4" />
+                Download PDF
+              </Button>
+            </div>
+            
+            {!isPDFReady && (
+              <p className="text-xs text-muted-foreground">Click "Save Layout" after making changes to update the PDF preview.</p>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
