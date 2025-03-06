@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -10,6 +11,14 @@ import { Label } from "@/components/ui/label";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { pdf } from "@react-pdf/renderer";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { VisualPreview } from "./VisualPreview";
 import { ControlPanel } from "./ControlPanel";
 import { ActionButtons } from "./ActionButtons";
@@ -31,7 +40,8 @@ import {
   MAX_LETTER_SIZE,
   PageSize,
   Unit,
-  ImagePlacement
+  ImagePlacement,
+  PAGE_SIZE_OPTIONS,
 } from "./constants";
 
 interface DownloadPuzzleDialogProps {

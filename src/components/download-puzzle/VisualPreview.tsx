@@ -1,4 +1,3 @@
-
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { PDFViewer } from "@react-pdf/renderer";
 import { PuzzlePDFPreview } from "./PuzzlePDFPreview";
@@ -118,7 +117,6 @@ export const VisualPreview = ({
     );
   }
 
-  // Helper function to get CSS for background image position
   const getBackgroundPosition = () => {
     switch (imagePlacement) {
       case "top":
@@ -164,7 +162,7 @@ export const VisualPreview = ({
             className={`${imagePlacement === "tiled" ? "w-full h-full object-cover" : "absolute"}`}
             style={{
               ...getBackgroundPosition(),
-              objectFit: imagePlacement === "tiled" ? "repeat" : "contain",
+              objectFit: imagePlacement === "tiled" ? "cover" : "contain",
             }}
           />
         </div>
