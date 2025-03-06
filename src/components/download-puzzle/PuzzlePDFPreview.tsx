@@ -1,6 +1,7 @@
 
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image, Svg, Path } from "@react-pdf/renderer";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
+import { ImagePlacement } from "./constants";
 
 interface PuzzlePDFPreviewProps {
   puzzle: PuzzleGrid | null;
@@ -27,6 +28,9 @@ interface PuzzlePDFPreviewProps {
   subtitleSizeMultiplier: number;
   instructionSizeMultiplier: number;
   wordListSizeMultiplier: number;
+  backgroundImage?: string | null;
+  backgroundOpacity?: number;
+  imagePlacement?: ImagePlacement;
 }
 
 export const PuzzlePDFPreview = ({
@@ -54,6 +58,9 @@ export const PuzzlePDFPreview = ({
   subtitleSizeMultiplier,
   instructionSizeMultiplier,
   wordListSizeMultiplier,
+  backgroundImage = null,
+  backgroundOpacity = 0.15,
+  imagePlacement = "centered",
 }: PuzzlePDFPreviewProps) => {
   if (!puzzle) return null;
   
@@ -78,10 +85,44 @@ export const PuzzlePDFPreview = ({
   // Use the exact font sizes from our calculations
   const pdfStyles = createPDFStyles(fontSizes);
   
+  // Helper function to determine image position based on placement type
+  const getImagePosition = () => {
+    switch (imagePlacement) {
+      case "top":
+        return { top: "5%", left: 0, right: 0 };
+      case "bottom":
+        return { bottom: "5%", left: 0, right: 0 };
+      case "tiled":
+        return { top: 0, left: 0, right: 0, bottom: 0 };
+      case "random":
+        // For random, we'll set it slightly off-center
+        const randomX = Math.floor(Math.random() * 30) - 15;
+        const randomY = Math.floor(Math.random() * 30) - 15;
+        return { top: `calc(50% + ${randomY}px)`, left: `calc(50% + ${randomX}px)` };
+      case "centered":
+      default:
+        return { top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
+    }
+  };
+  
   return (
     <Document>
       <Page size={[currentWidth, currentHeight]} style={pdfStyles.page}>
         <View style={pdfStyles.container}>
+          {backgroundImage && (
+            <View style={pdfStyles.backgroundContainer}>
+              <Image
+                src={backgroundImage}
+                style={{
+                  ...pdfStyles.backgroundImage,
+                  objectFit: imagePlacement === "tiled" ? "repeat" : "contain",
+                  opacity: backgroundOpacity,
+                  ...getImagePosition(),
+                }}
+              />
+            </View>
+          )}
+          
           {showTitle && <Text style={pdfStyles.title}>{title.toUpperCase()}</Text>}
           {showSubtitle && <Text style={pdfStyles.subtitle}>{subtitle.toLowerCase()}</Text>}
           {showInstruction && <Text style={pdfStyles.instruction}>{instruction}</Text>}
@@ -133,6 +174,20 @@ export const PuzzlePDFPreview = ({
         borderColor: '#000',
         padding: 20,
         position: 'relative',
+        overflow: 'hidden',
+      },
+      backgroundContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: -1,
+      },
+      backgroundImage: {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
       },
       title: {
         fontSize: fontSizes.titleSize,

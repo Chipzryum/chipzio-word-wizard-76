@@ -37,6 +37,9 @@ export const DEFAULT_VALUES = {
   instructionOffset: 0,
   gridOffset: 0,
   wordListOffset: 0,
+  backgroundImage: null,
+  backgroundOpacity: 0.15,
+  imagePlacement: "centered",
 };
 
 // Default multiplier values
@@ -67,6 +70,16 @@ export const MAX_MULTIPLIERS = {
   wordList: 1.5,
 };
 
+// Image placement options
+export const IMAGE_PLACEMENT_OPTIONS = [
+  { label: "Centered", value: "centered" },
+  { label: "Tiled", value: "tiled" },
+  { label: "Random", value: "random" },
+  { label: "Top", value: "top" },
+  { label: "Bottom", value: "bottom" },
+];
+
 // TypeScript types
 export type PageSize = keyof typeof PAGE_SIZES | "Custom";
 export type Unit = keyof typeof UNITS;
+export type ImagePlacement = "centered" | "tiled" | "random" | "top" | "bottom";

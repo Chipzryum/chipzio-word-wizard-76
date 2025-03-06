@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -15,6 +14,7 @@ import { VisualPreview } from "./VisualPreview";
 import { ControlPanel } from "./ControlPanel";
 import { ActionButtons } from "./ActionButtons";
 import { PuzzlePDFPreview } from "./PuzzlePDFPreview";
+import { AestheticsPanel } from "./AestheticsPanel";
 import { 
   PAGE_SIZES, 
   UNITS, 
@@ -30,7 +30,8 @@ import {
   DEFAULT_WORDLIST_MULTIPLIER,
   MAX_LETTER_SIZE,
   PageSize,
-  Unit
+  Unit,
+  ImagePlacement
 } from "./constants";
 
 interface DownloadPuzzleDialogProps {
@@ -74,6 +75,11 @@ export function DownloadPuzzleDialog({
   const [instructionOffset, setInstructionOffset] = useState(0);
   const [gridOffset, setGridOffset] = useState(0);
   const [wordListOffset, setWordListOffset] = useState(0);
+
+  // New aesthetics settings
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+  const [backgroundOpacity, setBackgroundOpacity] = useState(0.15);
+  const [imagePlacement, setImagePlacement] = useState<ImagePlacement>("centered");
 
   // Track which element is being positioned
   const [positioningElement, setPositioningElement] = useState<string | null>(null);
@@ -180,6 +186,25 @@ export function DownloadPuzzleDialog({
     return Math.max(-maxAllowedOffset, Math.min(offset * 10, maxAllowedOffset * 10));
   };
 
+  // Randomize image placement
+  const randomizeImagePlacement = () => {
+    const positions: ImagePlacement[] = ["centered", "tiled", "random", "top", "bottom"];
+    let newPlacement: ImagePlacement;
+    
+    // Make sure the new placement is different from the current one
+    do {
+      const randomIndex = Math.floor(Math.random() * positions.length);
+      newPlacement = positions[randomIndex];
+    } while (newPlacement === imagePlacement);
+    
+    setImagePlacement(newPlacement);
+    setIsPDFReady(false);
+    toast({
+      title: "Image Placement Updated",
+      description: `Changed to ${newPlacement}`,
+    });
+  };
+
   const handleSizeChange = (size: PageSize) => {
     setSelectedSize(size);
     if (size !== "Custom") {
@@ -253,6 +278,9 @@ export function DownloadPuzzleDialog({
           subtitleSizeMultiplier={subtitleSizeMultiplier}
           instructionSizeMultiplier={instructionSizeMultiplier}
           wordListSizeMultiplier={wordListSizeMultiplier}
+          backgroundImage={backgroundImage}
+          backgroundOpacity={backgroundOpacity}
+          imagePlacement={imagePlacement}
         />
       ).toBlob();
       
@@ -370,7 +398,8 @@ export function DownloadPuzzleDialog({
     cellSizeMultiplier, letterSizeMultiplier, wordListSizeMultiplier,
     showTitle, showSubtitle, showInstruction, showWordList, showGrid,
     titleOffset, subtitleOffset, instructionOffset, gridOffset, wordListOffset,
-    title, subtitle, instruction, selectedSize, customWidth, customHeight
+    title, subtitle, instruction, selectedSize, customWidth, customHeight,
+    backgroundImage, backgroundOpacity, imagePlacement
   ]);
 
   return (
@@ -384,60 +413,222 @@ export function DownloadPuzzleDialog({
         </DialogHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <ControlPanel 
-            showTitle={showTitle}
-            setShowTitle={setShowTitle}
-            title={title}
-            setTitle={setTitle}
-            titleSizeMultiplier={titleSizeMultiplier}
-            setTitleSizeMultiplier={setTitleSizeMultiplier}
-            titleOffset={titleOffset}
-            positioningElement={positioningElement}
-            togglePositioning={togglePositioning}
-            moveElement={moveElement}
-            
-            showSubtitle={showSubtitle}
-            setShowSubtitle={setShowSubtitle}
-            subtitle={subtitle}
-            setSubtitle={setSubtitle}
-            subtitleSizeMultiplier={subtitleSizeMultiplier}
-            setSubtitleSizeMultiplier={setSubtitleSizeMultiplier}
-            subtitleOffset={subtitleOffset}
-            
-            showInstruction={showInstruction}
-            setShowInstruction={setShowInstruction}
-            instruction={instruction}
-            setInstruction={setInstruction}
-            instructionSizeMultiplier={instructionSizeMultiplier}
-            setInstructionSizeMultiplier={setInstructionSizeMultiplier}
-            instructionOffset={instructionOffset}
-            
-            selectedSize={selectedSize}
-            handleSizeChange={handleSizeChange}
-            
-            showGrid={showGrid}
-            setShowGrid={setShowGrid}
-            cellSizeMultiplier={cellSizeMultiplier}
-            setCellSizeMultiplier={setCellSizeMultiplier}
-            letterSizeMultiplier={letterSizeMultiplier}
-            setLetterSizeMultiplier={setLetterSizeMultiplier}
-            gridOffset={gridOffset}
-            
-            showWordList={showWordList}
-            setShowWordList={setShowWordList}
-            wordListSizeMultiplier={wordListSizeMultiplier}
-            setWordListSizeMultiplier={setWordListSizeMultiplier}
-            wordListOffset={wordListOffset}
-            
-            selectedUnit={selectedUnit}
-            setSelectedUnit={handleUnitChange}
-            currentWidth={currentWidth}
-            currentHeight={currentHeight}
-            handleDimensionChange={handleDimensionChange}
-            convertFromPoints={convertFromPoints}
-            formatSliderValue={formatSliderValue}
-            getPositionValue={getPositionValue}
-          />
+          <div>
+            <div className="mb-4 border-b">
+              <div className="flex space-x-1">
+                <div 
+                  className={`px-4 py-2 cursor-pointer ${!positioningElement ? 'border-b-2 border-primary font-medium' : 'text-muted-foreground'}`}
+                  onClick={() => setPositioningElement(null)}
+                >
+                  Content
+                </div>
+                <div 
+                  className={`px-4 py-2 cursor-pointer ${positioningElement === 'layout' ? 'border-b-2 border-primary font-medium' : 'text-muted-foreground'}`}
+                  onClick={() => setPositioningElement('layout')}
+                >
+                  Layout
+                </div>
+                <div 
+                  className={`px-4 py-2 cursor-pointer ${positioningElement === 'sizes' ? 'border-b-2 border-primary font-medium' : 'text-muted-foreground'}`}
+                  onClick={() => setPositioningElement('sizes')}
+                >
+                  Sizes
+                </div>
+                <div 
+                  className={`px-4 py-2 cursor-pointer ${positioningElement === 'aesthetics' ? 'border-b-2 border-primary font-medium' : 'text-muted-foreground'}`}
+                  onClick={() => setPositioningElement('aesthetics')}
+                >
+                  Aesthetics
+                </div>
+              </div>
+            </div>
+
+            {!positioningElement && (
+              <ControlPanel 
+                showTitle={showTitle}
+                setShowTitle={setShowTitle}
+                title={title}
+                setTitle={setTitle}
+                titleSizeMultiplier={titleSizeMultiplier}
+                setTitleSizeMultiplier={setTitleSizeMultiplier}
+                titleOffset={titleOffset}
+                positioningElement={positioningElement}
+                togglePositioning={togglePositioning}
+                moveElement={moveElement}
+                
+                showSubtitle={showSubtitle}
+                setShowSubtitle={setShowSubtitle}
+                subtitle={subtitle}
+                setSubtitle={setSubtitle}
+                subtitleSizeMultiplier={subtitleSizeMultiplier}
+                setSubtitleSizeMultiplier={setSubtitleSizeMultiplier}
+                subtitleOffset={subtitleOffset}
+                
+                showInstruction={showInstruction}
+                setShowInstruction={setShowInstruction}
+                instruction={instruction}
+                setInstruction={setInstruction}
+                instructionSizeMultiplier={instructionSizeMultiplier}
+                setInstructionSizeMultiplier={setInstructionSizeMultiplier}
+                instructionOffset={instructionOffset}
+                
+                selectedSize={selectedSize}
+                handleSizeChange={handleSizeChange}
+                
+                showGrid={showGrid}
+                setShowGrid={setShowGrid}
+                cellSizeMultiplier={cellSizeMultiplier}
+                setCellSizeMultiplier={setCellSizeMultiplier}
+                letterSizeMultiplier={letterSizeMultiplier}
+                setLetterSizeMultiplier={setLetterSizeMultiplier}
+                gridOffset={gridOffset}
+                
+                showWordList={showWordList}
+                setShowWordList={setShowWordList}
+                wordListSizeMultiplier={wordListSizeMultiplier}
+                setWordListSizeMultiplier={setWordListSizeMultiplier}
+                wordListOffset={wordListOffset}
+                
+                selectedUnit={selectedUnit}
+                setSelectedUnit={handleUnitChange}
+                currentWidth={currentWidth}
+                currentHeight={currentHeight}
+                handleDimensionChange={handleDimensionChange}
+                convertFromPoints={convertFromPoints}
+                formatSliderValue={formatSliderValue}
+                getPositionValue={getPositionValue}
+              />
+            )}
+
+            {positioningElement === 'layout' && (
+              <div className="p-4 space-y-6">
+                <div className="grid gap-2">
+                  <Label>Page Size</Label>
+                  <div className="flex items-center space-x-4">
+                    <Select
+                      value={selectedSize}
+                      onValueChange={(value) => handleSizeChange(value as PageSize)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PAGE_SIZE_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label} 
+                            {option.value !== "Custom" && ` (${PAGE_SIZES[option.value as PageSize].width.toFixed(0)} × ${PAGE_SIZES[option.value as PageSize].height.toFixed(0)})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {selectedSize === "Custom" && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="custom-width">Width ({selectedUnit})</Label>
+                      <input
+                        id="custom-width"
+                        type="number"
+                        value={convertFromPoints(currentWidth)}
+                        onChange={(e) => 
+                          handleDimensionChange("width", e.target.value)
+                        }
+                        min="0"
+                        className="w-full p-2 border rounded"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="custom-height">Height ({selectedUnit})</Label>
+                      <input
+                        id="custom-height"
+                        type="number"
+                        value={convertFromPoints(currentHeight)}
+                        onChange={(e) =>
+                          handleDimensionChange("height", e.target.value)
+                        }
+                        min="0"
+                        className="w-full p-2 border rounded"
+                      />
+                    </div>
+                    <div className="grid gap-2 col-span-2">
+                      <Label htmlFor="unit">Unit</Label>
+                      <Select
+                        value={selectedUnit}
+                        onValueChange={(value) => handleUnitChange(value as Unit)}
+                      >
+                        <SelectTrigger id="unit">
+                          <SelectValue placeholder="Select unit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Points">Points</SelectItem>
+                          <SelectItem value="Inches">Inches</SelectItem>
+                          <SelectItem value="Millimeters">Millimeters</SelectItem>
+                          <SelectItem value="Centimeters">Centimeters</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {positioningElement === 'sizes' && (
+              <div className="p-4 space-y-6">
+                <div className="grid gap-2">
+                  <Label>Letters Size</Label>
+                  <Slider
+                    value={[letterSizeMultiplier * 100]}
+                    min={50}
+                    max={150}
+                    step={10}
+                    onValueChange={(value) => setLetterSizeMultiplier(value[0] / 100)}
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>50%</span>
+                    <span>{(letterSizeMultiplier * 100).toFixed(0)}%</span>
+                    <span>150%</span>
+                  </div>
+                </div>
+
+                {showTitle && (
+                  <div className="grid gap-2">
+                    <Label>Title Size</Label>
+                    <Slider
+                      value={[titleSizeMultiplier * 100]}
+                      min={50}
+                      max={150}
+                      step={10}
+                      onValueChange={(value) => setTitleSizeMultiplier(value[0] / 100)}
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>50%</span>
+                      <span>{(titleSizeMultiplier * 100).toFixed(0)}%</span>
+                      <span>150%</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Add other size controls (subtitle, instruction, etc.) here */}
+                {/* ... keep existing code for other size controls ... */}
+              </div>
+            )}
+
+            {positioningElement === 'aesthetics' && (
+              <div className="p-4">
+                <AestheticsPanel
+                  backgroundOpacity={backgroundOpacity}
+                  setBackgroundOpacity={setBackgroundOpacity}
+                  imagePlacement={imagePlacement}
+                  setImagePlacement={setImagePlacement}
+                  backgroundImage={backgroundImage}
+                  setBackgroundImage={setBackgroundImage}
+                  randomizeImagePlacement={randomizeImagePlacement}
+                />
+              </div>
+            )}
+          </div>
 
           {/* Preview Section */}
           <div className="space-y-4">
@@ -474,6 +665,9 @@ export function DownloadPuzzleDialog({
                 previewScaleFactor={previewScaleFactor}
                 fontSizes={fontSizes}
                 getVerticalOffset={getVerticalOffset}
+                backgroundImage={backgroundImage}
+                backgroundOpacity={backgroundOpacity}
+                imagePlacement={imagePlacement}
               />
             </div>
             
