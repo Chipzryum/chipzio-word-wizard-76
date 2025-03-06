@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -240,12 +239,59 @@ export const ControlPanel = ({
                 <SelectContent>
                   {PAGE_SIZE_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label} ({PAGE_SIZES[option.value].width.toFixed(0)} × {PAGE_SIZES[option.value].height.toFixed(0)})
+                      {option.label} 
+                      {option.value !== "Custom" && ` (${PAGE_SIZES[option.value].width.toFixed(0)} × ${PAGE_SIZES[option.value].height.toFixed(0)})`}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {selectedSize === "Custom" && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="custom-width">Width ({selectedUnit})</Label>
+                  <Input
+                    id="custom-width"
+                    type="number"
+                    value={convertFromPoints(currentWidth)}
+                    onChange={(e) => 
+                      handleDimensionChange("width", e.target.value)
+                    }
+                    min="0"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="custom-height">Height ({selectedUnit})</Label>
+                  <Input
+                    id="custom-height"
+                    type="number"
+                    value={convertFromPoints(currentHeight)}
+                    onChange={(e) =>
+                      handleDimensionChange("height", e.target.value)
+                    }
+                    min="0"
+                  />
+                </div>
+                <div className="grid gap-2 col-span-2">
+                  <Label htmlFor="unit">Unit</Label>
+                  <Select
+                    value={selectedUnit}
+                    onValueChange={(value) => setSelectedUnit(value as Unit)}
+                  >
+                    <SelectTrigger id="unit">
+                      <SelectValue placeholder="Select unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Points">Points</SelectItem>
+                      <SelectItem value="Inches">Inches</SelectItem>
+                      <SelectItem value="Millimeters">Millimeters</SelectItem>
+                      <SelectItem value="Centimeters">Centimeters</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
 
             <Separator />
 

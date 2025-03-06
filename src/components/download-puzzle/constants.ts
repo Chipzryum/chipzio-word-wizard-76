@@ -1,6 +1,7 @@
 
 // Page size definitions (width × height in points)
 export const PAGE_SIZES = {
+  A3: { width: 841.89, height: 1190.55 },
   A4: { width: 595.28, height: 841.89 },
   LETTER: { width: 612, height: 792 },
   LEGAL: { width: 612, height: 1008 },
@@ -49,10 +50,12 @@ export const MAX_LETTER_SIZE = 1.3;
 
 // Standard page size options for UI dropdowns
 export const PAGE_SIZE_OPTIONS = [
+  { label: "A3", value: "A3" },
   { label: "A4", value: "A4" },
   { label: "Letter", value: "LETTER" },
   { label: "Legal", value: "LEGAL" },
   { label: "Tabloid", value: "TABLOID" },
+  { label: "Custom", value: "Custom" },
 ];
 
 // Maximum multiplier values to prevent text from disappearing

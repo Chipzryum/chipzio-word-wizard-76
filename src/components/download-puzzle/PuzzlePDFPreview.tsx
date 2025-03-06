@@ -73,7 +73,10 @@ export const PuzzlePDFPreview = ({
   };
 
   const fontSizes = calculateFontSizes();
-  const pdfStyles = createPDFStyles();
+  
+  // Important: Don't recalculate and adjust sizes in the PDF
+  // This ensures that what you see in preview is what you get in PDF
+  const pdfStyles = createPDFStyles(fontSizes);
   
   return (
     <Document>
@@ -107,27 +110,19 @@ export const PuzzlePDFPreview = ({
     </Document>
   );
 
-  // Create styles for PDF dynamically based on page size and multipliers
-  function createPDFStyles() {
-    // Calculate the maximum content height to ensure one-page printing
-    const totalContentHeight = calculateTotalContentHeight();
-    const adjustmentFactor = totalContentHeight > contentHeight ? contentHeight / totalContentHeight : 1;
-
-    const adjustedFontSizes = {
-      titleSize: Math.max(12, Math.min(36, Math.floor(fontSizes.titleSize * adjustmentFactor))),
-      subtitleSize: Math.max(8, Math.min(24, Math.floor(fontSizes.subtitleSize * adjustmentFactor))),
-      instructionSize: Math.max(6, Math.min(14, Math.floor(fontSizes.instructionSize * adjustmentFactor))),
-      wordListSize: Math.max(6, Math.min(12, Math.floor(fontSizes.wordListSize * adjustmentFactor))),
-    };
+  // Create styles for PDF that match the preview exactly
+  function createPDFStyles(fontSizes: { 
+    titleSize: number; 
+    subtitleSize: number; 
+    instructionSize: number; 
+    wordListSize: number;
+  }) {
+    // Don't auto-adjust sizes - what you see in preview is what you get
+    // Apply the exact multipliers as in the preview
     
-    // Adjust cell size if needed to fit on one page
-    const adjustedCellSize = cellSize * adjustmentFactor;
-    
-    // Cap the letter size multiplier to prevent disappearing text
+    // Use the exact letter size multiplier passed from props
     const cappedLetterSizeMultiplier = Math.min(letterSizeMultiplier, 1.3);
-    console.log("Creating PDF with letterSizeMultiplier:", letterSizeMultiplier);
-    console.log("Creating PDF with cellSize:", adjustedCellSize);
-    console.log("Creating PDF with cappedLetterSizeMultiplier:", cappedLetterSizeMultiplier);
+    const letterSize = cellSize * 0.6 * cappedLetterSizeMultiplier;
     
     return StyleSheet.create({
       page: {
@@ -142,7 +137,7 @@ export const PuzzlePDFPreview = ({
         position: 'relative',
       },
       title: {
-        fontSize: adjustedFontSizes.titleSize,
+        fontSize: fontSizes.titleSize,
         marginBottom: 10,
         marginTop: getVerticalOffset(titleOffset),
         textAlign: 'center',
@@ -151,7 +146,7 @@ export const PuzzlePDFPreview = ({
         position: 'relative',
       },
       subtitle: {
-        fontSize: adjustedFontSizes.subtitleSize,
+        fontSize: fontSizes.subtitleSize,
         marginBottom: 10,
         marginTop: getVerticalOffset(subtitleOffset),
         textAlign: 'center',
@@ -160,7 +155,7 @@ export const PuzzlePDFPreview = ({
         position: 'relative',
       },
       instruction: {
-        fontSize: adjustedFontSizes.instructionSize,
+        fontSize: fontSizes.instructionSize,
         marginBottom: 20,
         marginTop: getVerticalOffset(instructionOffset),
         textAlign: 'center',
@@ -181,17 +176,16 @@ export const PuzzlePDFPreview = ({
         flexDirection: 'row',
       },
       cell: {
-        width: adjustedCellSize,
-        height: adjustedCellSize,
+        width: cellSize,
+        height: cellSize,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: adjustedCellSize * 0.6 * cappedLetterSizeMultiplier,
-        textAlign: 'center',
       },
       letter: {
         textAlign: 'center',
         alignSelf: 'center',
+        fontSize: letterSize,
       },
       wordList: {
         marginTop: getVerticalOffset(wordListOffset),
@@ -204,39 +198,12 @@ export const PuzzlePDFPreview = ({
       wordItem: {
         marginHorizontal: 15,
         marginVertical: 5,
-        fontSize: adjustedFontSizes.wordListSize,
+        fontSize: fontSizes.wordListSize,
       },
     });
   }
 
-  // Calculate total height of all content to ensure one-page fitting
-  function calculateTotalContentHeight() {
-    let totalHeight = 0;
-    
-    // Add height for visible elements with their actual multipliers
-    if (showTitle) totalHeight += fontSizes.titleSize * titleSizeMultiplier + 20 + Math.abs(getVerticalOffset(titleOffset));
-    if (showSubtitle) totalHeight += fontSizes.subtitleSize * subtitleSizeMultiplier + 20 + Math.abs(getVerticalOffset(subtitleOffset));
-    if (showInstruction) totalHeight += fontSizes.instructionSize * instructionSizeMultiplier + 30 + Math.abs(getVerticalOffset(instructionOffset));
-    
-    // Add grid height with cell size multiplier if grid is shown
-    if (showGrid) {
-      const gridHeight = puzzle.grid.length * cellSize + Math.abs(getVerticalOffset(gridOffset));
-      totalHeight += gridHeight + 40;
-    }
-    
-    // Add word list height with word list multiplier
-    if (showWordList) {
-      const wordRows = Math.ceil(puzzle.wordPlacements.length / 6);
-      totalHeight += wordRows * (fontSizes.wordListSize * wordListSizeMultiplier + 10) + Math.abs(getVerticalOffset(wordListOffset));
-    }
-    
-    // Add margins and padding
-    totalHeight += 40 * 2 + 20 * 2 + 1 * 2;
-    
-    return totalHeight;
-  }
-
-  // Calculate vertical position offset with improved boundary checking
+  // Calculate vertical position offset
   function getVerticalOffset(offset: number) {
     // Each unit is 10 points, limit to prevent going off page
     const maxAllowedOffset = Math.min(5, (contentHeight / 6) / 10);
