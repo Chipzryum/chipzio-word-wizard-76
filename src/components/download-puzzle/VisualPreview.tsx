@@ -1,7 +1,7 @@
+
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { PDFViewer } from "@react-pdf/renderer";
 import { PuzzlePDFPreview } from "./PuzzlePDFPreview";
-import { ImagePlacement } from "./constants";
 
 interface VisualPreviewProps {
   puzzle: PuzzleGrid | null;
@@ -39,9 +39,6 @@ interface VisualPreviewProps {
     wordListSize: number;
   };
   getVerticalOffset: (offset: number) => number;
-  backgroundImage?: string | null;
-  backgroundOpacity?: number;
-  imagePlacement?: ImagePlacement;
 }
 
 export const VisualPreview = ({
@@ -75,9 +72,6 @@ export const VisualPreview = ({
   previewScaleFactor,
   fontSizes,
   getVerticalOffset,
-  backgroundImage = null,
-  backgroundOpacity = 0.15,
-  imagePlacement = "centered",
 }: VisualPreviewProps) => {
   if (showLivePreview && isPDFReady) {
     return (
@@ -108,36 +102,11 @@ export const VisualPreview = ({
             subtitleSizeMultiplier={subtitleSizeMultiplier}
             instructionSizeMultiplier={instructionSizeMultiplier}
             wordListSizeMultiplier={wordListSizeMultiplier}
-            backgroundImage={backgroundImage}
-            backgroundOpacity={backgroundOpacity}
-            imagePlacement={imagePlacement}
           />
         </PDFViewer>
       </div>
     );
   }
-
-  const getBackgroundPosition = () => {
-    switch (imagePlacement) {
-      case "top":
-        return { top: "5%", left: "50%", transform: "translateX(-50%)" };
-      case "bottom":
-        return { bottom: "5%", left: "50%", transform: "translateX(-50%)" };
-      case "tiled":
-        return { backgroundSize: "auto", backgroundRepeat: "repeat" };
-      case "random":
-        const randomX = Math.floor(Math.random() * 30) - 15;
-        const randomY = Math.floor(Math.random() * 30) - 15;
-        return { 
-          top: `calc(50% + ${randomY}px)`, 
-          left: `calc(50% + ${randomX}px)`,
-          transform: "translate(-50%, -50%)"
-        };
-      case "centered":
-      default:
-        return { top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
-    }
-  };
 
   return (
     <div 
@@ -149,26 +118,7 @@ export const VisualPreview = ({
         maxHeight: '380px',
       }}
     >
-      {backgroundImage && (
-        <div 
-          className="absolute inset-0 z-0"
-          style={{
-            opacity: backgroundOpacity,
-          }}
-        >
-          <img 
-            src={backgroundImage} 
-            alt="Background" 
-            className={`${imagePlacement === "tiled" ? "w-full h-full object-cover" : "absolute"}`}
-            style={{
-              ...getBackgroundPosition(),
-              objectFit: imagePlacement === "tiled" ? "cover" : "contain",
-            }}
-          />
-        </div>
-      )}
-      
-      <div className="flex flex-col h-full relative z-10">
+      <div className="flex flex-col h-full">
         {showTitle && (
           <div 
             className="text-center font-bold font-serif"
