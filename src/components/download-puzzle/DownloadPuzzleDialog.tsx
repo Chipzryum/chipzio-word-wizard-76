@@ -88,6 +88,11 @@ export function DownloadPuzzleDialog({
   
   const { toast } = useToast();
 
+  // Handle unit change with proper type
+  const handleUnitChange = (unit: Unit) => {
+    setSelectedUnit(unit);
+  };
+
   const currentWidth = selectedSize === "Custom" ? customWidth : PAGE_SIZES[selectedSize].width;
   const currentHeight = selectedSize === "Custom" ? customHeight : PAGE_SIZES[selectedSize].height;
 
@@ -425,7 +430,7 @@ export function DownloadPuzzleDialog({
             wordListOffset={wordListOffset}
             
             selectedUnit={selectedUnit}
-            setSelectedUnit={setSelectedUnit}
+            setSelectedUnit={handleUnitChange}
             currentWidth={currentWidth}
             currentHeight={currentHeight}
             handleDimensionChange={handleDimensionChange}
