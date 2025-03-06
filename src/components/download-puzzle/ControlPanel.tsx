@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PAGE_SIZES, PAGE_SIZE_OPTIONS, DEFAULT_VALUES, MAX_MULTIPLIERS, Unit } from "./constants";
+import { PAGE_SIZES, PAGE_SIZE_OPTIONS, DEFAULT_VALUES, MAX_MULTIPLIERS } from "./constants";
 
 interface ControlPanelProps {
   title: string;
@@ -44,7 +44,7 @@ interface ControlPanelProps {
   handleSizeChange: (size: string) => void;
   
   selectedUnit: string;
-  setSelectedUnit: (unit: Unit) => void;
+  setSelectedUnit: (unit: string) => void;
   
   currentWidth: number;
   currentHeight: number;
