@@ -25,8 +25,8 @@ export const MAX_OFFSET = 5;
 // Default values for controlling the PDF layout
 export const DEFAULT_VALUES = {
   title: "WORD SEARCH",
-  subtitle: "Find the hidden words",
-  instruction: "Circle all the words from the list below",
+  subtitle: "word search",
+  instruction: "Can you find all the words?",
   letterSizeMultiplier: 1,
   titleSizeMultiplier: 1,
   subtitleSizeMultiplier: 1,
@@ -58,7 +58,7 @@ export const PAGE_SIZE_OPTIONS = [
   { label: "Custom", value: "Custom" },
 ];
 
-// Maximum multiplier values to prevent text from disappearing
+// Maximum multiplier values to prevent text from becoming too large
 export const MAX_MULTIPLIERS = {
   letter: 1.3,
   title: 1.5,

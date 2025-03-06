@@ -58,6 +58,7 @@ export const PuzzlePDFPreview = ({
   if (!puzzle) return null;
   
   // Calculate font sizes based on page dimensions and multipliers
+  // Use the same calculation method as in the DownloadPuzzleDialog component
   const calculateFontSizes = () => {
     // Base sizes for A4
     const a4Width = 595.28;
@@ -74,8 +75,7 @@ export const PuzzlePDFPreview = ({
 
   const fontSizes = calculateFontSizes();
   
-  // Important: Don't recalculate and adjust sizes in the PDF
-  // This ensures that what you see in preview is what you get in PDF
+  // Use the exact font sizes from our calculations
   const pdfStyles = createPDFStyles(fontSizes);
   
   return (
@@ -117,10 +117,8 @@ export const PuzzlePDFPreview = ({
     instructionSize: number; 
     wordListSize: number;
   }) {
-    // Don't auto-adjust sizes - what you see in preview is what you get
     // Apply the exact multipliers as in the preview
-    
-    // Use the exact letter size multiplier passed from props
+    // The letter size calculation remains based on cell size
     const cappedLetterSizeMultiplier = Math.min(letterSizeMultiplier, 1.3);
     const letterSize = cellSize * 0.6 * cappedLetterSizeMultiplier;
     
