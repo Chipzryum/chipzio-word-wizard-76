@@ -1,5 +1,5 @@
 
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image, Svg, Path } from "@react-pdf/renderer";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 
 interface PuzzlePDFPreviewProps {
@@ -27,6 +27,13 @@ interface PuzzlePDFPreviewProps {
   subtitleSizeMultiplier: number;
   instructionSizeMultiplier: number;
   wordListSizeMultiplier: number;
+  uploadedImages?: string[];
+  imageOpacity?: number;
+  imagePositions?: { x: number; y: number }[];
+  designAngle?: number;
+  designSize?: number;
+  designSpacing?: number;
+  useTiledPattern?: boolean;
 }
 
 export const PuzzlePDFPreview = ({
@@ -54,6 +61,13 @@ export const PuzzlePDFPreview = ({
   subtitleSizeMultiplier,
   instructionSizeMultiplier,
   wordListSizeMultiplier,
+  uploadedImages = [],
+  imageOpacity = 0.3,
+  imagePositions = [],
+  designAngle = 0,
+  designSize = 1,
+  designSpacing = 1,
+  useTiledPattern = false,
 }: PuzzlePDFPreviewProps) => {
   if (!puzzle) return null;
   
@@ -75,6 +89,60 @@ export const PuzzlePDFPreview = ({
 
   const fontSizes = calculateFontSizes();
   
+  // Create tiled background images if needed
+  const createTiledBackground = () => {
+    if (!useTiledPattern || uploadedImages.length === 0) return null;
+    
+    const image = uploadedImages[0]; // Use the first image for tiling
+    const imgSize = 50 * designSize;
+    const padding = 15 * designSpacing;
+    
+    // Calculate the number of tiles needed to cover the page with overlap
+    const tilesX = Math.ceil(contentWidth / (imgSize + padding)) + 2;
+    const tilesY = Math.ceil(contentHeight / (imgSize + padding)) + 2;
+    
+    // Generate a grid of positioned images
+    const tiles = [];
+    
+    for (let y = -1; y < tilesY; y++) {
+      for (let x = -1; x < tilesX; x++) {
+        const posX = x * (imgSize + padding);
+        const posY = y * (imgSize + padding);
+        
+        tiles.push(
+          <Image
+            key={`${x}-${y}`}
+            src={image}
+            style={{
+              position: 'absolute',
+              width: imgSize,
+              height: imgSize,
+              objectFit: 'contain',
+              left: posX,
+              top: posY,
+              opacity: imageOpacity,
+              transform: `rotate(${designAngle}deg)`,
+              transformOrigin: 'center',
+            }}
+          />
+        );
+      }
+    }
+    
+    return (
+      <View style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: -1,
+      }}>
+        {tiles}
+      </View>
+    );
+  };
+  
   // Use the exact font sizes from our calculations
   const pdfStyles = createPDFStyles(fontSizes);
   
@@ -82,6 +150,26 @@ export const PuzzlePDFPreview = ({
     <Document>
       <Page size={[currentWidth, currentHeight]} style={pdfStyles.page}>
         <View style={pdfStyles.container}>
+          {/* Render tiled pattern or individual images */}
+          {useTiledPattern ? createTiledBackground() : (
+            uploadedImages.map((image, index) => (
+              <Image
+                key={index}
+                src={image}
+                style={{
+                  position: 'absolute',
+                  width: '50%',
+                  height: '50%',
+                  objectFit: 'contain',
+                  left: `${imagePositions[index]?.x ?? 0}%`,
+                  top: `${imagePositions[index]?.y ?? 0}%`,
+                  opacity: imageOpacity,
+                  zIndex: -1,
+                }}
+              />
+            ))
+          )}
+          
           {showTitle && <Text style={pdfStyles.title}>{title.toUpperCase()}</Text>}
           {showSubtitle && <Text style={pdfStyles.subtitle}>{subtitle.toLowerCase()}</Text>}
           {showInstruction && <Text style={pdfStyles.instruction}>{instruction}</Text>}

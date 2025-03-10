@@ -39,6 +39,13 @@ interface VisualPreviewProps {
     wordListSize: number;
   };
   getVerticalOffset: (offset: number) => number;
+  uploadedImages?: string[];
+  imageOpacity?: number;
+  imagePositions?: { x: number; y: number }[];
+  designAngle?: number;
+  designSize?: number;
+  designSpacing?: number;
+  useTiledPattern?: boolean;
 }
 
 export const VisualPreview = ({
@@ -72,6 +79,13 @@ export const VisualPreview = ({
   previewScaleFactor,
   fontSizes,
   getVerticalOffset,
+  uploadedImages = [],
+  imageOpacity = 0.3,
+  imagePositions = [],
+  designAngle = 0,
+  designSize = 1,
+  designSpacing = 1,
+  useTiledPattern = false,
 }: VisualPreviewProps) => {
   if (showLivePreview && isPDFReady) {
     return (
@@ -102,6 +116,13 @@ export const VisualPreview = ({
             subtitleSizeMultiplier={subtitleSizeMultiplier}
             instructionSizeMultiplier={instructionSizeMultiplier}
             wordListSizeMultiplier={wordListSizeMultiplier}
+            uploadedImages={uploadedImages}
+            imageOpacity={imageOpacity}
+            imagePositions={imagePositions}
+            designAngle={designAngle}
+            designSize={designSize}
+            designSpacing={designSpacing}
+            useTiledPattern={useTiledPattern}
           />
         </PDFViewer>
       </div>
@@ -118,6 +139,63 @@ export const VisualPreview = ({
         maxHeight: '380px',
       }}
     >
+      {/* Background Images - Tiled Pattern */}
+      {useTiledPattern && uploadedImages.length > 0 && (
+        <div 
+          className="absolute inset-0 overflow-hidden" 
+          style={{ opacity: imageOpacity }}
+        >
+          {uploadedImages.map((image, index) => {
+            // Use the first image for tiling
+            if (index > 0) return null;
+            
+            const imgSize = 50 * designSize;
+            const gap = 30 * designSpacing;
+            const totalSize = imgSize + gap;
+            
+            return (
+              <div 
+                key={index}
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: `url(${image})`,
+                  backgroundSize: `${imgSize * previewScaleFactor}px`,
+                  backgroundRepeat: 'repeat',
+                  backgroundPosition: 'center',
+                  transform: `rotate(${designAngle}deg)`,
+                  transformOrigin: 'center',
+                  padding: `${gap/2 * previewScaleFactor}px`,
+                  // Scale the background pattern based on spacing
+                  backgroundPositionX: `${gap/2 * previewScaleFactor}px`,
+                  backgroundPositionY: `${gap/2 * previewScaleFactor}px`,
+                }}
+              />
+            );
+          })}
+        </div>
+      )}
+      
+      {/* Regular Background Images */}
+      {!useTiledPattern && uploadedImages.map((image, index) => (
+        <div
+          key={index}
+          className="absolute pointer-events-none"
+          style={{
+            left: `${imagePositions[index]?.x ?? 0}%`,
+            top: `${imagePositions[index]?.y ?? 0}%`,
+            opacity: imageOpacity,
+            maxWidth: '50%',
+            maxHeight: '50%',
+          }}
+        >
+          <img
+            src={image}
+            alt=""
+            className="w-full h-full object-contain"
+          />
+        </div>
+      ))}
+
       <div className="flex flex-col h-full">
         {showTitle && (
           <div 

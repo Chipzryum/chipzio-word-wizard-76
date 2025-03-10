@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -6,7 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Trash2, Upload, Shuffle, Info } from "lucide-react";
+import { Trash2, Upload, Shuffle, Info, RotateCw, Grid, ZoomIn } from "lucide-react";
 import { 
   Select, 
   SelectContent, 
@@ -20,7 +21,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { PAGE_SIZES, PAGE_SIZE_OPTIONS, DEFAULT_VALUES, MAX_MULTIPLIERS, Unit } from "./constants";
+import {
+  PAGE_SIZES, 
+  PAGE_SIZE_OPTIONS, 
+  DEFAULT_VALUES, 
+  MAX_MULTIPLIERS, 
+  MIN_DESIGN_ANGLE,
+  MAX_DESIGN_ANGLE,
+  MIN_DESIGN_SIZE,
+  MAX_DESIGN_SIZE,
+  MIN_DESIGN_SPACING,
+  MAX_DESIGN_SPACING,
+  Unit
+} from "./constants";
 
 interface ControlPanelProps {
   title: string;
@@ -95,6 +108,16 @@ interface ControlPanelProps {
   imageOpacity: number;
   setImageOpacity: (value: number) => void;
   onRandomizeImages: () => void;
+  
+  // New design properties
+  designAngle: number;
+  setDesignAngle: (value: number) => void;
+  designSize: number;
+  setDesignSize: (value: number) => void;
+  designSpacing: number;
+  setDesignSpacing: (value: number) => void;
+  useTiledPattern: boolean;
+  setUseTiledPattern: (value: boolean) => void;
 }
 
 export const ControlPanel = ({
@@ -148,7 +171,16 @@ export const ControlPanel = ({
   onImagesChange,
   imageOpacity,
   setImageOpacity,
-  onRandomizeImages
+  onRandomizeImages,
+  // New design properties
+  designAngle,
+  setDesignAngle,
+  designSize,
+  setDesignSize,
+  designSpacing,
+  setDesignSpacing,
+  useTiledPattern,
+  setUseTiledPattern
 }: ControlPanelProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -624,6 +656,8 @@ export const ControlPanel = ({
               </div>
             </div>
 
+            <Separator />
+
             <div className="grid gap-2">
               <Label>Image Opacity</Label>
               <Slider
@@ -639,6 +673,78 @@ export const ControlPanel = ({
                 <span>100%</span>
               </div>
             </div>
+            
+            <div className="grid gap-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="use-tiled-pattern">Use Tiled Pattern</Label>
+                <Switch
+                  id="use-tiled-pattern"
+                  checked={useTiledPattern}
+                  onCheckedChange={setUseTiledPattern}
+                />
+              </div>
+            </div>
+
+            {useTiledPattern && (
+              <>
+                <div className="grid gap-2">
+                  <div className="flex items-center">
+                    <RotateCw className="h-4 w-4 mr-2" />
+                    <Label>Design Angle</Label>
+                  </div>
+                  <Slider
+                    value={[designAngle]}
+                    min={MIN_DESIGN_ANGLE}
+                    max={MAX_DESIGN_ANGLE}
+                    step={5}
+                    onValueChange={(value) => setDesignAngle(value[0])}
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{MIN_DESIGN_ANGLE}°</span>
+                    <span>{designAngle}°</span>
+                    <span>{MAX_DESIGN_ANGLE}°</span>
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <div className="flex items-center">
+                    <ZoomIn className="h-4 w-4 mr-2" />
+                    <Label>Design Size</Label>
+                  </div>
+                  <Slider
+                    value={[designSize * 100]}
+                    min={MIN_DESIGN_SIZE * 100}
+                    max={MAX_DESIGN_SIZE * 100}
+                    step={10}
+                    onValueChange={(value) => setDesignSize(value[0] / 100)}
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{(MIN_DESIGN_SIZE * 100).toFixed(0)}%</span>
+                    <span>{(designSize * 100).toFixed(0)}%</span>
+                    <span>{(MAX_DESIGN_SIZE * 100).toFixed(0)}%</span>
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <div className="flex items-center">
+                    <Grid className="h-4 w-4 mr-2" />
+                    <Label>Grid Spacing</Label>
+                  </div>
+                  <Slider
+                    value={[designSpacing * 100]}
+                    min={MIN_DESIGN_SPACING * 100}
+                    max={MAX_DESIGN_SPACING * 100}
+                    step={10}
+                    onValueChange={(value) => setDesignSpacing(value[0] / 100)}
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Tight</span>
+                    <span>{(designSpacing * 100).toFixed(0)}%</span>
+                    <span>Loose</span>
+                  </div>
+                </div>
+              </>
+            )}
 
             {uploadedImages.length > 0 && (
               <div className="grid gap-2">

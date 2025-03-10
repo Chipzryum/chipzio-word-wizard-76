@@ -48,6 +48,17 @@ export const DEFAULT_LETTER_SIZE_MULTIPLIER = 1;
 export const DEFAULT_WORDLIST_MULTIPLIER = 1;
 export const MAX_LETTER_SIZE = 1.3;
 
+// Design defaults
+export const DEFAULT_DESIGN_ANGLE = 0;
+export const DEFAULT_DESIGN_SIZE = 1;
+export const DEFAULT_DESIGN_SPACING = 1;
+export const MIN_DESIGN_ANGLE = -45;
+export const MAX_DESIGN_ANGLE = 45;
+export const MIN_DESIGN_SIZE = 0.5;
+export const MAX_DESIGN_SIZE = 2;
+export const MIN_DESIGN_SPACING = 0.5;
+export const MAX_DESIGN_SPACING = 3;
+
 // Standard page size options for UI dropdowns
 export const PAGE_SIZE_OPTIONS = [
   { label: "A3", value: "A3" },
