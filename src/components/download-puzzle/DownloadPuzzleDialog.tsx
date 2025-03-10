@@ -1,22 +1,36 @@
-
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PuzzlePDFPreview } from "./PuzzlePDFPreview";
-import { pdf } from "@react-pdf/renderer";
-import { Slider } from "@/components/ui/slider";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue 
-} from "@/components/ui/select";
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
+import { pdf } from "@react-pdf/renderer";
 import { useToast } from "@/hooks/use-toast";
+import { useLocalStorage } from "@/hooks/use-local-storage";
+import { VisualPreview } from "./VisualPreview";
+import { ControlPanel } from "./ControlPanel";
+import { ActionButtons } from "./ActionButtons";
+import { PuzzlePDFPreview } from "./PuzzlePDFPreview";
 import { 
-  PAGE_SIZE_OPTIONS,
-  MAX_LETTER_SIZE 
+  PAGE_SIZES, 
+  UNITS, 
+  PDF_MARGIN, 
+  BORDER_WIDTH, 
+  BASE_PADDING, 
+  MAX_OFFSET,
+  DEFAULT_TITLE_MULTIPLIER,
+  DEFAULT_SUBTITLE_MULTIPLIER,
+  DEFAULT_INSTRUCTION_MULTIPLIER,
+  DEFAULT_CELL_MULTIPLIER,
+  DEFAULT_LETTER_SIZE_MULTIPLIER,
+  DEFAULT_WORDLIST_MULTIPLIER,
+  MAX_LETTER_SIZE,
+  PageSize,
+  Unit
 } from "./constants";
 
 interface DownloadPuzzleDialogProps {
@@ -25,60 +39,191 @@ interface DownloadPuzzleDialogProps {
   puzzle: PuzzleGrid | null;
 }
 
-export const DownloadPuzzleDialog: React.FC<DownloadPuzzleDialogProps> = ({
+export function DownloadPuzzleDialog({
   open,
   onClose,
-  puzzle
-}) => {
-  const { toast } = useToast();
+  puzzle,
+}: DownloadPuzzleDialogProps) {
   
-  // State variables for PDF generation
-  const [isPDFReady, setIsPDFReady] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
-  const [showLivePreview, setShowLivePreview] = useState(false);
+  const [title, setTitle] = useState("Word Search Puzzle");
+  const [subtitle, setSubtitle] = useState("word search");
+  const [instruction, setInstruction] = useState("Can you find all the words?");
+  const [selectedSize, setSelectedSize] = useState<PageSize>("A4");
+  const [selectedUnit, setSelectedUnit] = useState<Unit>("Points");
+  const [customWidth, setCustomWidth] = useState(PAGE_SIZES.A4.width);
+  const [customHeight, setCustomHeight] = useState(PAGE_SIZES.A4.height);
   
-  // Content configuration
-  const [title, setTitle] = useState("WORD SEARCH PUZZLE");
-  const [subtitle, setSubtitle] = useState("Find all the words");
-  const [instruction, setInstruction] = useState("Circle all the words from the list below.");
-  
-  // Visibility options
+  // Size multiplier sliders
+  const [titleSizeMultiplier, setTitleSizeMultiplier] = useState(DEFAULT_TITLE_MULTIPLIER);
+  const [subtitleSizeMultiplier, setSubtitleSizeMultiplier] = useState(DEFAULT_SUBTITLE_MULTIPLIER);
+  const [instructionSizeMultiplier, setInstructionSizeMultiplier] = useState(DEFAULT_INSTRUCTION_MULTIPLIER);
+  const [cellSizeMultiplier, setCellSizeMultiplier] = useState(DEFAULT_CELL_MULTIPLIER);
+  const [letterSizeMultiplier, setLetterSizeMultiplier] = useState(DEFAULT_LETTER_SIZE_MULTIPLIER);
+  const [wordListSizeMultiplier, setWordListSizeMultiplier] = useState(DEFAULT_WORDLIST_MULTIPLIER);
+
+  // Toggle states for showing/hiding elements
   const [showTitle, setShowTitle] = useState(true);
   const [showSubtitle, setShowSubtitle] = useState(true);
   const [showInstruction, setShowInstruction] = useState(true);
-  const [showGrid, setShowGrid] = useState(true);
   const [showWordList, setShowWordList] = useState(true);
-  
-  // Position offsets
+  const [showGrid, setShowGrid] = useState(true);
+
+  // Position offsets for elements
   const [titleOffset, setTitleOffset] = useState(0);
   const [subtitleOffset, setSubtitleOffset] = useState(0);
   const [instructionOffset, setInstructionOffset] = useState(0);
   const [gridOffset, setGridOffset] = useState(0);
   const [wordListOffset, setWordListOffset] = useState(0);
+
+  // Track which element is being positioned
+  const [positioningElement, setPositioningElement] = useState<string | null>(null);
   
-  // Size configurations
-  const [cellSize, setCellSize] = useState(28);
-  const [letterSizeMultiplier, setLetterSizeMultiplier] = useState(1);
-  const [titleSizeMultiplier, setTitleSizeMultiplier] = useState(1);
-  const [subtitleSizeMultiplier, setSubtitleSizeMultiplier] = useState(1);
-  const [instructionSizeMultiplier, setInstructionSizeMultiplier] = useState(1);
-  const [wordListSizeMultiplier, setWordListSizeMultiplier] = useState(1);
+  // State for saving layout and loading status
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isPDFReady, setIsPDFReady] = useState(false);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   
-  // Page size configuration
-  const [currentWidth, setCurrentWidth] = useState(595.28); // A4 default
-  const [currentHeight, setCurrentHeight] = useState(841.89); // A4 default
-  const [contentWidth, setContentWidth] = useState(515.28); // A4 content area
-  const [contentHeight, setContentHeight] = useState(761.89); // A4 content area
-  
-  // Aesthetics configuration
-  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  // State for live preview
+  const [showLivePreview, setShowLivePreview] = useState(false);
+
+  // New state for images
+  const [uploadedImages, setUploadedImages] = useLocalStorage<string[]>("puzzle-images", []);
   const [imageOpacity, setImageOpacity] = useState(0.3);
-  const [imagePositions, setImagePositions] = useState<{x: number; y: number}[]>([]);
-  const [designAngle, setDesignAngle] = useState(0);
-  const [designSize, setDesignSize] = useState(1);
-  const [designSpacing, setDesignSpacing] = useState(1);
-  const [useTiledPattern, setUseTiledPattern] = useState(false);
+  const [imagePositions, setImagePositions] = useState<{ x: number; y: number }[]>([]);
+
+  // Initialize image positions when images change
+  useEffect(() => {
+    randomizeImagePositions();
+  }, [uploadedImages]);
+
+  const randomizeImagePositions = () => {
+    const newPositions = uploadedImages.map(() => ({
+      x: Math.random() * 80, // percentage
+      y: Math.random() * 80, // percentage
+    }));
+    setImagePositions(newPositions);
+  };
+  
+  const { toast } = useToast();
+
+  // Handle unit change with proper type
+  const handleUnitChange = (unit: Unit) => {
+    setSelectedUnit(unit);
+  };
+
+  const currentWidth = selectedSize === "Custom" ? customWidth : PAGE_SIZES[selectedSize].width;
+  const currentHeight = selectedSize === "Custom" ? customHeight : PAGE_SIZES[selectedSize].height;
+
+  // Calculate available content area (after margins and border)
+  const contentWidth = currentWidth - (2 * PDF_MARGIN) - (2 * BASE_PADDING) - (2 * BORDER_WIDTH);
+  const contentHeight = currentHeight - (2 * PDF_MARGIN) - (2 * BASE_PADDING) - (2 * BORDER_WIDTH);
+
+  // Calculate preview size (maintaining aspect ratio)
+  const previewContainerWidth = 300;
+  const previewContainerHeight = 400;
+  const widthScale = previewContainerWidth / currentWidth;
+  const heightScale = previewContainerHeight / currentHeight;
+  const previewScaleFactor = Math.min(widthScale, heightScale);
+
+  // Calculate font sizes based on page dimensions and multipliers
+  const calculateFontSizes = () => {
+    // Base sizes for A4
+    const a4Width = PAGE_SIZES.A4.width;
+    const a4Height = PAGE_SIZES.A4.height;
+    const sizeRatio = Math.sqrt((currentWidth * currentHeight) / (a4Width * a4Height));
+    
+    return {
+      titleSize: Math.max(20, Math.min(48, Math.floor(36 * sizeRatio * titleSizeMultiplier))),
+      subtitleSize: Math.max(14, Math.min(36, Math.floor(24 * sizeRatio * subtitleSizeMultiplier))),
+      instructionSize: Math.max(8, Math.min(24, Math.floor(14 * sizeRatio * instructionSizeMultiplier))),
+      // Make word list size more responsive to multiplier
+      wordListSize: Math.max(6, Math.min(28, Math.floor(12 * sizeRatio * wordListSizeMultiplier))),
+    };
+  };
+
+  const fontSizes = calculateFontSizes();
+  
+  // Calculate space needed for elements
+  const calculateSpaceNeeded = () => {
+    let space = 0;
+    if (showTitle) space += fontSizes.titleSize * titleSizeMultiplier + 10;
+    if (showSubtitle) space += fontSizes.subtitleSize * subtitleSizeMultiplier + 10;
+    if (showInstruction) space += fontSizes.instructionSize * instructionSizeMultiplier + 20;
+    if (showWordList) space += fontSizes.wordListSize * wordListSizeMultiplier * 3;
+    return space;
+  };
+
+  // Calculate grid cell size based on page dimensions, grid size, and the cell size multiplier
+  const calculateGridCellSize = () => {
+    if (!puzzle) return 20;
+    
+    const gridWidth = puzzle.grid[0].length;
+    const gridHeight = puzzle.grid.length;
+    
+    // Reserve space for visible elements
+    const reservedSpace = calculateSpaceNeeded() + 40; // add padding
+    
+    const availableHeight = contentHeight - reservedSpace;
+    const availableWidth = contentWidth;
+    
+    // Calculate cell size to fit the grid
+    const cellSizeByWidth = availableWidth / gridWidth;
+    const cellSizeByHeight = availableHeight / gridHeight;
+    
+    const baseSize = Math.min(cellSizeByWidth, cellSizeByHeight);
+    
+    // Apply the cell size multiplier
+    return baseSize * cellSizeMultiplier;
+  };
+
+  const cellSize = calculateGridCellSize();
+  
+  // Calculate letter size separately, based on cell size and letter size multiplier
+  const calculateLetterSize = () => {
+    // Base letter size is a percentage of cell size
+    const baseLetterSize = cellSize * 0.6;
+    
+    // Cap the letter size multiplier to prevent disappearing text
+    const cappedMultiplier = Math.min(letterSizeMultiplier, MAX_LETTER_SIZE);
+    
+    return baseLetterSize * cappedMultiplier;
+  };
+  
+  const letterSize = calculateLetterSize();
+
+  // Calculate vertical position offset with improved boundary checking
+  const getVerticalOffset = (offset: number) => {
+    // Each unit is 10 points, limit to prevent going off page
+    const maxAllowedOffset = Math.min(MAX_OFFSET, (contentHeight / 6) / 10);
+    return Math.max(-maxAllowedOffset, Math.min(offset * 10, maxAllowedOffset * 10));
+  };
+
+  const handleSizeChange = (size: PageSize) => {
+    setSelectedSize(size);
+    if (size !== "Custom") {
+      setCustomWidth(PAGE_SIZES[size].width);
+      setCustomHeight(PAGE_SIZES[size].height);
+    }
+    setIsPDFReady(false);
+  };
+
+  const handleDimensionChange = (dimension: "width" | "height", value: string) => {
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) return;
+
+    const pointValue = numValue * UNITS[selectedUnit];
+    if (dimension === "width") {
+      setCustomWidth(pointValue);
+    } else {
+      setCustomHeight(pointValue);
+    }
+    setSelectedSize("Custom");
+    setIsPDFReady(false);
+  };
+
+  const convertFromPoints = (points: number) => {
+    return (points / UNITS[selectedUnit]).toFixed(2);
+  };
 
   const handleSaveLayout = async () => {
     if (!puzzle) {
@@ -126,13 +271,6 @@ export const DownloadPuzzleDialog: React.FC<DownloadPuzzleDialogProps> = ({
           subtitleSizeMultiplier={subtitleSizeMultiplier}
           instructionSizeMultiplier={instructionSizeMultiplier}
           wordListSizeMultiplier={wordListSizeMultiplier}
-          uploadedImages={uploadedImages}
-          imageOpacity={imageOpacity}
-          imagePositions={imagePositions}
-          designAngle={designAngle}
-          designSize={designSize}
-          designSpacing={designSpacing}
-          useTiledPattern={useTiledPattern}
         />
       ).toBlob();
       
@@ -157,180 +295,249 @@ export const DownloadPuzzleDialog: React.FC<DownloadPuzzleDialogProps> = ({
     }
   };
 
-  // Rest of component implementation
+  const handleDownload = async () => {
+    if (!puzzle) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No puzzle to download. Please generate a puzzle first.",
+      });
+      return;
+    }
+    
+    if (!isPDFReady || !pdfBlob) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please save the layout first by clicking 'Save Layout'.",
+      });
+      return;
+    }
+    
+    try {
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${title.toLowerCase().replace(/\s+/g, '-')}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Success",
+        description: "PDF downloaded successfully!",
+      });
+      
+      onClose();
+    } catch (error) {
+      console.error('Failed to download PDF:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to download PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
+      });
+    }
+  };
+
+  const formatSliderValue = (value: number) => {
+    return `${(value * 100).toFixed(0)}%`;
+  };
+
+  const moveElement = (element: string, direction: 'up' | 'down') => {
+    const step = direction === 'up' ? -1 : 1;
+    const maxAllowedOffset = Math.min(MAX_OFFSET, (contentHeight / 6) / 10);
+    
+    switch(element) {
+      case 'title':
+        setTitleOffset(prev => Math.max(-maxAllowedOffset, Math.min(maxAllowedOffset, prev + step)));
+        break;
+      case 'subtitle':
+        setSubtitleOffset(prev => Math.max(-maxAllowedOffset, Math.min(maxAllowedOffset, prev + step)));
+        break;
+      case 'instruction':
+        setInstructionOffset(prev => Math.max(-maxAllowedOffset, Math.min(maxAllowedOffset, prev + step)));
+        break;
+      case 'grid':
+        setGridOffset(prev => Math.max(-maxAllowedOffset, Math.min(maxAllowedOffset, prev + step)));
+        break;
+      case 'wordList':
+        setWordListOffset(prev => Math.max(-maxAllowedOffset, Math.min(maxAllowedOffset, prev + step)));
+        break;
+    }
+    setIsPDFReady(false);
+  };
+
+  const getPositionValue = (offset: number) => {
+    if (offset === 0) return '0';
+    return offset > 0 ? `+${offset}` : `${offset}`;
+  };
+
+  const togglePositioning = (element: string) => {
+    if (positioningElement === element) {
+      setPositioningElement(null);
+    } else {
+      setPositioningElement(element);
+    }
+  };
+
+  // Update effect to reset PDF status whenever settings change
+  useEffect(() => {
+    setIsPDFReady(false);
+    setShowLivePreview(false);
+  }, [
+    titleSizeMultiplier, subtitleSizeMultiplier, instructionSizeMultiplier,
+    cellSizeMultiplier, letterSizeMultiplier, wordListSizeMultiplier,
+    showTitle, showSubtitle, showInstruction, showWordList, showGrid,
+    titleOffset, subtitleOffset, instructionOffset, gridOffset, wordListOffset,
+    title, subtitle, instruction, selectedSize, customWidth, customHeight
+  ]);
+
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
-        <DialogTitle>Download Puzzle</DialogTitle>
-        <div className="grid gap-4">
-          <button
-            onClick={handleSaveLayout}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded"
-            disabled={isGenerating}
-          >
-            {isGenerating ? "Generating PDF..." : "Generate PDF"}
-          </button>
-          
-          {/* Rest of your UI implementation */}
-          {/* Add tabs for Layout, Content, Aesthetics */}
-          <Tabs defaultValue="layout">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="layout">Layout</TabsTrigger>
-              <TabsTrigger value="content">Content</TabsTrigger>
-              <TabsTrigger value="aesthetics">Aesthetics</TabsTrigger>
-            </TabsList>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Download Puzzle</DialogTitle>
+          <DialogDescription>
+            Customize your puzzle before downloading
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <ControlPanel 
+            showTitle={showTitle}
+            setShowTitle={setShowTitle}
+            title={title}
+            setTitle={setTitle}
+            titleSizeMultiplier={titleSizeMultiplier}
+            setTitleSizeMultiplier={setTitleSizeMultiplier}
+            titleOffset={titleOffset}
+            positioningElement={positioningElement}
+            togglePositioning={togglePositioning}
+            moveElement={moveElement}
             
-            <TabsContent value="layout">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Page Size</label>
-                  <Select 
-                    defaultValue="a4" 
-                    onValueChange={(value) => {
-                      // Handle page size change
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a page size" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PAGE_SIZE_OPTIONS.map(option => (
-                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-2">Cell Size: {cellSize}px</label>
-                  <Slider
-                    value={[cellSize]}
-                    min={20}
-                    max={40}
-                    step={1}
-                    onValueChange={(values) => setCellSize(values[0])}
-                  />
-                </div>
-              </div>
-            </TabsContent>
+            showSubtitle={showSubtitle}
+            setShowSubtitle={setShowSubtitle}
+            subtitle={subtitle}
+            setSubtitle={setSubtitle}
+            subtitleSizeMultiplier={subtitleSizeMultiplier}
+            setSubtitleSizeMultiplier={setSubtitleSizeMultiplier}
+            subtitleOffset={subtitleOffset}
             
-            <TabsContent value="content">
-              {/* Content tab implementation */}
-            </TabsContent>
+            showInstruction={showInstruction}
+            setShowInstruction={setShowInstruction}
+            instruction={instruction}
+            setInstruction={setInstruction}
+            instructionSizeMultiplier={instructionSizeMultiplier}
+            setInstructionSizeMultiplier={setInstructionSizeMultiplier}
+            instructionOffset={instructionOffset}
             
-            <TabsContent value="aesthetics">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Image Tiling Pattern</label>
-                  <Select 
-                    defaultValue="none" 
-                    onValueChange={(value) => {
-                      setUseTiledPattern(value === "tiled");
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select pattern type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      <SelectItem value="tiled">Tiled Pattern</SelectItem>
-                      <SelectItem value="centered">Centered</SelectItem>
-                      <SelectItem value="random">Random</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Design Angle: {designAngle}°
-                  </label>
-                  <Slider
-                    value={[designAngle]}
-                    min={0}
-                    max={360}
-                    step={5}
-                    onValueChange={(values) => setDesignAngle(values[0])}
+            selectedSize={selectedSize}
+            handleSizeChange={handleSizeChange}
+            
+            showGrid={showGrid}
+            setShowGrid={setShowGrid}
+            cellSizeMultiplier={cellSizeMultiplier}
+            setCellSizeMultiplier={setCellSizeMultiplier}
+            letterSizeMultiplier={letterSizeMultiplier}
+            setLetterSizeMultiplier={setLetterSizeMultiplier}
+            gridOffset={gridOffset}
+            
+            showWordList={showWordList}
+            setShowWordList={setShowWordList}
+            wordListSizeMultiplier={wordListSizeMultiplier}
+            setWordListSizeMultiplier={setWordListSizeMultiplier}
+            wordListOffset={wordListOffset}
+            
+            selectedUnit={selectedUnit}
+            setSelectedUnit={handleUnitChange}
+            currentWidth={currentWidth}
+            currentHeight={currentHeight}
+            handleDimensionChange={handleDimensionChange}
+            convertFromPoints={convertFromPoints}
+            formatSliderValue={formatSliderValue}
+            getPositionValue={getPositionValue}
+            uploadedImages={uploadedImages}
+            onImagesChange={setUploadedImages}
+            imageOpacity={imageOpacity}
+            setImageOpacity={setImageOpacity}
+            onRandomizeImages={randomizeImagePositions}
+          />
+
+          {/* Preview Section */}
+          <div className="space-y-4">
+            <Label>Preview</Label>
+            <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
+              {/* Background Images */}
+              {uploadedImages.map((image, index) => (
+                <div
+                  key={index}
+                  className="absolute pointer-events-none"
+                  style={{
+                    left: `${imagePositions[index]?.x ?? 0}%`,
+                    top: `${imagePositions[index]?.y ?? 0}%`,
+                    opacity: imageOpacity,
+                    maxWidth: '50%',
+                    maxHeight: '50%',
+                  }}
+                >
+                  <img
+                    src={image}
+                    alt=""
+                    className="w-full h-full object-contain"
                   />
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Design Size: {Math.round(designSize * 100)}%
-                  </label>
-                  <Slider
-                    value={[designSize]}
-                    min={0.2}
-                    max={2}
-                    step={0.1}
-                    onValueChange={(values) => setDesignSize(values[0])}
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Image Opacity: {Math.round(imageOpacity * 100)}%
-                  </label>
-                  <Slider
-                    value={[imageOpacity]}
-                    min={0.05}
-                    max={1}
-                    step={0.05}
-                    onValueChange={(values) => setImageOpacity(values[0])}
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-2">Upload Images</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          if (event.target && typeof event.target.result === 'string') {
-                            setUploadedImages([...uploadedImages, event.target.result]);
-                            setImagePositions([...imagePositions, { x: 25, y: 25 }]);
-                          }
-                        };
-                        reader.readAsDataURL(e.target.files[0]);
-                      }
-                    }}
-                    className="w-full border rounded p-2"
-                  />
-                </div>
-                
-                {uploadedImages.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2">
-                    {uploadedImages.map((image, index) => (
-                      <div key={index} className="relative">
-                        <img 
-                          src={image} 
-                          alt={`Uploaded ${index}`} 
-                          className="w-full h-20 object-contain border rounded"
-                        />
-                        <button
-                          className="absolute top-0 right-0 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center"
-                          onClick={() => {
-                            const newImages = [...uploadedImages];
-                            const newPositions = [...imagePositions];
-                            newImages.splice(index, 1);
-                            newPositions.splice(index, 1);
-                            setUploadedImages(newImages);
-                            setImagePositions(newPositions);
-                          }}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
+              ))}
+              
+              <VisualPreview 
+                puzzle={puzzle}
+                showLivePreview={showLivePreview}
+                isPDFReady={isPDFReady}
+                title={title}
+                subtitle={subtitle}
+                instruction={instruction}
+                showTitle={showTitle}
+                showSubtitle={showSubtitle}
+                showInstruction={showInstruction}
+                showGrid={showGrid}
+                showWordList={showWordList}
+                titleOffset={titleOffset}
+                subtitleOffset={subtitleOffset}
+                instructionOffset={instructionOffset}
+                gridOffset={gridOffset}
+                wordListOffset={wordListOffset}
+                currentWidth={currentWidth}
+                currentHeight={currentHeight}
+                contentWidth={contentWidth}
+                contentHeight={contentHeight}
+                cellSize={cellSize}
+                letterSize={letterSize}
+                letterSizeMultiplier={letterSizeMultiplier}
+                titleSizeMultiplier={titleSizeMultiplier}
+                subtitleSizeMultiplier={subtitleSizeMultiplier}
+                instructionSizeMultiplier={instructionSizeMultiplier}
+                wordListSizeMultiplier={wordListSizeMultiplier}
+                previewScaleFactor={previewScaleFactor}
+                fontSizes={fontSizes}
+                getVerticalOffset={getVerticalOffset}
+              />
+            </div>
+            
+            <ActionButtons 
+              handleSaveLayout={handleSaveLayout}
+              handleDownload={handleDownload}
+              isGenerating={isGenerating}
+              isPDFReady={isPDFReady}
+              puzzle={puzzle}
+              pdfBlob={pdfBlob}
+            />
+            
+            {!isPDFReady && (
+              <p className="text-xs text-muted-foreground">
+                Click "Save Layout" after making changes to update the PDF preview.
+              </p>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
   );
-};
+}
