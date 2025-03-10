@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
@@ -367,6 +366,87 @@ export function DownloadPuzzleDialog({
     uploadedImages, imageOpacity, imageGridSize
   ]);
 
+  const AestheticsTab = () => (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Background Images</Label>
+        <div className="flex flex-wrap gap-2 mb-2">
+          {uploadedImages.map((image, index) => (
+            <div key={index} className="relative w-12 h-12 rounded overflow-hidden border">
+              <img 
+                src={image} 
+                alt=""
+                className="w-full h-full object-cover"
+              />
+              <button 
+                onClick={() => {
+                  const newImages = [...uploadedImages];
+                  newImages.splice(index, 1);
+                  setUploadedImages(newImages);
+                }}
+                className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-bl"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          <label className="w-12 h-12 border-2 border-dashed rounded flex items-center justify-center cursor-pointer hover:bg-secondary/30">
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  const file = e.target.files[0];
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                    if (event.target && typeof event.target.result === 'string') {
+                      setUploadedImages([...uploadedImages, event.target.result]);
+                    }
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+            />
+            +
+          </label>
+        </div>
+      </div>
+
+      {uploadedImages.length > 0 && (
+        <>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <Label>Image Opacity</Label>
+              <span className="text-xs">{(imageOpacity * 100).toFixed(0)}%</span>
+            </div>
+            <Slider
+              value={[imageOpacity * 100]}
+              min={10}
+              max={100}
+              step={5}
+              onValueChange={(value) => setImageOpacity(value[0] / 100)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <Label>Image Size</Label>
+              <span className="text-xs">{imageGridSize}px</span>
+            </div>
+            <Slider
+              value={[imageGridSize]}
+              min={MIN_IMAGE_GRID_SIZE}
+              max={MAX_IMAGE_GRID_SIZE}
+              step={5}
+              onValueChange={(value) => setImageGridSize(value[0])}
+            />
+          </div>
+        </>
+      )}
+    </div>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -378,76 +458,73 @@ export function DownloadPuzzleDialog({
         </DialogHeader>
 
         <Tabs defaultValue="content">
-          <TabsList className="grid grid-cols-4 mb-4">
+          <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="layout">Layout</TabsTrigger>
-            <TabsTrigger value="sizes">Sizes</TabsTrigger>
             <TabsTrigger value="aesthetics">Aesthetics</TabsTrigger>
           </TabsList>
           
           <TabsContent value="content" className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <ControlPanel 
-                showTitle={showTitle}
-                setShowTitle={setShowTitle}
-                title={title}
-                setTitle={setTitle}
-                titleSizeMultiplier={titleSizeMultiplier}
-                setTitleSizeMultiplier={setTitleSizeMultiplier}
-                titleOffset={titleOffset}
-                positioningElement={positioningElement}
-                togglePositioning={togglePositioning}
-                moveElement={moveElement}
-                
-                showSubtitle={showSubtitle}
-                setShowSubtitle={setShowSubtitle}
-                subtitle={subtitle}
-                setSubtitle={setSubtitle}
-                subtitleSizeMultiplier={subtitleSizeMultiplier}
-                setSubtitleSizeMultiplier={setSubtitleSizeMultiplier}
-                subtitleOffset={subtitleOffset}
-                
-                showInstruction={showInstruction}
-                setShowInstruction={setShowInstruction}
-                instruction={instruction}
-                setInstruction={setInstruction}
-                instructionSizeMultiplier={instructionSizeMultiplier}
-                setInstructionSizeMultiplier={setInstructionSizeMultiplier}
-                instructionOffset={instructionOffset}
-                
-                selectedSize={selectedSize}
-                handleSizeChange={handleSizeChange}
-                
-                showGrid={showGrid}
-                setShowGrid={setShowGrid}
-                cellSizeMultiplier={cellSizeMultiplier}
-                setCellSizeMultiplier={setCellSizeMultiplier}
-                letterSizeMultiplier={letterSizeMultiplier}
-                setLetterSizeMultiplier={setLetterSizeMultiplier}
-                gridOffset={gridOffset}
-                
-                showWordList={showWordList}
-                setShowWordList={setShowWordList}
-                wordListSizeMultiplier={wordListSizeMultiplier}
-                setWordListSizeMultiplier={setWordListSizeMultiplier}
-                wordListOffset={wordListOffset}
-                
-                selectedUnit={selectedUnit}
-                setSelectedUnit={handleUnitChange}
-                currentWidth={currentWidth}
-                currentHeight={currentHeight}
-                handleDimensionChange={handleDimensionChange}
-                convertFromPoints={convertFromPoints}
-                formatSliderValue={formatSliderValue}
-                getPositionValue={getPositionValue}
-                
-                uploadedImages={uploadedImages}
-                onImagesChange={setUploadedImages}
-                imageOpacity={imageOpacity}
-                setImageOpacity={setImageOpacity}
-                onRandomizeImages={handleRandomizeImages}
-              />
-            </div>
+            <ControlPanel 
+              showTitle={showTitle}
+              setShowTitle={setShowTitle}
+              title={title}
+              setTitle={setTitle}
+              titleSizeMultiplier={titleSizeMultiplier}
+              setTitleSizeMultiplier={setTitleSizeMultiplier}
+              titleOffset={titleOffset}
+              positioningElement={positioningElement}
+              togglePositioning={togglePositioning}
+              moveElement={moveElement}
+              
+              showSubtitle={showSubtitle}
+              setShowSubtitle={setShowSubtitle}
+              subtitle={subtitle}
+              setSubtitle={setSubtitle}
+              subtitleSizeMultiplier={subtitleSizeMultiplier}
+              setSubtitleSizeMultiplier={setSubtitleSizeMultiplier}
+              subtitleOffset={subtitleOffset}
+              
+              showInstruction={showInstruction}
+              setShowInstruction={setShowInstruction}
+              instruction={instruction}
+              setInstruction={setInstruction}
+              instructionSizeMultiplier={instructionSizeMultiplier}
+              setInstructionSizeMultiplier={setInstructionSizeMultiplier}
+              instructionOffset={instructionOffset}
+              
+              selectedSize={selectedSize}
+              handleSizeChange={handleSizeChange}
+              
+              showGrid={showGrid}
+              setShowGrid={setShowGrid}
+              cellSizeMultiplier={cellSizeMultiplier}
+              setCellSizeMultiplier={setCellSizeMultiplier}
+              letterSizeMultiplier={letterSizeMultiplier}
+              setLetterSizeMultiplier={setLetterSizeMultiplier}
+              gridOffset={gridOffset}
+              
+              showWordList={showWordList}
+              setShowWordList={setShowWordList}
+              wordListSizeMultiplier={wordListSizeMultiplier}
+              setWordListSizeMultiplier={setWordListSizeMultiplier}
+              wordListOffset={wordListOffset}
+              
+              selectedUnit={selectedUnit}
+              setSelectedUnit={handleUnitChange}
+              currentWidth={currentWidth}
+              currentHeight={currentHeight}
+              handleDimensionChange={handleDimensionChange}
+              convertFromPoints={convertFromPoints}
+              formatSliderValue={formatSliderValue}
+              getPositionValue={getPositionValue}
+              
+              uploadedImages={uploadedImages}
+              onImagesChange={setUploadedImages}
+              imageOpacity={imageOpacity}
+              setImageOpacity={setImageOpacity}
+              onRandomizeImages={handleRandomizeImages}
+            />
 
             <div className="space-y-4">
               <Label>Preview</Label>
@@ -520,193 +597,6 @@ export function DownloadPuzzleDialog({
           </TabsContent>
           
           <TabsContent value="layout" className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <Label>Position Elements</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {showTitle && (
-                    <div className="space-y-2 p-2 border rounded-md">
-                      <div className="flex items-center justify-between">
-                        <Label>Title Position</Label>
-                        <span className="text-xs">{getPositionValue(titleOffset)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <button 
-                          onClick={() => moveElement('title', 'up')}
-                          className="px-2 py-1 bg-secondary rounded-md"
-                        >
-                          Up
-                        </button>
-                        <button 
-                          onClick={() => moveElement('title', 'down')}
-                          className="px-2 py-1 bg-secondary rounded-md"
-                        >
-                          Down
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {showSubtitle && (
-                    <div className="space-y-2 p-2 border rounded-md">
-                      <div className="flex items-center justify-between">
-                        <Label>Subtitle Position</Label>
-                        <span className="text-xs">{getPositionValue(subtitleOffset)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <button 
-                          onClick={() => moveElement('subtitle', 'up')}
-                          className="px-2 py-1 bg-secondary rounded-md"
-                        >
-                          Up
-                        </button>
-                        <button 
-                          onClick={() => moveElement('subtitle', 'down')}
-                          className="px-2 py-1 bg-secondary rounded-md"
-                        >
-                          Down
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {showInstruction && (
-                    <div className="space-y-2 p-2 border rounded-md">
-                      <div className="flex items-center justify-between">
-                        <Label>Instruction Position</Label>
-                        <span className="text-xs">{getPositionValue(instructionOffset)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <button 
-                          onClick={() => moveElement('instruction', 'up')}
-                          className="px-2 py-1 bg-secondary rounded-md"
-                        >
-                          Up
-                        </button>
-                        <button 
-                          onClick={() => moveElement('instruction', 'down')}
-                          className="px-2 py-1 bg-secondary rounded-md"
-                        >
-                          Down
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {showGrid && (
-                    <div className="space-y-2 p-2 border rounded-md">
-                      <div className="flex items-center justify-between">
-                        <Label>Grid Position</Label>
-                        <span className="text-xs">{getPositionValue(gridOffset)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <button 
-                          onClick={() => moveElement('grid', 'up')}
-                          className="px-2 py-1 bg-secondary rounded-md"
-                        >
-                          Up
-                        </button>
-                        <button 
-                          onClick={() => moveElement('grid', 'down')}
-                          className="px-2 py-1 bg-secondary rounded-md"
-                        >
-                          Down
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {showWordList && (
-                    <div className="space-y-2 p-2 border rounded-md">
-                      <div className="flex items-center justify-between">
-                        <Label>Word List Position</Label>
-                        <span className="text-xs">{getPositionValue(wordListOffset)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <button 
-                          onClick={() => moveElement('wordList', 'up')}
-                          className="px-2 py-1 bg-secondary rounded-md"
-                        >
-                          Up
-                        </button>
-                        <button 
-                          onClick={() => moveElement('wordList', 'down')}
-                          className="px-2 py-1 bg-secondary rounded-md"
-                        >
-                          Down
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <Label>Preview</Label>
-              <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-                {uploadedImages.length > 0 && (
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    <div 
-                      className="w-full h-full"
-                      style={{
-                        backgroundImage: uploadedImages.length > 0 
-                          ? `url(${uploadedImages[0]})` 
-                          : 'none',
-                        backgroundSize: `${imageGridSize}px ${imageGridSize}px`,
-                        backgroundRepeat: 'repeat',
-                        opacity: imageOpacity,
-                      }}
-                    />
-                  </div>
-                )}
-                
-                <VisualPreview 
-                  puzzle={puzzle}
-                  showLivePreview={showLivePreview}
-                  isPDFReady={isPDFReady}
-                  title={title}
-                  subtitle={subtitle}
-                  instruction={instruction}
-                  showTitle={showTitle}
-                  showSubtitle={showSubtitle}
-                  showInstruction={showInstruction}
-                  showGrid={showGrid}
-                  showWordList={showWordList}
-                  titleOffset={titleOffset}
-                  subtitleOffset={subtitleOffset}
-                  instructionOffset={instructionOffset}
-                  gridOffset={gridOffset}
-                  wordListOffset={wordListOffset}
-                  currentWidth={currentWidth}
-                  currentHeight={currentHeight}
-                  contentWidth={contentWidth}
-                  contentHeight={contentHeight}
-                  cellSize={cellSize}
-                  letterSize={letterSize}
-                  letterSizeMultiplier={letterSizeMultiplier}
-                  titleSizeMultiplier={titleSizeMultiplier}
-                  subtitleSizeMultiplier={subtitleSizeMultiplier}
-                  instructionSizeMultiplier={instructionSizeMultiplier}
-                  wordListSizeMultiplier={wordListSizeMultiplier}
-                  previewScaleFactor={previewScaleFactor}
-                  fontSizes={fontSizes}
-                  getVerticalOffset={getVerticalOffset}
-                />
-              </div>
-              
-              <ActionButtons 
-                handleSaveLayout={handleSaveLayout}
-                handleDownload={handleDownload}
-                isGenerating={isGenerating}
-                isPDFReady={isPDFReady}
-                puzzle={puzzle}
-                pdfBlob={pdfBlob}
-              />
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="sizes" className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-6">
               <div className="space-y-4">
                 <Label>Page Size</Label>
@@ -845,93 +735,7 @@ export function DownloadPuzzleDialog({
           </TabsContent>
           
           <TabsContent value="aesthetics" className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Background Images</Label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {uploadedImages.map((image, index) => (
-                    <div key={index} className="relative w-12 h-12 rounded overflow-hidden border">
-                      <img 
-                        src={image} 
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
-                      <button 
-                        onClick={() => {
-                          const newImages = [...uploadedImages];
-                          newImages.splice(index, 1);
-                          setUploadedImages(newImages);
-                        }}
-                        className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-bl"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                  <label className="w-12 h-12 border-2 border-dashed rounded flex items-center justify-center cursor-pointer hover:bg-secondary/30">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        if (e.target.files && e.target.files[0]) {
-                          const file = e.target.files[0];
-                          const reader = new FileReader();
-                          reader.onload = (event) => {
-                            if (event.target && typeof event.target.result === 'string') {
-                              setUploadedImages([...uploadedImages, event.target.result]);
-                            }
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
-                    +
-                  </label>
-                </div>
-                
-                {uploadedImages.length > 0 && (
-                  <button
-                    onClick={handleRandomizeImages}
-                    className="px-2 py-1 bg-secondary rounded-md text-xs"
-                  >
-                    Randomize Order
-                  </button>
-                )}
-              </div>
-
-              {uploadedImages.length > 0 && (
-                <>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label>Image Opacity</Label>
-                      <span className="text-xs">{(imageOpacity * 100).toFixed(0)}%</span>
-                    </div>
-                    <Slider
-                      value={[imageOpacity * 100]}
-                      min={10}
-                      max={100}
-                      step={5}
-                      onValueChange={(value) => setImageOpacity(value[0] / 100)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label>Image Grid Size</Label>
-                      <span className="text-xs">{imageGridSize}px</span>
-                    </div>
-                    <Slider
-                      value={[imageGridSize]}
-                      min={MIN_IMAGE_GRID_SIZE}
-                      max={MAX_IMAGE_GRID_SIZE}
-                      step={5}
-                      onValueChange={(value) => setImageGridSize(value[0])}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
+            <AestheticsTab />
             
             <div className="space-y-4">
               <Label>Preview</Label>
