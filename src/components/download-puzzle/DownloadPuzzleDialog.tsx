@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -11,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { pdf } from "@react-pdf/renderer";
 import { useToast } from "@/hooks/use-toast";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 import { VisualPreview } from "./VisualPreview";
 import { ControlPanel } from "./ControlPanel";
 import { ActionButtons } from "./ActionButtons";
@@ -85,6 +85,24 @@ export function DownloadPuzzleDialog({
   
   // State for live preview
   const [showLivePreview, setShowLivePreview] = useState(false);
+
+  // New state for images
+  const [uploadedImages, setUploadedImages] = useLocalStorage<string[]>("puzzle-images", []);
+  const [imageOpacity, setImageOpacity] = useState(0.3);
+  const [imagePositions, setImagePositions] = useState<{ x: number; y: number }[]>([]);
+
+  // Initialize image positions when images change
+  useEffect(() => {
+    randomizeImagePositions();
+  }, [uploadedImages]);
+
+  const randomizeImagePositions = () => {
+    const newPositions = uploadedImages.map(() => ({
+      x: Math.random() * 80, // percentage
+      y: Math.random() * 80, // percentage
+    }));
+    setImagePositions(newPositions);
+  };
   
   const { toast } = useToast();
 
@@ -437,12 +455,38 @@ export function DownloadPuzzleDialog({
             convertFromPoints={convertFromPoints}
             formatSliderValue={formatSliderValue}
             getPositionValue={getPositionValue}
+            uploadedImages={uploadedImages}
+            onImagesChange={setUploadedImages}
+            imageOpacity={imageOpacity}
+            setImageOpacity={setImageOpacity}
+            onRandomizeImages={randomizeImagePositions}
           />
 
           {/* Preview Section */}
           <div className="space-y-4">
             <Label>Preview</Label>
-            <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto">
+            <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
+              {/* Background Images */}
+              {uploadedImages.map((image, index) => (
+                <div
+                  key={index}
+                  className="absolute pointer-events-none"
+                  style={{
+                    left: `${imagePositions[index]?.x ?? 0}%`,
+                    top: `${imagePositions[index]?.y ?? 0}%`,
+                    opacity: imageOpacity,
+                    maxWidth: '50%',
+                    maxHeight: '50%',
+                  }}
+                >
+                  <img
+                    src={image}
+                    alt=""
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ))}
+              
               <VisualPreview 
                 puzzle={puzzle}
                 showLivePreview={showLivePreview}
@@ -487,7 +531,9 @@ export function DownloadPuzzleDialog({
             />
             
             {!isPDFReady && (
-              <p className="text-xs text-muted-foreground">Click "Save Layout" after making changes to update the PDF preview.</p>
+              <p className="text-xs text-muted-foreground">
+                Click "Save Layout" after making changes to update the PDF preview.
+              </p>
             )}
           </div>
         </div>

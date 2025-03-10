@@ -1,8 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Trash2, Upload, Shuffle, Info } from "lucide-react";
 import { 
   Select, 
   SelectContent, 
@@ -10,8 +14,12 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { PAGE_SIZES, PAGE_SIZE_OPTIONS, DEFAULT_VALUES, MAX_MULTIPLIERS, Unit } from "./constants";
 
 interface ControlPanelProps {
@@ -81,6 +89,12 @@ interface ControlPanelProps {
   
   formatSliderValue: (value: number) => string;
   getPositionValue: (offset: number) => string;
+
+  uploadedImages: string[];
+  onImagesChange: (images: string[]) => void;
+  imageOpacity: number;
+  setImageOpacity: (value: number) => void;
+  onRandomizeImages: () => void;
 }
 
 export const ControlPanel = ({
@@ -129,8 +143,68 @@ export const ControlPanel = ({
   getPositionValue,
   positioningElement,
   togglePositioning,
-  moveElement
+  moveElement,
+  uploadedImages,
+  onImagesChange,
+  imageOpacity,
+  setImageOpacity,
+  onRandomizeImages
 }: ControlPanelProps) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    const newImages: string[] = [];
+    const maxFileSize = 5 * 1024 * 1024; // 5MB
+    const supportedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      if (!supportedTypes.includes(file.type)) {
+        continue;
+      }
+
+      if (file.size > maxFileSize) {
+        continue;
+      }
+
+      const reader = new FileReader();
+      try {
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        newImages.push(dataUrl);
+      } catch (error) {
+        console.error('Error reading file:', error);
+      }
+    }
+
+    if (newImages.length > 0) {
+      onImagesChange([...uploadedImages, ...newImages]);
+    }
+    
+    // Reset the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = uploadedImages.filter((_, i) => i !== index);
+    onImagesChange(newImages);
+  };
+
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   return (
     <div className="p-4 overflow-y-auto max-h-[60vh]">
       <Tabs defaultValue="content">
@@ -144,8 +218,12 @@ export const ControlPanel = ({
           <TabsTrigger value="sizes" className="flex-1">
             Sizes
           </TabsTrigger>
+          <TabsTrigger value="aesthetics" className="flex-1">
+            Aesthetics
+          </TabsTrigger>
         </TabsList>
 
+        {/* Content Tab */}
         <TabsContent value="content" className="space-y-6">
           <div className="space-y-4">
             <div className="grid gap-2">
@@ -225,6 +303,7 @@ export const ControlPanel = ({
           </div>
         </TabsContent>
 
+        {/* Layout Tab */}
         <TabsContent value="layout" className="space-y-6">
           <div className="space-y-4">
             <div className="grid gap-2">
@@ -382,6 +461,7 @@ export const ControlPanel = ({
           </div>
         </TabsContent>
 
+        {/* Sizes Tab */}
         <TabsContent value="sizes" className="space-y-6">
           <div className="space-y-4">
             <div className="grid gap-2">
@@ -490,6 +570,95 @@ export const ControlPanel = ({
                   <span>50%</span>
                   <span>{(cellSizeMultiplier * 100).toFixed(0)}%</span>
                   <span>150%</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Aesthetics Tab */}
+        <TabsContent value="aesthetics" className="space-y-6">
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <div className="flex items-center justify-between">
+                <Label>Background Images</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <Info className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Supported formats: JPG, PNG, GIF, WebP</p>
+                      <p>Max file size: 5MB per image</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  multiple
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <Button
+                  onClick={triggerFileInput}
+                  className="flex-1"
+                  variant="outline"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Choose Images
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={onRandomizeImages}
+                  disabled={uploadedImages.length === 0}
+                >
+                  <Shuffle className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Image Opacity</Label>
+              <Slider
+                value={[imageOpacity * 100]}
+                min={10}
+                max={100}
+                step={10}
+                onValueChange={(value) => setImageOpacity(value[0] / 100)}
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>10%</span>
+                <span>{(imageOpacity * 100).toFixed(0)}%</span>
+                <span>100%</span>
+              </div>
+            </div>
+
+            {uploadedImages.length > 0 && (
+              <div className="grid gap-2">
+                <Label>Uploaded Images</Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {uploadedImages.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={image}
+                        alt={`Uploaded ${index + 1}`}
+                        className="w-full h-20 object-cover rounded-md"
+                      />
+                      <button
+                        onClick={() => removeImage(index)}
+                        className="absolute top-1 right-1 p-1 rounded-md bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
