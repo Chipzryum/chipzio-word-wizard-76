@@ -91,6 +91,8 @@ export function DownloadPuzzleDialog({
   const [imageGridSize, setImageGridSize] = useState(DEFAULT_IMAGE_GRID_SIZE);
   
   const { toast } = useToast();
+  
+  const previewScaleFactor = 0.25;
 
   const handleRandomizeImages = () => {
     if (uploadedImages.length > 0) {
