@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -60,7 +59,6 @@ export function DownloadPuzzleDialog({
   const [customWidth, setCustomWidth] = useState(PAGE_SIZES.A4.width);
   const [customHeight, setCustomHeight] = useState(PAGE_SIZES.A4.height);
   
-  // Size multiplier sliders
   const [titleSizeMultiplier, setTitleSizeMultiplier] = useState(DEFAULT_TITLE_MULTIPLIER);
   const [subtitleSizeMultiplier, setSubtitleSizeMultiplier] = useState(DEFAULT_SUBTITLE_MULTIPLIER);
   const [instructionSizeMultiplier, setInstructionSizeMultiplier] = useState(DEFAULT_INSTRUCTION_MULTIPLIER);
@@ -68,39 +66,39 @@ export function DownloadPuzzleDialog({
   const [letterSizeMultiplier, setLetterSizeMultiplier] = useState(DEFAULT_LETTER_SIZE_MULTIPLIER);
   const [wordListSizeMultiplier, setWordListSizeMultiplier] = useState(DEFAULT_WORDLIST_MULTIPLIER);
 
-  // Toggle states for showing/hiding elements
   const [showTitle, setShowTitle] = useState(true);
   const [showSubtitle, setShowSubtitle] = useState(true);
   const [showInstruction, setShowInstruction] = useState(true);
   const [showWordList, setShowWordList] = useState(true);
   const [showGrid, setShowGrid] = useState(true);
 
-  // Position offsets for elements
   const [titleOffset, setTitleOffset] = useState(0);
   const [subtitleOffset, setSubtitleOffset] = useState(0);
   const [instructionOffset, setInstructionOffset] = useState(0);
   const [gridOffset, setGridOffset] = useState(0);
   const [wordListOffset, setWordListOffset] = useState(0);
 
-  // Track which element is being positioned
   const [positioningElement, setPositioningElement] = useState<string | null>(null);
   
-  // State for saving layout and loading status
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPDFReady, setIsPDFReady] = useState(false);
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   
-  // State for live preview
   const [showLivePreview, setShowLivePreview] = useState(false);
 
-  // State for images
   const [uploadedImages, setUploadedImages] = useLocalStorage<string[]>("puzzle-images", []);
   const [imageOpacity, setImageOpacity] = useState(DEFAULT_IMAGE_OPACITY);
   const [imageGridSize, setImageGridSize] = useState(DEFAULT_IMAGE_GRID_SIZE);
   
   const { toast } = useToast();
 
-  // Handle unit change with proper type
+  const handleRandomizeImages = () => {
+    if (uploadedImages.length > 0) {
+      const shuffledImages = [...uploadedImages].sort(() => Math.random() - 0.5);
+      setUploadedImages(shuffledImages);
+    }
+  };
+
   const handleUnitChange = (unit: Unit) => {
     setSelectedUnit(unit);
   };
@@ -108,20 +106,10 @@ export function DownloadPuzzleDialog({
   const currentWidth = selectedSize === "Custom" ? customWidth : PAGE_SIZES[selectedSize].width;
   const currentHeight = selectedSize === "Custom" ? customHeight : PAGE_SIZES[selectedSize].height;
 
-  // Calculate available content area (after margins and border)
   const contentWidth = currentWidth - (2 * PDF_MARGIN) - (2 * BASE_PADDING) - (2 * BORDER_WIDTH);
   const contentHeight = currentHeight - (2 * PDF_MARGIN) - (2 * BASE_PADDING) - (2 * BORDER_WIDTH);
 
-  // Calculate preview size (maintaining aspect ratio)
-  const previewContainerWidth = 300;
-  const previewContainerHeight = 400;
-  const widthScale = previewContainerWidth / currentWidth;
-  const heightScale = previewContainerHeight / currentHeight;
-  const previewScaleFactor = Math.min(widthScale, heightScale);
-
-  // Calculate font sizes based on page dimensions and multipliers
   const calculateFontSizes = () => {
-    // Base sizes for A4
     const a4Width = PAGE_SIZES.A4.width;
     const a4Height = PAGE_SIZES.A4.height;
     const sizeRatio = Math.sqrt((currentWidth * currentHeight) / (a4Width * a4Height));
@@ -130,14 +118,12 @@ export function DownloadPuzzleDialog({
       titleSize: Math.max(20, Math.min(48, Math.floor(36 * sizeRatio * titleSizeMultiplier))),
       subtitleSize: Math.max(14, Math.min(36, Math.floor(24 * sizeRatio * subtitleSizeMultiplier))),
       instructionSize: Math.max(8, Math.min(24, Math.floor(14 * sizeRatio * instructionSizeMultiplier))),
-      // Make word list size more responsive to multiplier
       wordListSize: Math.max(6, Math.min(28, Math.floor(12 * sizeRatio * wordListSizeMultiplier))),
     };
   };
 
   const fontSizes = calculateFontSizes();
   
-  // Calculate space needed for elements
   const calculateSpaceNeeded = () => {
     let space = 0;
     if (showTitle) space += fontSizes.titleSize * titleSizeMultiplier + 10;
@@ -147,37 +133,30 @@ export function DownloadPuzzleDialog({
     return space;
   };
 
-  // Calculate grid cell size based on page dimensions, grid size, and the cell size multiplier
   const calculateGridCellSize = () => {
     if (!puzzle) return 20;
     
     const gridWidth = puzzle.grid[0].length;
     const gridHeight = puzzle.grid.length;
     
-    // Reserve space for visible elements
-    const reservedSpace = calculateSpaceNeeded() + 40; // add padding
+    const reservedSpace = calculateSpaceNeeded() + 40;
     
     const availableHeight = contentHeight - reservedSpace;
     const availableWidth = contentWidth;
     
-    // Calculate cell size to fit the grid
     const cellSizeByWidth = availableWidth / gridWidth;
     const cellSizeByHeight = availableHeight / gridHeight;
     
     const baseSize = Math.min(cellSizeByWidth, cellSizeByHeight);
     
-    // Apply the cell size multiplier
     return baseSize * cellSizeMultiplier;
   };
 
   const cellSize = calculateGridCellSize();
   
-  // Calculate letter size separately, based on cell size and letter size multiplier
   const calculateLetterSize = () => {
-    // Base letter size is a percentage of cell size
     const baseLetterSize = cellSize * 0.6;
     
-    // Cap the letter size multiplier to prevent disappearing text
     const cappedMultiplier = Math.min(letterSizeMultiplier, MAX_LETTER_SIZE);
     
     return baseLetterSize * cappedMultiplier;
@@ -185,9 +164,7 @@ export function DownloadPuzzleDialog({
   
   const letterSize = calculateLetterSize();
 
-  // Calculate vertical position offset with improved boundary checking
   const getVerticalOffset = (offset: number) => {
-    // Each unit is 10 points, limit to prevent going off page
     const maxAllowedOffset = Math.min(MAX_OFFSET, (contentHeight / 6) / 10);
     return Math.max(-maxAllowedOffset, Math.min(offset * 10, maxAllowedOffset * 10));
   };
@@ -235,7 +212,6 @@ export function DownloadPuzzleDialog({
       console.log("Creating PDF with letterSizeMultiplier:", letterSizeMultiplier);
       console.log("Creating PDF with cellSize:", cellSize);
       
-      // Cap the letter size multiplier
       const cappedLetterSizeMultiplier = Math.min(letterSizeMultiplier, MAX_LETTER_SIZE);
       console.log("Creating PDF with cappedLetterSizeMultiplier:", cappedLetterSizeMultiplier);
       
@@ -376,7 +352,6 @@ export function DownloadPuzzleDialog({
     }
   };
 
-  // Update effect to reset PDF status whenever settings change
   useEffect(() => {
     setIsPDFReady(false);
     setShowLivePreview(false);
@@ -389,7 +364,6 @@ export function DownloadPuzzleDialog({
     uploadedImages, imageOpacity, imageGridSize
   ]);
 
-  // Component for the Aesthetics tab
   const AestheticsTab = () => (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -445,11 +419,11 @@ export function DownloadPuzzleDialog({
               <span className="text-xs">{(imageOpacity * 100).toFixed(0)}%</span>
             </div>
             <Slider
-              value={[imageOpacity]}
-              min={0.05}
-              max={0.5}
-              step={0.01}
-              onValueChange={(value) => setImageOpacity(value[0])}
+              value={[imageOpacity * 100]}
+              min={10}
+              max={100}
+              step={5}
+              onValueChange={(value) => setImageOpacity(value[0] / 100)}
             />
           </div>
 
@@ -542,13 +516,17 @@ export function DownloadPuzzleDialog({
               convertFromPoints={convertFromPoints}
               formatSliderValue={formatSliderValue}
               getPositionValue={getPositionValue}
+              
+              uploadedImages={uploadedImages}
+              onImagesChange={setUploadedImages}
+              imageOpacity={imageOpacity}
+              setImageOpacity={setImageOpacity}
+              onRandomizeImages={handleRandomizeImages}
             />
 
-            {/* Preview Section */}
             <div className="space-y-4">
               <Label>Preview</Label>
               <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-                {/* Background Images in a Grid Pattern */}
                 {uploadedImages.length > 0 && (
                   <div className="absolute inset-0 pointer-events-none overflow-hidden">
                     <div 
@@ -617,7 +595,6 @@ export function DownloadPuzzleDialog({
           </TabsContent>
           
           <TabsContent value="layout" className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Layout controls go here */}
             <div className="space-y-6">
               <div className="space-y-4">
                 <Label>Page Size</Label>
@@ -691,11 +668,9 @@ export function DownloadPuzzleDialog({
               </div>
             </div>
 
-            {/* Preview Section (Same as in Content tab) */}
             <div className="space-y-4">
               <Label>Preview</Label>
               <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-                {/* Background Images in a Grid Pattern */}
                 {uploadedImages.length > 0 && (
                   <div className="absolute inset-0 pointer-events-none overflow-hidden">
                     <div 
@@ -760,11 +735,9 @@ export function DownloadPuzzleDialog({
           <TabsContent value="aesthetics" className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <AestheticsTab />
             
-            {/* Preview Section (Same as in other tabs) */}
             <div className="space-y-4">
               <Label>Preview</Label>
               <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-                {/* Background Images in a Grid Pattern */}
                 {uploadedImages.length > 0 && (
                   <div className="absolute inset-0 pointer-events-none overflow-hidden">
                     <div 
