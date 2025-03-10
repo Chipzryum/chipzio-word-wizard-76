@@ -1,5 +1,5 @@
 
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 
 interface PuzzlePDFPreviewProps {
@@ -27,6 +27,9 @@ interface PuzzlePDFPreviewProps {
   subtitleSizeMultiplier: number;
   instructionSizeMultiplier: number;
   wordListSizeMultiplier: number;
+  uploadedImages?: string[];
+  imageOpacity?: number;
+  imageGridSize?: number;
 }
 
 export const PuzzlePDFPreview = ({
@@ -54,6 +57,9 @@ export const PuzzlePDFPreview = ({
   subtitleSizeMultiplier,
   instructionSizeMultiplier,
   wordListSizeMultiplier,
+  uploadedImages = [],
+  imageOpacity = 0.3,
+  imageGridSize = 100,
 }: PuzzlePDFPreviewProps) => {
   if (!puzzle) return null;
   
@@ -77,11 +83,58 @@ export const PuzzlePDFPreview = ({
   
   // Use the exact font sizes from our calculations
   const pdfStyles = createPDFStyles(fontSizes);
+
+  // Calculate how many images we need to cover the page
+  const calculateImageGrid = () => {
+    if (!uploadedImages || uploadedImages.length === 0) return [];
+    
+    const imageElements = [];
+    const scaledImageSize = imageGridSize; // Size in pixels
+    
+    // Calculate number of images needed to cover the page
+    const horizontalCount = Math.ceil(contentWidth / scaledImageSize) + 1;
+    const verticalCount = Math.ceil(contentHeight / scaledImageSize) + 1;
+    
+    for (let x = 0; x < horizontalCount; x++) {
+      for (let y = 0; y < verticalCount; y++) {
+        imageElements.push({
+          x: x * scaledImageSize,
+          y: y * scaledImageSize,
+          size: scaledImageSize,
+          image: uploadedImages[0] // Use the first image for grid
+        });
+      }
+    }
+    
+    return imageElements;
+  };
+  
+  const backgroundImages = calculateImageGrid();
   
   return (
     <Document>
       <Page size={[currentWidth, currentHeight]} style={pdfStyles.page}>
         <View style={pdfStyles.container}>
+          {/* Background image grid */}
+          {uploadedImages && uploadedImages.length > 0 && (
+            <View style={pdfStyles.backgroundGrid}>
+              {backgroundImages.map((img, index) => (
+                <Image
+                  key={index}
+                  src={img.image}
+                  style={{
+                    position: 'absolute',
+                    left: img.x,
+                    top: img.y,
+                    width: img.size,
+                    height: img.size,
+                    opacity: imageOpacity,
+                  }}
+                />
+              ))}
+            </View>
+          )}
+        
           {showTitle && <Text style={pdfStyles.title}>{title.toUpperCase()}</Text>}
           {showSubtitle && <Text style={pdfStyles.subtitle}>{subtitle.toLowerCase()}</Text>}
           {showInstruction && <Text style={pdfStyles.instruction}>{instruction}</Text>}
@@ -133,6 +186,14 @@ export const PuzzlePDFPreview = ({
         borderColor: '#000',
         padding: 20,
         position: 'relative',
+      },
+      backgroundGrid: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: -1,
       },
       title: {
         fontSize: fontSizes.titleSize,

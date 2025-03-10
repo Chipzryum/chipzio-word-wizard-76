@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -29,9 +30,15 @@ import {
   DEFAULT_LETTER_SIZE_MULTIPLIER,
   DEFAULT_WORDLIST_MULTIPLIER,
   MAX_LETTER_SIZE,
+  DEFAULT_IMAGE_OPACITY,
+  DEFAULT_IMAGE_GRID_SIZE,
+  MIN_IMAGE_GRID_SIZE,
+  MAX_IMAGE_GRID_SIZE,
   PageSize,
   Unit
 } from "./constants";
+import { Slider } from "../ui/slider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 interface DownloadPuzzleDialogProps {
   open: boolean;
@@ -86,23 +93,10 @@ export function DownloadPuzzleDialog({
   // State for live preview
   const [showLivePreview, setShowLivePreview] = useState(false);
 
-  // New state for images
+  // State for images
   const [uploadedImages, setUploadedImages] = useLocalStorage<string[]>("puzzle-images", []);
-  const [imageOpacity, setImageOpacity] = useState(0.3);
-  const [imagePositions, setImagePositions] = useState<{ x: number; y: number }[]>([]);
-
-  // Initialize image positions when images change
-  useEffect(() => {
-    randomizeImagePositions();
-  }, [uploadedImages]);
-
-  const randomizeImagePositions = () => {
-    const newPositions = uploadedImages.map(() => ({
-      x: Math.random() * 80, // percentage
-      y: Math.random() * 80, // percentage
-    }));
-    setImagePositions(newPositions);
-  };
+  const [imageOpacity, setImageOpacity] = useState(DEFAULT_IMAGE_OPACITY);
+  const [imageGridSize, setImageGridSize] = useState(DEFAULT_IMAGE_GRID_SIZE);
   
   const { toast } = useToast();
 
@@ -271,6 +265,9 @@ export function DownloadPuzzleDialog({
           subtitleSizeMultiplier={subtitleSizeMultiplier}
           instructionSizeMultiplier={instructionSizeMultiplier}
           wordListSizeMultiplier={wordListSizeMultiplier}
+          uploadedImages={uploadedImages}
+          imageOpacity={imageOpacity}
+          imageGridSize={imageGridSize}
         />
       ).toBlob();
       
@@ -388,8 +385,91 @@ export function DownloadPuzzleDialog({
     cellSizeMultiplier, letterSizeMultiplier, wordListSizeMultiplier,
     showTitle, showSubtitle, showInstruction, showWordList, showGrid,
     titleOffset, subtitleOffset, instructionOffset, gridOffset, wordListOffset,
-    title, subtitle, instruction, selectedSize, customWidth, customHeight
+    title, subtitle, instruction, selectedSize, customWidth, customHeight,
+    uploadedImages, imageOpacity, imageGridSize
   ]);
+
+  // Component for the Aesthetics tab
+  const AestheticsTab = () => (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Background Images</Label>
+        <div className="flex flex-wrap gap-2 mb-2">
+          {uploadedImages.map((image, index) => (
+            <div key={index} className="relative w-12 h-12 rounded overflow-hidden border">
+              <img 
+                src={image} 
+                alt=""
+                className="w-full h-full object-cover"
+              />
+              <button 
+                onClick={() => {
+                  const newImages = [...uploadedImages];
+                  newImages.splice(index, 1);
+                  setUploadedImages(newImages);
+                }}
+                className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-bl"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          <label className="w-12 h-12 border-2 border-dashed rounded flex items-center justify-center cursor-pointer hover:bg-secondary/30">
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  const file = e.target.files[0];
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                    if (event.target && typeof event.target.result === 'string') {
+                      setUploadedImages([...uploadedImages, event.target.result]);
+                    }
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+            />
+            +
+          </label>
+        </div>
+      </div>
+
+      {uploadedImages.length > 0 && (
+        <>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <Label>Image Opacity</Label>
+              <span className="text-xs">{(imageOpacity * 100).toFixed(0)}%</span>
+            </div>
+            <Slider
+              value={[imageOpacity]}
+              min={0.05}
+              max={0.5}
+              step={0.01}
+              onValueChange={(value) => setImageOpacity(value[0])}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <Label>Image Size</Label>
+              <span className="text-xs">{imageGridSize}px</span>
+            </div>
+            <Slider
+              value={[imageGridSize]}
+              min={MIN_IMAGE_GRID_SIZE}
+              max={MAX_IMAGE_GRID_SIZE}
+              step={5}
+              onValueChange={(value) => setImageGridSize(value[0])}
+            />
+          </div>
+        </>
+      )}
+    </div>
+  );
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -401,142 +481,351 @@ export function DownloadPuzzleDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <ControlPanel 
-            showTitle={showTitle}
-            setShowTitle={setShowTitle}
-            title={title}
-            setTitle={setTitle}
-            titleSizeMultiplier={titleSizeMultiplier}
-            setTitleSizeMultiplier={setTitleSizeMultiplier}
-            titleOffset={titleOffset}
-            positioningElement={positioningElement}
-            togglePositioning={togglePositioning}
-            moveElement={moveElement}
-            
-            showSubtitle={showSubtitle}
-            setShowSubtitle={setShowSubtitle}
-            subtitle={subtitle}
-            setSubtitle={setSubtitle}
-            subtitleSizeMultiplier={subtitleSizeMultiplier}
-            setSubtitleSizeMultiplier={setSubtitleSizeMultiplier}
-            subtitleOffset={subtitleOffset}
-            
-            showInstruction={showInstruction}
-            setShowInstruction={setShowInstruction}
-            instruction={instruction}
-            setInstruction={setInstruction}
-            instructionSizeMultiplier={instructionSizeMultiplier}
-            setInstructionSizeMultiplier={setInstructionSizeMultiplier}
-            instructionOffset={instructionOffset}
-            
-            selectedSize={selectedSize}
-            handleSizeChange={handleSizeChange}
-            
-            showGrid={showGrid}
-            setShowGrid={setShowGrid}
-            cellSizeMultiplier={cellSizeMultiplier}
-            setCellSizeMultiplier={setCellSizeMultiplier}
-            letterSizeMultiplier={letterSizeMultiplier}
-            setLetterSizeMultiplier={setLetterSizeMultiplier}
-            gridOffset={gridOffset}
-            
-            showWordList={showWordList}
-            setShowWordList={setShowWordList}
-            wordListSizeMultiplier={wordListSizeMultiplier}
-            setWordListSizeMultiplier={setWordListSizeMultiplier}
-            wordListOffset={wordListOffset}
-            
-            selectedUnit={selectedUnit}
-            setSelectedUnit={handleUnitChange}
-            currentWidth={currentWidth}
-            currentHeight={currentHeight}
-            handleDimensionChange={handleDimensionChange}
-            convertFromPoints={convertFromPoints}
-            formatSliderValue={formatSliderValue}
-            getPositionValue={getPositionValue}
-            uploadedImages={uploadedImages}
-            onImagesChange={setUploadedImages}
-            imageOpacity={imageOpacity}
-            setImageOpacity={setImageOpacity}
-            onRandomizeImages={randomizeImagePositions}
-          />
-
-          {/* Preview Section */}
-          <div className="space-y-4">
-            <Label>Preview</Label>
-            <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-              {/* Background Images */}
-              {uploadedImages.map((image, index) => (
-                <div
-                  key={index}
-                  className="absolute pointer-events-none"
-                  style={{
-                    left: `${imagePositions[index]?.x ?? 0}%`,
-                    top: `${imagePositions[index]?.y ?? 0}%`,
-                    opacity: imageOpacity,
-                    maxWidth: '50%',
-                    maxHeight: '50%',
-                  }}
-                >
-                  <img
-                    src={image}
-                    alt=""
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              ))}
+        <Tabs defaultValue="content">
+          <TabsList className="grid grid-cols-3 mb-4">
+            <TabsTrigger value="content">Content</TabsTrigger>
+            <TabsTrigger value="layout">Layout</TabsTrigger>
+            <TabsTrigger value="aesthetics">Aesthetics</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="content" className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ControlPanel 
+              showTitle={showTitle}
+              setShowTitle={setShowTitle}
+              title={title}
+              setTitle={setTitle}
+              titleSizeMultiplier={titleSizeMultiplier}
+              setTitleSizeMultiplier={setTitleSizeMultiplier}
+              titleOffset={titleOffset}
+              positioningElement={positioningElement}
+              togglePositioning={togglePositioning}
+              moveElement={moveElement}
               
-              <VisualPreview 
-                puzzle={puzzle}
-                showLivePreview={showLivePreview}
+              showSubtitle={showSubtitle}
+              setShowSubtitle={setShowSubtitle}
+              subtitle={subtitle}
+              setSubtitle={setSubtitle}
+              subtitleSizeMultiplier={subtitleSizeMultiplier}
+              setSubtitleSizeMultiplier={setSubtitleSizeMultiplier}
+              subtitleOffset={subtitleOffset}
+              
+              showInstruction={showInstruction}
+              setShowInstruction={setShowInstruction}
+              instruction={instruction}
+              setInstruction={setInstruction}
+              instructionSizeMultiplier={instructionSizeMultiplier}
+              setInstructionSizeMultiplier={setInstructionSizeMultiplier}
+              instructionOffset={instructionOffset}
+              
+              selectedSize={selectedSize}
+              handleSizeChange={handleSizeChange}
+              
+              showGrid={showGrid}
+              setShowGrid={setShowGrid}
+              cellSizeMultiplier={cellSizeMultiplier}
+              setCellSizeMultiplier={setCellSizeMultiplier}
+              letterSizeMultiplier={letterSizeMultiplier}
+              setLetterSizeMultiplier={setLetterSizeMultiplier}
+              gridOffset={gridOffset}
+              
+              showWordList={showWordList}
+              setShowWordList={setShowWordList}
+              wordListSizeMultiplier={wordListSizeMultiplier}
+              setWordListSizeMultiplier={setWordListSizeMultiplier}
+              wordListOffset={wordListOffset}
+              
+              selectedUnit={selectedUnit}
+              setSelectedUnit={handleUnitChange}
+              currentWidth={currentWidth}
+              currentHeight={currentHeight}
+              handleDimensionChange={handleDimensionChange}
+              convertFromPoints={convertFromPoints}
+              formatSliderValue={formatSliderValue}
+              getPositionValue={getPositionValue}
+            />
+
+            {/* Preview Section */}
+            <div className="space-y-4">
+              <Label>Preview</Label>
+              <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
+                {/* Background Images in a Grid Pattern */}
+                {uploadedImages.length > 0 && (
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    <div 
+                      className="w-full h-full"
+                      style={{
+                        backgroundImage: uploadedImages.length > 0 
+                          ? `url(${uploadedImages[0]})` 
+                          : 'none',
+                        backgroundSize: `${imageGridSize}px ${imageGridSize}px`,
+                        backgroundRepeat: 'repeat',
+                        opacity: imageOpacity,
+                      }}
+                    />
+                  </div>
+                )}
+                
+                <VisualPreview 
+                  puzzle={puzzle}
+                  showLivePreview={showLivePreview}
+                  isPDFReady={isPDFReady}
+                  title={title}
+                  subtitle={subtitle}
+                  instruction={instruction}
+                  showTitle={showTitle}
+                  showSubtitle={showSubtitle}
+                  showInstruction={showInstruction}
+                  showGrid={showGrid}
+                  showWordList={showWordList}
+                  titleOffset={titleOffset}
+                  subtitleOffset={subtitleOffset}
+                  instructionOffset={instructionOffset}
+                  gridOffset={gridOffset}
+                  wordListOffset={wordListOffset}
+                  currentWidth={currentWidth}
+                  currentHeight={currentHeight}
+                  contentWidth={contentWidth}
+                  contentHeight={contentHeight}
+                  cellSize={cellSize}
+                  letterSize={letterSize}
+                  letterSizeMultiplier={letterSizeMultiplier}
+                  titleSizeMultiplier={titleSizeMultiplier}
+                  subtitleSizeMultiplier={subtitleSizeMultiplier}
+                  instructionSizeMultiplier={instructionSizeMultiplier}
+                  wordListSizeMultiplier={wordListSizeMultiplier}
+                  previewScaleFactor={previewScaleFactor}
+                  fontSizes={fontSizes}
+                  getVerticalOffset={getVerticalOffset}
+                />
+              </div>
+              
+              <ActionButtons 
+                handleSaveLayout={handleSaveLayout}
+                handleDownload={handleDownload}
+                isGenerating={isGenerating}
                 isPDFReady={isPDFReady}
-                title={title}
-                subtitle={subtitle}
-                instruction={instruction}
-                showTitle={showTitle}
-                showSubtitle={showSubtitle}
-                showInstruction={showInstruction}
-                showGrid={showGrid}
-                showWordList={showWordList}
-                titleOffset={titleOffset}
-                subtitleOffset={subtitleOffset}
-                instructionOffset={instructionOffset}
-                gridOffset={gridOffset}
-                wordListOffset={wordListOffset}
-                currentWidth={currentWidth}
-                currentHeight={currentHeight}
-                contentWidth={contentWidth}
-                contentHeight={contentHeight}
-                cellSize={cellSize}
-                letterSize={letterSize}
-                letterSizeMultiplier={letterSizeMultiplier}
-                titleSizeMultiplier={titleSizeMultiplier}
-                subtitleSizeMultiplier={subtitleSizeMultiplier}
-                instructionSizeMultiplier={instructionSizeMultiplier}
-                wordListSizeMultiplier={wordListSizeMultiplier}
-                previewScaleFactor={previewScaleFactor}
-                fontSizes={fontSizes}
-                getVerticalOffset={getVerticalOffset}
+                puzzle={puzzle}
+                pdfBlob={pdfBlob}
+              />
+              
+              {!isPDFReady && (
+                <p className="text-xs text-muted-foreground">
+                  Click "Save Layout" after making changes to update the PDF preview.
+                </p>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="layout" className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Layout controls go here */}
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <Label>Page Size</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {Object.keys(PAGE_SIZES).map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => handleSizeChange(size as PageSize)}
+                      className={`py-2 px-4 rounded-md ${
+                        selectedSize === size
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary text-secondary-foreground"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => handleSizeChange("Custom")}
+                    className={`py-2 px-4 rounded-md ${
+                      selectedSize === "Custom"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary text-secondary-foreground"
+                    }`}
+                  >
+                    Custom
+                  </button>
+                </div>
+              </div>
+
+              {selectedSize === "Custom" && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Width ({selectedUnit})</Label>
+                    <input
+                      type="number"
+                      value={convertFromPoints(customWidth)}
+                      onChange={(e) => handleDimensionChange("width", e.target.value)}
+                      className="w-full p-2 border rounded-md"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Height ({selectedUnit})</Label>
+                    <input
+                      type="number"
+                      value={convertFromPoints(customHeight)}
+                      onChange={(e) => handleDimensionChange("height", e.target.value)}
+                      className="w-full p-2 border rounded-md"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>Units</Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {Object.keys(UNITS).map((unit) => (
+                    <button
+                      key={unit}
+                      onClick={() => handleUnitChange(unit as Unit)}
+                      className={`py-2 px-4 rounded-md ${
+                        selectedUnit === unit
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary text-secondary-foreground"
+                      }`}
+                    >
+                      {unit}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Preview Section (Same as in Content tab) */}
+            <div className="space-y-4">
+              <Label>Preview</Label>
+              <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
+                {/* Background Images in a Grid Pattern */}
+                {uploadedImages.length > 0 && (
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    <div 
+                      className="w-full h-full"
+                      style={{
+                        backgroundImage: uploadedImages.length > 0 
+                          ? `url(${uploadedImages[0]})` 
+                          : 'none',
+                        backgroundSize: `${imageGridSize}px ${imageGridSize}px`,
+                        backgroundRepeat: 'repeat',
+                        opacity: imageOpacity,
+                      }}
+                    />
+                  </div>
+                )}
+                
+                <VisualPreview 
+                  puzzle={puzzle}
+                  showLivePreview={showLivePreview}
+                  isPDFReady={isPDFReady}
+                  title={title}
+                  subtitle={subtitle}
+                  instruction={instruction}
+                  showTitle={showTitle}
+                  showSubtitle={showSubtitle}
+                  showInstruction={showInstruction}
+                  showGrid={showGrid}
+                  showWordList={showWordList}
+                  titleOffset={titleOffset}
+                  subtitleOffset={subtitleOffset}
+                  instructionOffset={instructionOffset}
+                  gridOffset={gridOffset}
+                  wordListOffset={wordListOffset}
+                  currentWidth={currentWidth}
+                  currentHeight={currentHeight}
+                  contentWidth={contentWidth}
+                  contentHeight={contentHeight}
+                  cellSize={cellSize}
+                  letterSize={letterSize}
+                  letterSizeMultiplier={letterSizeMultiplier}
+                  titleSizeMultiplier={titleSizeMultiplier}
+                  subtitleSizeMultiplier={subtitleSizeMultiplier}
+                  instructionSizeMultiplier={instructionSizeMultiplier}
+                  wordListSizeMultiplier={wordListSizeMultiplier}
+                  previewScaleFactor={previewScaleFactor}
+                  fontSizes={fontSizes}
+                  getVerticalOffset={getVerticalOffset}
+                />
+              </div>
+              
+              <ActionButtons 
+                handleSaveLayout={handleSaveLayout}
+                handleDownload={handleDownload}
+                isGenerating={isGenerating}
+                isPDFReady={isPDFReady}
+                puzzle={puzzle}
+                pdfBlob={pdfBlob}
               />
             </div>
+          </TabsContent>
+          
+          <TabsContent value="aesthetics" className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <AestheticsTab />
             
-            <ActionButtons 
-              handleSaveLayout={handleSaveLayout}
-              handleDownload={handleDownload}
-              isGenerating={isGenerating}
-              isPDFReady={isPDFReady}
-              puzzle={puzzle}
-              pdfBlob={pdfBlob}
-            />
-            
-            {!isPDFReady && (
-              <p className="text-xs text-muted-foreground">
-                Click "Save Layout" after making changes to update the PDF preview.
-              </p>
-            )}
-          </div>
-        </div>
+            {/* Preview Section (Same as in other tabs) */}
+            <div className="space-y-4">
+              <Label>Preview</Label>
+              <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
+                {/* Background Images in a Grid Pattern */}
+                {uploadedImages.length > 0 && (
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    <div 
+                      className="w-full h-full"
+                      style={{
+                        backgroundImage: uploadedImages.length > 0 
+                          ? `url(${uploadedImages[0]})` 
+                          : 'none',
+                        backgroundSize: `${imageGridSize}px ${imageGridSize}px`,
+                        backgroundRepeat: 'repeat',
+                        opacity: imageOpacity,
+                      }}
+                    />
+                  </div>
+                )}
+                
+                <VisualPreview 
+                  puzzle={puzzle}
+                  showLivePreview={showLivePreview}
+                  isPDFReady={isPDFReady}
+                  title={title}
+                  subtitle={subtitle}
+                  instruction={instruction}
+                  showTitle={showTitle}
+                  showSubtitle={showSubtitle}
+                  showInstruction={showInstruction}
+                  showGrid={showGrid}
+                  showWordList={showWordList}
+                  titleOffset={titleOffset}
+                  subtitleOffset={subtitleOffset}
+                  instructionOffset={instructionOffset}
+                  gridOffset={gridOffset}
+                  wordListOffset={wordListOffset}
+                  currentWidth={currentWidth}
+                  currentHeight={currentHeight}
+                  contentWidth={contentWidth}
+                  contentHeight={contentHeight}
+                  cellSize={cellSize}
+                  letterSize={letterSize}
+                  letterSizeMultiplier={letterSizeMultiplier}
+                  titleSizeMultiplier={titleSizeMultiplier}
+                  subtitleSizeMultiplier={subtitleSizeMultiplier}
+                  instructionSizeMultiplier={instructionSizeMultiplier}
+                  wordListSizeMultiplier={wordListSizeMultiplier}
+                  previewScaleFactor={previewScaleFactor}
+                  fontSizes={fontSizes}
+                  getVerticalOffset={getVerticalOffset}
+                />
+              </div>
+              
+              <ActionButtons 
+                handleSaveLayout={handleSaveLayout}
+                handleDownload={handleDownload}
+                isGenerating={isGenerating}
+                isPDFReady={isPDFReady}
+                puzzle={puzzle}
+                pdfBlob={pdfBlob}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

@@ -37,6 +37,7 @@ export const DEFAULT_VALUES = {
   instructionOffset: 0,
   gridOffset: 0,
   wordListOffset: 0,
+  imageGridSize: 100, // Default grid image size in pixels
 };
 
 // Default multiplier values
@@ -47,6 +48,12 @@ export const DEFAULT_CELL_MULTIPLIER = 1;
 export const DEFAULT_LETTER_SIZE_MULTIPLIER = 1;
 export const DEFAULT_WORDLIST_MULTIPLIER = 1;
 export const MAX_LETTER_SIZE = 1.3;
+
+// Image grid constants
+export const MIN_IMAGE_GRID_SIZE = 50; // Minimum size in pixels
+export const MAX_IMAGE_GRID_SIZE = 200; // Maximum size in pixels
+export const DEFAULT_IMAGE_GRID_SIZE = 100; // Default size in pixels
+export const DEFAULT_IMAGE_OPACITY = 0.3; // Default opacity
 
 // Standard page size options for UI dropdowns
 export const PAGE_SIZE_OPTIONS = [
@@ -66,6 +73,14 @@ export const MAX_MULTIPLIERS = {
   instruction: 1.5,
   wordList: 1.5,
 };
+
+// Design pattern constants
+export const MIN_DESIGN_ANGLE = 0;
+export const MAX_DESIGN_ANGLE = 360;
+export const MIN_DESIGN_SIZE = 50;
+export const MAX_DESIGN_SIZE = 200;
+export const MIN_DESIGN_SPACING = 50;
+export const MAX_DESIGN_SPACING = 300;
 
 // TypeScript types
 export type PageSize = keyof typeof PAGE_SIZES | "Custom";
