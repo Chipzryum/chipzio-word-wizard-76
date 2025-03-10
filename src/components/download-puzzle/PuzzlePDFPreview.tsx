@@ -1,5 +1,5 @@
 
-import { Document, Page, Text, View, StyleSheet, Image, Svg, Path } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 
 interface PuzzlePDFPreviewProps {
@@ -72,7 +72,6 @@ export const PuzzlePDFPreview = ({
   if (!puzzle) return null;
   
   // Calculate font sizes based on page dimensions and multipliers
-  // Use the same calculation method as in the DownloadPuzzleDialog component
   const calculateFontSizes = () => {
     // Base sizes for A4
     const a4Width = 595.28;
@@ -228,7 +227,6 @@ export const PuzzlePDFPreview = ({
         marginTop: getVerticalOffset(titleOffset),
         textAlign: 'center',
         fontWeight: 'bold',
-        display: showTitle ? 'flex' : 'none',
         position: 'relative',
       },
       subtitle: {
@@ -237,7 +235,6 @@ export const PuzzlePDFPreview = ({
         marginTop: getVerticalOffset(subtitleOffset),
         textAlign: 'center',
         fontFamily: 'Times-Italic',
-        display: showSubtitle ? 'flex' : 'none',
         position: 'relative',
       },
       instruction: {
@@ -245,12 +242,10 @@ export const PuzzlePDFPreview = ({
         marginBottom: 20,
         marginTop: getVerticalOffset(instructionOffset),
         textAlign: 'center',
-        display: showInstruction ? 'flex' : 'none',
         position: 'relative',
       },
       grid: {
         width: '100%',
-        display: showGrid ? 'flex' : 'none',
         flexDirection: 'column',
         alignItems: 'center',
         marginBottom: 20,
@@ -275,7 +270,6 @@ export const PuzzlePDFPreview = ({
       },
       wordList: {
         marginTop: getVerticalOffset(wordListOffset),
-        display: showWordList ? 'flex' : 'none',
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'center',
