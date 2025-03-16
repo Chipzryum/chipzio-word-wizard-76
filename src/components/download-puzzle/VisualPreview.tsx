@@ -108,6 +108,9 @@ export const VisualPreview = ({
     );
   }
 
+  console.log("Rendering VisualPreview with showWordList:", showWordList);
+  console.log("Puzzle words:", puzzle?.wordPlacements.map(wp => wp.word));
+
   return (
     <div 
       className="relative border-2 border-black bg-white p-4 overflow-hidden"
@@ -164,7 +167,7 @@ export const VisualPreview = ({
                 {row.map((letter, j) => (
                   <div
                     key={`${i}-${j}`}
-                    className="flex items-center justify-center"
+                    className="flex items-center justify-center border border-gray-300"
                     style={{
                       width: `${cellSize * previewScaleFactor}px`,
                       height: `${cellSize * previewScaleFactor}px`,
@@ -178,7 +181,7 @@ export const VisualPreview = ({
             ))}
           </div>
         )}
-        {showWordList && puzzle && (
+        {showWordList && puzzle && puzzle.wordPlacements && puzzle.wordPlacements.length > 0 && (
           <div 
             className="flex flex-wrap justify-center mt-4 px-2"
             style={{
@@ -187,7 +190,9 @@ export const VisualPreview = ({
             }}
           >
             {puzzle.wordPlacements.map(({ word }, index) => (
-              <span key={index} className="mx-2 px-1 py-0.5 bg-gray-100 rounded-md mb-1">{word.toLowerCase()}</span>
+              <span key={index} className="mx-2 px-1 py-0.5 bg-gray-100 rounded-md mb-1">
+                {word.toLowerCase()}
+              </span>
             ))}
           </div>
         )}

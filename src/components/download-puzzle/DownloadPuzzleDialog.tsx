@@ -39,6 +39,13 @@ import {
 } from "./constants";
 import { Slider } from "../ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 interface DownloadPuzzleDialogProps {
   open: boolean;
@@ -214,6 +221,7 @@ export function DownloadPuzzleDialog({
     try {
       console.log("Creating PDF with letterSizeMultiplier:", letterSizeMultiplier);
       console.log("Creating PDF with cellSize:", cellSize);
+      console.log("Word list visibility:", showWordList);
       
       const cappedLetterSizeMultiplier = Math.min(letterSizeMultiplier, MAX_LETTER_SIZE);
       console.log("Creating PDF with cappedLetterSizeMultiplier:", cappedLetterSizeMultiplier);
@@ -318,41 +326,9 @@ export function DownloadPuzzleDialog({
     return `${(value * 100).toFixed(0)}%`;
   };
 
-  const moveElement = (element: string, direction: 'up' | 'down') => {
-    const step = direction === 'up' ? -1 : 1;
-    const maxAllowedOffset = Math.min(MAX_OFFSET, (contentHeight / 6) / 10);
-    
-    switch(element) {
-      case 'title':
-        setTitleOffset(prev => Math.max(-maxAllowedOffset, Math.min(maxAllowedOffset, prev + step)));
-        break;
-      case 'subtitle':
-        setSubtitleOffset(prev => Math.max(-maxAllowedOffset, Math.min(maxAllowedOffset, prev + step)));
-        break;
-      case 'instruction':
-        setInstructionOffset(prev => Math.max(-maxAllowedOffset, Math.min(maxAllowedOffset, prev + step)));
-        break;
-      case 'grid':
-        setGridOffset(prev => Math.max(-maxAllowedOffset, Math.min(maxAllowedOffset, prev + step)));
-        break;
-      case 'wordList':
-        setWordListOffset(prev => Math.max(-maxAllowedOffset, Math.min(maxAllowedOffset, prev + step)));
-        break;
-    }
-    setIsPDFReady(false);
-  };
-
   const getPositionValue = (offset: number) => {
     if (offset === 0) return '0';
     return offset > 0 ? `+${offset}` : `${offset}`;
-  };
-
-  const togglePositioning = (element: string) => {
-    if (positioningElement === element) {
-      setPositioningElement(null);
-    } else {
-      setPositioningElement(element);
-    }
   };
 
   useEffect(() => {
@@ -366,6 +342,8 @@ export function DownloadPuzzleDialog({
     title, subtitle, instruction, selectedSize, customWidth, customHeight,
     uploadedImages, imageOpacity, imageGridSize
   ]);
+
+  console.log("Word list toggle status:", showWordList);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -523,109 +501,158 @@ export function DownloadPuzzleDialog({
             <div className="space-y-6">
               <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
                 <h3 className="font-medium mb-3">Page Size</h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {Object.keys(PAGE_SIZES).map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => handleSizeChange(size as PageSize)}
-                      className={`py-2 px-4 rounded-md transition-colors ${
-                        selectedSize === size
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-secondary hover:bg-secondary/80 text-secondary-foreground"
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => handleSizeChange("Custom")}
-                    className={`py-2 px-4 rounded-md transition-colors ${
-                      selectedSize === "Custom"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary hover:bg-secondary/80 text-secondary-foreground"
-                    }`}
-                  >
-                    Custom
-                  </button>
-                </div>
+                <Select value={selectedSize} onValueChange={(value) => handleSizeChange(value as PageSize)}>
+                  <SelectTrigger className="w-full mb-3">
+                    <SelectValue placeholder="Select page size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(PAGE_SIZES).map((size) => (
+                      <SelectItem key={size} value={size}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="Custom">Custom</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {selectedSize === "Custom" && (
-                <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
-                  <h3 className="font-medium mb-3">Custom Dimensions</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Width ({selectedUnit})</Label>
-                      <input
-                        type="number"
-                        value={convertFromPoints(customWidth)}
-                        onChange={(e) => handleDimensionChange("width", e.target.value)}
-                        className="w-full p-2 border rounded-md"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Height ({selectedUnit})</Label>
-                      <input
-                        type="number"
-                        value={convertFromPoints(customHeight)}
-                        onChange={(e) => handleDimensionChange("height", e.target.value)}
-                        className="w-full p-2 border rounded-md"
-                      />
+                <>
+                  <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                    <h3 className="font-medium mb-3">Custom Dimensions</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Width ({selectedUnit})</Label>
+                        <input
+                          type="number"
+                          value={convertFromPoints(customWidth)}
+                          onChange={(e) => handleDimensionChange("width", e.target.value)}
+                          className="w-full p-2 border rounded-md"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Height ({selectedUnit})</Label>
+                        <input
+                          type="number"
+                          value={convertFromPoints(customHeight)}
+                          onChange={(e) => handleDimensionChange("height", e.target.value)}
+                          className="w-full p-2 border rounded-md"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+
+                  <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                    <h3 className="font-medium mb-3">Units</h3>
+                    <div className="grid grid-cols-4 gap-2">
+                      {Object.keys(UNITS).map((unit) => (
+                        <button
+                          key={unit}
+                          onClick={() => handleUnitChange(unit as Unit)}
+                          className={`py-2 px-4 rounded-md transition-colors ${
+                            selectedUnit === unit
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-secondary hover:bg-secondary/80 text-secondary-foreground"
+                          }`}
+                        >
+                          {unit}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
 
               <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
-                <h3 className="font-medium mb-3">Units</h3>
-                <div className="grid grid-cols-4 gap-2">
-                  {Object.keys(UNITS).map((unit) => (
-                    <button
-                      key={unit}
-                      onClick={() => handleUnitChange(unit as Unit)}
-                      className={`py-2 px-4 rounded-md transition-colors ${
-                        selectedUnit === unit
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-secondary hover:bg-secondary/80 text-secondary-foreground"
-                      }`}
-                    >
-                      {unit}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
                 <h3 className="font-medium mb-3">Element Position</h3>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {showTitle && (
-                    <div className="flex items-center justify-between">
-                      <span>Title Position:</span>
-                      <span className="bg-gray-100 px-2 py-1 rounded text-sm">{getPositionValue(titleOffset)}</span>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center mb-2">
+                        <Label>Title Position</Label>
+                        <span className="text-xs bg-muted px-2 py-1 rounded-md">
+                          {getPositionValue(titleOffset)}
+                        </span>
+                      </div>
+                      <Slider
+                        value={[titleOffset]}
+                        min={-20}
+                        max={20}
+                        step={1}
+                        onValueChange={(values) => setTitleOffset(values[0])}
+                      />
                     </div>
                   )}
+                  
                   {showSubtitle && (
-                    <div className="flex items-center justify-between">
-                      <span>Subtitle Position:</span>
-                      <span className="bg-gray-100 px-2 py-1 rounded text-sm">{getPositionValue(subtitleOffset)}</span>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center mb-2">
+                        <Label>Subtitle Position</Label>
+                        <span className="text-xs bg-muted px-2 py-1 rounded-md">
+                          {getPositionValue(subtitleOffset)}
+                        </span>
+                      </div>
+                      <Slider
+                        value={[subtitleOffset]}
+                        min={-20}
+                        max={20}
+                        step={1}
+                        onValueChange={(values) => setSubtitleOffset(values[0])}
+                      />
                     </div>
                   )}
+                  
                   {showInstruction && (
-                    <div className="flex items-center justify-between">
-                      <span>Instruction Position:</span>
-                      <span className="bg-gray-100 px-2 py-1 rounded text-sm">{getPositionValue(instructionOffset)}</span>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center mb-2">
+                        <Label>Instruction Position</Label>
+                        <span className="text-xs bg-muted px-2 py-1 rounded-md">
+                          {getPositionValue(instructionOffset)}
+                        </span>
+                      </div>
+                      <Slider
+                        value={[instructionOffset]}
+                        min={-20}
+                        max={20}
+                        step={1}
+                        onValueChange={(values) => setInstructionOffset(values[0])}
+                      />
                     </div>
                   )}
+                  
                   {showGrid && (
-                    <div className="flex items-center justify-between">
-                      <span>Grid Position:</span>
-                      <span className="bg-gray-100 px-2 py-1 rounded text-sm">{getPositionValue(gridOffset)}</span>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center mb-2">
+                        <Label>Grid Position</Label>
+                        <span className="text-xs bg-muted px-2 py-1 rounded-md">
+                          {getPositionValue(gridOffset)}
+                        </span>
+                      </div>
+                      <Slider
+                        value={[gridOffset]}
+                        min={-20}
+                        max={20}
+                        step={1}
+                        onValueChange={(values) => setGridOffset(values[0])}
+                      />
                     </div>
                   )}
+                  
                   {showWordList && (
-                    <div className="flex items-center justify-between">
-                      <span>Word List Position:</span>
-                      <span className="bg-gray-100 px-2 py-1 rounded text-sm">{getPositionValue(wordListOffset)}</span>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center mb-2">
+                        <Label>Word List Position</Label>
+                        <span className="text-xs bg-muted px-2 py-1 rounded-md">
+                          {getPositionValue(wordListOffset)}
+                        </span>
+                      </div>
+                      <Slider
+                        value={[wordListOffset]}
+                        min={-20}
+                        max={20}
+                        step={1}
+                        onValueChange={(values) => setWordListOffset(values[0])}
+                      />
                     </div>
                   )}
                 </div>
@@ -1048,3 +1075,16 @@ export function DownloadPuzzleDialog({
     </Dialog>
   );
 }
+
+// Function used for element positioning
+const moveElement = (element: string, direction: 'up' | 'down') => {
+  // This function is no longer used with the slider implementation
+  // but kept for compatibility with ControlPanel
+  return;
+};
+
+const togglePositioning = (element: string) => {
+  // This function is no longer used with the slider implementation
+  // but kept for compatibility with ControlPanel
+  return;
+};
