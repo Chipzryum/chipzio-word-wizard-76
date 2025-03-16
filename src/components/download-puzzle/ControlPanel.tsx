@@ -205,6 +205,11 @@ export const ControlPanel = ({
     }
   };
 
+  const handleWordListToggle = (checked: boolean) => {
+    console.log("Word list toggle in ControlPanel:", checked);
+    setShowWordList(checked);
+  };
+
   return (
     <div className="p-4 overflow-y-auto max-h-[60vh]">
       <div className="space-y-4">
@@ -278,7 +283,7 @@ export const ControlPanel = ({
             <Switch
               id="show-word-list"
               checked={showWordList}
-              onCheckedChange={setShowWordList}
+              onCheckedChange={handleWordListToggle}
             />
           </div>
         </div>

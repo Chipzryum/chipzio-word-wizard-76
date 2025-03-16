@@ -61,6 +61,8 @@ export const PuzzlePDFPreview = ({
   imageOpacity = 0.3,
   imageGridSize = 100,
 }: PuzzlePDFPreviewProps) => {
+  console.log("PDF Preview rendering with showWordList:", showWordList);
+  
   if (!puzzle) return null;
   
   // Calculate font sizes based on page dimensions and multipliers
