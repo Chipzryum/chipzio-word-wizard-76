@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
@@ -93,11 +94,6 @@ export function DownloadPuzzleDialog({
   const { toast } = useToast();
   
   const previewScaleFactor = 0.25;
-
-  const handleWordListToggle = (value: boolean) => {
-    console.log("Word list toggled:", value);
-    setShowWordList(value);
-  };
 
   const handleRandomizeImages = () => {
     if (uploadedImages.length > 0) {
@@ -218,9 +214,6 @@ export function DownloadPuzzleDialog({
     try {
       console.log("Creating PDF with letterSizeMultiplier:", letterSizeMultiplier);
       console.log("Creating PDF with cellSize:", cellSize);
-      console.log("Word list is shown:", showWordList);
-      console.log("Word list font size:", fontSizes.wordListSize);
-      console.log("Word list multiplier:", wordListSizeMultiplier);
       
       const cappedLetterSizeMultiplier = Math.min(letterSizeMultiplier, MAX_LETTER_SIZE);
       console.log("Creating PDF with cappedLetterSizeMultiplier:", cappedLetterSizeMultiplier);
@@ -434,7 +427,7 @@ export function DownloadPuzzleDialog({
                 gridOffset={gridOffset}
                 
                 showWordList={showWordList}
-                setShowWordList={handleWordListToggle}
+                setShowWordList={setShowWordList}
                 wordListSizeMultiplier={wordListSizeMultiplier}
                 setWordListSizeMultiplier={setWordListSizeMultiplier}
                 wordListOffset={wordListOffset}
@@ -558,51 +551,85 @@ export function DownloadPuzzleDialog({
               </div>
 
               {selectedSize === "Custom" && (
-                <>
-                  <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
-                    <h3 className="font-medium mb-3">Custom Dimensions</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Width ({selectedUnit})</Label>
-                        <input
-                          type="number"
-                          value={convertFromPoints(customWidth)}
-                          onChange={(e) => handleDimensionChange("width", e.target.value)}
-                          className="w-full p-2 border rounded-md"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Height ({selectedUnit})</Label>
-                        <input
-                          type="number"
-                          value={convertFromPoints(customHeight)}
-                          onChange={(e) => handleDimensionChange("height", e.target.value)}
-                          className="w-full p-2 border rounded-md"
-                        />
-                      </div>
+                <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                  <h3 className="font-medium mb-3">Custom Dimensions</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Width ({selectedUnit})</Label>
+                      <input
+                        type="number"
+                        value={convertFromPoints(customWidth)}
+                        onChange={(e) => handleDimensionChange("width", e.target.value)}
+                        className="w-full p-2 border rounded-md"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Height ({selectedUnit})</Label>
+                      <input
+                        type="number"
+                        value={convertFromPoints(customHeight)}
+                        onChange={(e) => handleDimensionChange("height", e.target.value)}
+                        className="w-full p-2 border rounded-md"
+                      />
                     </div>
                   </div>
-
-                  <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
-                    <h3 className="font-medium mb-3">Units</h3>
-                    <div className="grid grid-cols-4 gap-2">
-                      {Object.keys(UNITS).map((unit) => (
-                        <button
-                          key={unit}
-                          onClick={() => handleUnitChange(unit as Unit)}
-                          className={`py-2 px-4 rounded-md transition-colors ${
-                            selectedUnit === unit
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-secondary hover:bg-secondary/80 text-secondary-foreground"
-                          }`}
-                        >
-                          {unit}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </>
+                </div>
               )}
+
+              <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                <h3 className="font-medium mb-3">Units</h3>
+                <div className="grid grid-cols-4 gap-2">
+                  {Object.keys(UNITS).map((unit) => (
+                    <button
+                      key={unit}
+                      onClick={() => handleUnitChange(unit as Unit)}
+                      className={`py-2 px-4 rounded-md transition-colors ${
+                        selectedUnit === unit
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary hover:bg-secondary/80 text-secondary-foreground"
+                      }`}
+                    >
+                      {unit}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                <h3 className="font-medium mb-3">Element Position</h3>
+                <div className="space-y-3">
+                  {showTitle && (
+                    <div className="flex items-center justify-between">
+                      <span>Title Position:</span>
+                      <span className="bg-gray-100 px-2 py-1 rounded text-sm">{getPositionValue(titleOffset)}</span>
+                    </div>
+                  )}
+                  {showSubtitle && (
+                    <div className="flex items-center justify-between">
+                      <span>Subtitle Position:</span>
+                      <span className="bg-gray-100 px-2 py-1 rounded text-sm">{getPositionValue(subtitleOffset)}</span>
+                    </div>
+                  )}
+                  {showInstruction && (
+                    <div className="flex items-center justify-between">
+                      <span>Instruction Position:</span>
+                      <span className="bg-gray-100 px-2 py-1 rounded text-sm">{getPositionValue(instructionOffset)}</span>
+                    </div>
+                  )}
+                  {showGrid && (
+                    <div className="flex items-center justify-between">
+                      <span>Grid Position:</span>
+                      <span className="bg-gray-100 px-2 py-1 rounded text-sm">{getPositionValue(gridOffset)}</span>
+                    </div>
+                  )}
+                  {showWordList && (
+                    <div className="flex items-center justify-between">
+                      <span>Word List Position:</span>
+                      <span className="bg-gray-100 px-2 py-1 rounded text-sm">{getPositionValue(wordListOffset)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -882,4 +909,142 @@ export function DownloadPuzzleDialog({
                       </button>
                     </div>
                   ))}
-                  <label className="w-12 h-12 border-2 border-
+                  <label className="w-12 h-12 border-2 border-dashed rounded flex items-center justify-center cursor-pointer hover:bg-secondary/30">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          const file = e.target.files[0];
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            if (event.target && typeof event.target.result === 'string') {
+                              setUploadedImages([...uploadedImages, event.target.result]);
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                    +
+                  </label>
+                </div>
+                
+                {uploadedImages.length > 0 && (
+                  <button
+                    onClick={handleRandomizeImages}
+                    className="mt-2 w-full py-1 px-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-md text-sm"
+                  >
+                    Randomize Images
+                  </button>
+                )}
+              </div>
+
+              {uploadedImages.length > 0 && (
+                <>
+                  <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                    <div className="grid gap-2">
+                      <div className="flex justify-between items-center">
+                        <Label className="font-medium">Image Opacity</Label>
+                        <span className="text-xs">{(imageOpacity * 100).toFixed(0)}%</span>
+                      </div>
+                      <Slider
+                        value={[imageOpacity * 100]}
+                        min={10}
+                        max={100}
+                        step={1}
+                        onValueChange={(value) => setImageOpacity(value[0] / 100)}
+                        className="cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                    <div className="grid gap-2">
+                      <div className="flex justify-between items-center">
+                        <Label className="font-medium">Image Size</Label>
+                        <span className="text-xs">{imageGridSize}px</span>
+                      </div>
+                      <Slider
+                        value={[imageGridSize]}
+                        min={MIN_IMAGE_GRID_SIZE}
+                        max={MAX_IMAGE_GRID_SIZE}
+                        step={1}
+                        onValueChange={(value) => setImageGridSize(value[0])}
+                        className="cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <Label>Preview</Label>
+              <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
+                {uploadedImages.length > 0 && (
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    <div 
+                      className="w-full h-full"
+                      style={{
+                        backgroundImage: uploadedImages.length > 0 
+                          ? `url(${uploadedImages[0]})` 
+                          : 'none',
+                        backgroundSize: `${imageGridSize}px ${imageGridSize}px`,
+                        backgroundRepeat: 'repeat',
+                        opacity: imageOpacity,
+                      }}
+                    />
+                  </div>
+                )}
+                
+                <VisualPreview 
+                  puzzle={puzzle}
+                  showLivePreview={showLivePreview}
+                  isPDFReady={isPDFReady}
+                  title={title}
+                  subtitle={subtitle}
+                  instruction={instruction}
+                  showTitle={showTitle}
+                  showSubtitle={showSubtitle}
+                  showInstruction={showInstruction}
+                  showGrid={showGrid}
+                  showWordList={showWordList}
+                  titleOffset={titleOffset}
+                  subtitleOffset={subtitleOffset}
+                  instructionOffset={instructionOffset}
+                  gridOffset={gridOffset}
+                  wordListOffset={wordListOffset}
+                  currentWidth={currentWidth}
+                  currentHeight={currentHeight}
+                  contentWidth={contentWidth}
+                  contentHeight={contentHeight}
+                  cellSize={cellSize}
+                  letterSize={letterSize}
+                  letterSizeMultiplier={letterSizeMultiplier}
+                  titleSizeMultiplier={titleSizeMultiplier}
+                  subtitleSizeMultiplier={subtitleSizeMultiplier}
+                  instructionSizeMultiplier={instructionSizeMultiplier}
+                  wordListSizeMultiplier={wordListSizeMultiplier}
+                  previewScaleFactor={previewScaleFactor}
+                  fontSizes={fontSizes}
+                  getVerticalOffset={getVerticalOffset}
+                />
+              </div>
+              
+              <ActionButtons 
+                handleSaveLayout={handleSaveLayout}
+                handleDownload={handleDownload}
+                isGenerating={isGenerating}
+                isPDFReady={isPDFReady}
+                puzzle={puzzle}
+                pdfBlob={pdfBlob}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}

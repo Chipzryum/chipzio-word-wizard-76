@@ -73,8 +73,6 @@ export const VisualPreview = ({
   fontSizes,
   getVerticalOffset,
 }: VisualPreviewProps) => {
-  console.log("VisualPreview rendering with showWordList:", showWordList);
-  
   if (showLivePreview && isPDFReady) {
     return (
       <div className="w-full h-full flex-1">
