@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
@@ -459,7 +458,7 @@ export function DownloadPuzzleDialog({
         </DialogHeader>
 
         <Tabs defaultValue="content">
-          <TabsList className="grid grid-cols-4 mb-4">
+          <TabsList className="grid grid-cols-4 mb-4 w-full">
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="layout">Layout</TabsTrigger>
             <TabsTrigger value="sizes">Sizes</TabsTrigger>
@@ -602,17 +601,17 @@ export function DownloadPuzzleDialog({
           
           <TabsContent value="layout" className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-6">
-              <div className="space-y-4">
-                <Label>Page Size</Label>
+              <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                <h3 className="font-medium mb-3">Page Size</h3>
                 <div className="grid grid-cols-3 gap-2">
                   {Object.keys(PAGE_SIZES).map((size) => (
                     <button
                       key={size}
                       onClick={() => handleSizeChange(size as PageSize)}
-                      className={`py-2 px-4 rounded-md ${
+                      className={`py-2 px-4 rounded-md transition-colors ${
                         selectedSize === size
                           ? "bg-primary text-primary-foreground"
-                          : "bg-secondary text-secondary-foreground"
+                          : "bg-secondary hover:bg-secondary/80 text-secondary-foreground"
                       }`}
                     >
                       {size}
@@ -620,10 +619,10 @@ export function DownloadPuzzleDialog({
                   ))}
                   <button
                     onClick={() => handleSizeChange("Custom")}
-                    className={`py-2 px-4 rounded-md ${
+                    className={`py-2 px-4 rounded-md transition-colors ${
                       selectedSize === "Custom"
                         ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-secondary-foreground"
+                        : "bg-secondary hover:bg-secondary/80 text-secondary-foreground"
                     }`}
                   >
                     Custom
@@ -632,44 +631,83 @@ export function DownloadPuzzleDialog({
               </div>
 
               {selectedSize === "Custom" && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Width ({selectedUnit})</Label>
-                    <input
-                      type="number"
-                      value={convertFromPoints(customWidth)}
-                      onChange={(e) => handleDimensionChange("width", e.target.value)}
-                      className="w-full p-2 border rounded-md"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Height ({selectedUnit})</Label>
-                    <input
-                      type="number"
-                      value={convertFromPoints(customHeight)}
-                      onChange={(e) => handleDimensionChange("height", e.target.value)}
-                      className="w-full p-2 border rounded-md"
-                    />
+                <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                  <h3 className="font-medium mb-3">Custom Dimensions</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Width ({selectedUnit})</Label>
+                      <input
+                        type="number"
+                        value={convertFromPoints(customWidth)}
+                        onChange={(e) => handleDimensionChange("width", e.target.value)}
+                        className="w-full p-2 border rounded-md"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Height ({selectedUnit})</Label>
+                      <input
+                        type="number"
+                        value={convertFromPoints(customHeight)}
+                        onChange={(e) => handleDimensionChange("height", e.target.value)}
+                        className="w-full p-2 border rounded-md"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label>Units</Label>
+              <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                <h3 className="font-medium mb-3">Units</h3>
                 <div className="grid grid-cols-4 gap-2">
                   {Object.keys(UNITS).map((unit) => (
                     <button
                       key={unit}
                       onClick={() => handleUnitChange(unit as Unit)}
-                      className={`py-2 px-4 rounded-md ${
+                      className={`py-2 px-4 rounded-md transition-colors ${
                         selectedUnit === unit
                           ? "bg-primary text-primary-foreground"
-                          : "bg-secondary text-secondary-foreground"
+                          : "bg-secondary hover:bg-secondary/80 text-secondary-foreground"
                       }`}
                     >
                       {unit}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                <h3 className="font-medium mb-3">Element Position</h3>
+                <div className="space-y-3">
+                  {showTitle && (
+                    <div className="flex items-center justify-between">
+                      <span>Title Position:</span>
+                      <span className="bg-gray-100 px-2 py-1 rounded text-sm">{getPositionValue(titleOffset)}</span>
+                    </div>
+                  )}
+                  {showSubtitle && (
+                    <div className="flex items-center justify-between">
+                      <span>Subtitle Position:</span>
+                      <span className="bg-gray-100 px-2 py-1 rounded text-sm">{getPositionValue(subtitleOffset)}</span>
+                    </div>
+                  )}
+                  {showInstruction && (
+                    <div className="flex items-center justify-between">
+                      <span>Instruction Position:</span>
+                      <span className="bg-gray-100 px-2 py-1 rounded text-sm">{getPositionValue(instructionOffset)}</span>
+                    </div>
+                  )}
+                  {showGrid && (
+                    <div className="flex items-center justify-between">
+                      <span>Grid Position:</span>
+                      <span className="bg-gray-100 px-2 py-1 rounded text-sm">{getPositionValue(gridOffset)}</span>
+                    </div>
+                  )}
+                  {showWordList && (
+                    <div className="flex items-center justify-between">
+                      <span>Word List Position:</span>
+                      <span className="bg-gray-100 px-2 py-1 rounded text-sm">{getPositionValue(wordListOffset)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -740,249 +778,106 @@ export function DownloadPuzzleDialog({
           
           <TabsContent value="sizes" className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div className="grid gap-2">
-                <Label>Letters Size</Label>
-                <Slider
-                  value={[letterSizeMultiplier * 100]}
-                  min={50}
-                  max={150}
-                  step={10}
-                  onValueChange={(value) => setLetterSizeMultiplier(value[0] / 100)}
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>50%</span>
-                  <span>{(letterSizeMultiplier * 100).toFixed(0)}%</span>
-                  <span>150%</span>
+              <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                <div className="grid gap-2">
+                  <Label className="font-medium">Letters Size</Label>
+                  <Slider
+                    value={[letterSizeMultiplier * 100]}
+                    min={50}
+                    max={150}
+                    step={1}
+                    onValueChange={(value) => setLetterSizeMultiplier(value[0] / 100)}
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>50%</span>
+                    <span>{(letterSizeMultiplier * 100).toFixed(0)}%</span>
+                    <span>150%</span>
+                  </div>
                 </div>
               </div>
 
               {showTitle && (
-                <div className="grid gap-2">
-                  <Label>Title Size</Label>
-                  <Slider
-                    value={[titleSizeMultiplier * 100]}
-                    min={50}
-                    max={150}
-                    step={10}
-                    onValueChange={(value) => setTitleSizeMultiplier(value[0] / 100)}
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>50%</span>
-                    <span>{(titleSizeMultiplier * 100).toFixed(0)}%</span>
-                    <span>150%</span>
+                <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                  <div className="grid gap-2">
+                    <Label className="font-medium">Title Size</Label>
+                    <Slider
+                      value={[titleSizeMultiplier * 100]}
+                      min={50}
+                      max={150}
+                      step={1}
+                      onValueChange={(value) => setTitleSizeMultiplier(value[0] / 100)}
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>50%</span>
+                      <span>{(titleSizeMultiplier * 100).toFixed(0)}%</span>
+                      <span>150%</span>
+                    </div>
                   </div>
                 </div>
               )}
 
               {showSubtitle && (
-                <div className="grid gap-2">
-                  <Label>Subtitle Size</Label>
-                  <Slider
-                    value={[subtitleSizeMultiplier * 100]}
-                    min={50}
-                    max={150}
-                    step={10}
-                    onValueChange={(value) => setSubtitleSizeMultiplier(value[0] / 100)}
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>50%</span>
-                    <span>{(subtitleSizeMultiplier * 100).toFixed(0)}%</span>
-                    <span>150%</span>
+                <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                  <div className="grid gap-2">
+                    <Label className="font-medium">Subtitle Size</Label>
+                    <Slider
+                      value={[subtitleSizeMultiplier * 100]}
+                      min={50}
+                      max={150}
+                      step={1}
+                      onValueChange={(value) => setSubtitleSizeMultiplier(value[0] / 100)}
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>50%</span>
+                      <span>{(subtitleSizeMultiplier * 100).toFixed(0)}%</span>
+                      <span>150%</span>
+                    </div>
                   </div>
                 </div>
               )}
 
               {showInstruction && (
-                <div className="grid gap-2">
-                  <Label>Instruction Size</Label>
-                  <Slider
-                    value={[instructionSizeMultiplier * 100]}
-                    min={50}
-                    max={150}
-                    step={10}
-                    onValueChange={(value) =>
-                      setInstructionSizeMultiplier(value[0] / 100)
-                    }
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>50%</span>
-                    <span>{(instructionSizeMultiplier * 100).toFixed(0)}%</span>
-                    <span>150%</span>
+                <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                  <div className="grid gap-2">
+                    <Label className="font-medium">Instruction Size</Label>
+                    <Slider
+                      value={[instructionSizeMultiplier * 100]}
+                      min={50}
+                      max={150}
+                      step={1}
+                      onValueChange={(value) =>
+                        setInstructionSizeMultiplier(value[0] / 100)
+                      }
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>50%</span>
+                      <span>{(instructionSizeMultiplier * 100).toFixed(0)}%</span>
+                      <span>150%</span>
+                    </div>
                   </div>
                 </div>
               )}
 
               {showWordList && (
-                <div className="grid gap-2">
-                  <Label>Word List Size</Label>
-                  <Slider
-                    value={[wordListSizeMultiplier * 100]}
-                    min={50}
-                    max={150}
-                    step={10}
-                    onValueChange={(value) =>
-                      setWordListSizeMultiplier(value[0] / 100)
-                    }
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>50%</span>
-                    <span>{(wordListSizeMultiplier * 100).toFixed(0)}%</span>
-                    <span>150%</span>
+                <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                  <div className="grid gap-2">
+                    <Label className="font-medium">Word List Size</Label>
+                    <Slider
+                      value={[wordListSizeMultiplier * 100]}
+                      min={50}
+                      max={150}
+                      step={1}
+                      onValueChange={(value) =>
+                        setWordListSizeMultiplier(value[0] / 100)
+                      }
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>50%</span>
+                      <span>{(wordListSizeMultiplier * 100).toFixed(0)}%</span>
+                      <span>150%</span>
+                    </div>
                   </div>
                 </div>
               )}
               
               {showGrid && (
-                <div className="grid gap-2">
-                  <Label>Cell Size</Label>
-                  <Slider
-                    value={[cellSizeMultiplier * 100]}
-                    min={50}
-                    max={150}
-                    step={10}
-                    onValueChange={(value) => setCellSizeMultiplier(value[0] / 100)}
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>50%</span>
-                    <span>{(cellSizeMultiplier * 100).toFixed(0)}%</span>
-                    <span>150%</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-4">
-              <Label>Preview</Label>
-              <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-                {uploadedImages.length > 0 && (
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    <div 
-                      className="w-full h-full"
-                      style={{
-                        backgroundImage: uploadedImages.length > 0 
-                          ? `url(${uploadedImages[0]})` 
-                          : 'none',
-                        backgroundSize: `${imageGridSize}px ${imageGridSize}px`,
-                        backgroundRepeat: 'repeat',
-                        opacity: imageOpacity,
-                      }}
-                    />
-                  </div>
-                )}
-                
-                <VisualPreview 
-                  puzzle={puzzle}
-                  showLivePreview={showLivePreview}
-                  isPDFReady={isPDFReady}
-                  title={title}
-                  subtitle={subtitle}
-                  instruction={instruction}
-                  showTitle={showTitle}
-                  showSubtitle={showSubtitle}
-                  showInstruction={showInstruction}
-                  showGrid={showGrid}
-                  showWordList={showWordList}
-                  titleOffset={titleOffset}
-                  subtitleOffset={subtitleOffset}
-                  instructionOffset={instructionOffset}
-                  gridOffset={gridOffset}
-                  wordListOffset={wordListOffset}
-                  currentWidth={currentWidth}
-                  currentHeight={currentHeight}
-                  contentWidth={contentWidth}
-                  contentHeight={contentHeight}
-                  cellSize={cellSize}
-                  letterSize={letterSize}
-                  letterSizeMultiplier={letterSizeMultiplier}
-                  titleSizeMultiplier={titleSizeMultiplier}
-                  subtitleSizeMultiplier={subtitleSizeMultiplier}
-                  instructionSizeMultiplier={instructionSizeMultiplier}
-                  wordListSizeMultiplier={wordListSizeMultiplier}
-                  previewScaleFactor={previewScaleFactor}
-                  fontSizes={fontSizes}
-                  getVerticalOffset={getVerticalOffset}
-                />
-              </div>
-              
-              <ActionButtons 
-                handleSaveLayout={handleSaveLayout}
-                handleDownload={handleDownload}
-                isGenerating={isGenerating}
-                isPDFReady={isPDFReady}
-                puzzle={puzzle}
-                pdfBlob={pdfBlob}
-              />
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="aesthetics" className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <AestheticsTab />
-            
-            <div className="space-y-4">
-              <Label>Preview</Label>
-              <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-                {uploadedImages.length > 0 && (
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    <div 
-                      className="w-full h-full"
-                      style={{
-                        backgroundImage: uploadedImages.length > 0 
-                          ? `url(${uploadedImages[0]})` 
-                          : 'none',
-                        backgroundSize: `${imageGridSize}px ${imageGridSize}px`,
-                        backgroundRepeat: 'repeat',
-                        opacity: imageOpacity,
-                      }}
-                    />
-                  </div>
-                )}
-                
-                <VisualPreview 
-                  puzzle={puzzle}
-                  showLivePreview={showLivePreview}
-                  isPDFReady={isPDFReady}
-                  title={title}
-                  subtitle={subtitle}
-                  instruction={instruction}
-                  showTitle={showTitle}
-                  showSubtitle={showSubtitle}
-                  showInstruction={showInstruction}
-                  showGrid={showGrid}
-                  showWordList={showWordList}
-                  titleOffset={titleOffset}
-                  subtitleOffset={subtitleOffset}
-                  instructionOffset={instructionOffset}
-                  gridOffset={gridOffset}
-                  wordListOffset={wordListOffset}
-                  currentWidth={currentWidth}
-                  currentHeight={currentHeight}
-                  contentWidth={contentWidth}
-                  contentHeight={contentHeight}
-                  cellSize={cellSize}
-                  letterSize={letterSize}
-                  letterSizeMultiplier={letterSizeMultiplier}
-                  titleSizeMultiplier={titleSizeMultiplier}
-                  subtitleSizeMultiplier={subtitleSizeMultiplier}
-                  instructionSizeMultiplier={instructionSizeMultiplier}
-                  wordListSizeMultiplier={wordListSizeMultiplier}
-                  previewScaleFactor={previewScaleFactor}
-                  fontSizes={fontSizes}
-                  getVerticalOffset={getVerticalOffset}
-                />
-              </div>
-              
-              <ActionButtons 
-                handleSaveLayout={handleSaveLayout}
-                handleDownload={handleDownload}
-                isGenerating={isGenerating}
-                isPDFReady={isPDFReady}
-                puzzle={puzzle}
-                pdfBlob={pdfBlob}
-              />
-            </div>
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
-  );
-}

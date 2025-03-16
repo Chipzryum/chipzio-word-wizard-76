@@ -135,11 +135,12 @@ export const PuzzlePDFPreview = ({
             </View>
           )}
         
-          {showTitle && <Text style={pdfStyles.title}>{title.toUpperCase()}</Text>}
-          {showSubtitle && <Text style={pdfStyles.subtitle}>{subtitle.toLowerCase()}</Text>}
-          {showInstruction && <Text style={pdfStyles.instruction}>{instruction}</Text>}
+          {showTitle && <Text style={[pdfStyles.title, {marginTop: getVerticalOffset(titleOffset)}]}>{title.toUpperCase()}</Text>}
+          {showSubtitle && <Text style={[pdfStyles.subtitle, {marginTop: getVerticalOffset(subtitleOffset)}]}>{subtitle.toLowerCase()}</Text>}
+          {showInstruction && <Text style={[pdfStyles.instruction, {marginTop: getVerticalOffset(instructionOffset)}]}>{instruction}</Text>}
+          
           {showGrid && (
-            <View style={pdfStyles.grid}>
+            <View style={[pdfStyles.grid, {marginTop: getVerticalOffset(gridOffset)}]}>
               {puzzle.grid.map((row, i) => (
                 <View key={i} style={pdfStyles.row}>
                   {row.map((cell, j) => (
@@ -151,8 +152,9 @@ export const PuzzlePDFPreview = ({
               ))}
             </View>
           )}
+          
           {showWordList && (
-            <View style={pdfStyles.wordList}>
+            <View style={[pdfStyles.wordList, {marginTop: getVerticalOffset(wordListOffset)}]}>
               {puzzle.wordPlacements.map(({ word }, index) => (
                 <Text key={index} style={pdfStyles.wordItem}>{word.toLowerCase()}</Text>
               ))}
@@ -198,36 +200,29 @@ export const PuzzlePDFPreview = ({
       title: {
         fontSize: fontSizes.titleSize,
         marginBottom: 10,
-        marginTop: getVerticalOffset(titleOffset),
         textAlign: 'center',
         fontWeight: 'bold',
-        display: showTitle ? 'flex' : 'none',
         position: 'relative',
       },
       subtitle: {
         fontSize: fontSizes.subtitleSize,
         marginBottom: 10,
-        marginTop: getVerticalOffset(subtitleOffset),
         textAlign: 'center',
         fontFamily: 'Times-Italic',
-        display: showSubtitle ? 'flex' : 'none',
         position: 'relative',
       },
       instruction: {
         fontSize: fontSizes.instructionSize,
         marginBottom: 20,
-        marginTop: getVerticalOffset(instructionOffset),
         textAlign: 'center',
-        display: showInstruction ? 'flex' : 'none',
         position: 'relative',
       },
       grid: {
         width: '100%',
-        display: showGrid ? 'flex' : 'none',
+        display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         marginBottom: 20,
-        marginTop: getVerticalOffset(gridOffset),
         position: 'relative',
       },
       row: {
@@ -247,8 +242,7 @@ export const PuzzlePDFPreview = ({
         fontSize: letterSize,
       },
       wordList: {
-        marginTop: getVerticalOffset(wordListOffset),
-        display: showWordList ? 'flex' : 'none',
+        display: 'flex',
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'center',

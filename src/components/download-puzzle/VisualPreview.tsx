@@ -180,14 +180,14 @@ export const VisualPreview = ({
         )}
         {showWordList && puzzle && (
           <div 
-            className="flex flex-wrap justify-center mt-4"
+            className="flex flex-wrap justify-center mt-4 px-2"
             style={{
               marginTop: `${getVerticalOffset(wordListOffset) * previewScaleFactor}px`,
               fontSize: `${fontSizes.wordListSize * previewScaleFactor * wordListSizeMultiplier}px`,
             }}
           >
             {puzzle.wordPlacements.map(({ word }, index) => (
-              <span key={index} className="mx-2">{word.toLowerCase()}</span>
+              <span key={index} className="mx-2 px-1 py-0.5 bg-gray-100 rounded-md mb-1">{word.toLowerCase()}</span>
             ))}
           </div>
         )}
