@@ -39,6 +39,9 @@ interface VisualPreviewProps {
     wordListSize: number;
   };
   getVerticalOffset: (offset: number) => number;
+  uploadedImages?: string[];
+  imageOpacity?: number;
+  imageGridSize?: number;
 }
 
 export const VisualPreview = ({
@@ -72,6 +75,9 @@ export const VisualPreview = ({
   previewScaleFactor,
   fontSizes,
   getVerticalOffset,
+  uploadedImages = [],
+  imageOpacity = 0.3,
+  imageGridSize = 100,
 }: VisualPreviewProps) => {
   if (showLivePreview && isPDFReady) {
     return (
@@ -102,6 +108,9 @@ export const VisualPreview = ({
             subtitleSizeMultiplier={subtitleSizeMultiplier}
             instructionSizeMultiplier={instructionSizeMultiplier}
             wordListSizeMultiplier={wordListSizeMultiplier}
+            uploadedImages={uploadedImages}
+            imageOpacity={imageOpacity}
+            imageGridSize={imageGridSize}
           />
         </PDFViewer>
       </div>
@@ -110,6 +119,33 @@ export const VisualPreview = ({
 
   console.log("Rendering VisualPreview with showWordList:", showWordList);
   console.log("Puzzle words:", puzzle?.wordPlacements.map(wp => wp.word));
+
+  // Calculate how many images we need to cover the preview
+  const calculateImageGrid = () => {
+    if (!uploadedImages || uploadedImages.length === 0) return [];
+    
+    const imageElements = [];
+    const scaledSize = imageGridSize * previewScaleFactor;
+    
+    // Calculate number of images needed to cover the preview area
+    const horizontalCount = Math.ceil((currentWidth * previewScaleFactor) / scaledSize) + 1;
+    const verticalCount = Math.ceil((currentHeight * previewScaleFactor) / scaledSize) + 1;
+    
+    for (let x = 0; x < horizontalCount; x++) {
+      for (let y = 0; y < verticalCount; y++) {
+        imageElements.push({
+          x: x * scaledSize,
+          y: y * scaledSize,
+          size: scaledSize,
+          image: uploadedImages[0] // Use first image for grid
+        });
+      }
+    }
+    
+    return imageElements;
+  };
+  
+  const backgroundImages = calculateImageGrid();
 
   return (
     <div 
@@ -121,7 +157,28 @@ export const VisualPreview = ({
         maxHeight: '380px',
       }}
     >
-      <div className="flex flex-col h-full">
+      {/* Background images grid */}
+      {uploadedImages && uploadedImages.length > 0 && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ opacity: imageOpacity }}>
+          {backgroundImages.map((img, index) => (
+            <div
+              key={index}
+              style={{
+                position: 'absolute',
+                left: img.x,
+                top: img.y,
+                width: img.size,
+                height: img.size,
+                backgroundImage: `url(${img.image})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      <div className="flex flex-col h-full relative z-10">
         {showTitle && (
           <div 
             className="text-center font-bold font-serif"
@@ -167,7 +224,7 @@ export const VisualPreview = ({
                 {row.map((letter, j) => (
                   <div
                     key={`${i}-${j}`}
-                    className="flex items-center justify-center border border-gray-300"
+                    className="flex items-center justify-center border border-gray-300 bg-white/80"
                     style={{
                       width: `${cellSize * previewScaleFactor}px`,
                       height: `${cellSize * previewScaleFactor}px`,
@@ -190,7 +247,7 @@ export const VisualPreview = ({
             }}
           >
             {puzzle.wordPlacements.map(({ word }, index) => (
-              <span key={index} className="mx-2 px-1 py-0.5 bg-gray-100 rounded-md mb-1">
+              <span key={index} className="mx-2 px-1.5 py-0.5 bg-white/80 rounded-md mb-1 border border-gray-200">
                 {word.toLowerCase()}
               </span>
             ))}
