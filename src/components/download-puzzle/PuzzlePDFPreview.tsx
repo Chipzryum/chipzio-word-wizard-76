@@ -89,7 +89,7 @@ export const PuzzlePDFPreview = ({
     if (!uploadedImages || uploadedImages.length === 0) return [];
     
     const imageElements = [];
-    const scaledImageSize = imageGridSize; // Size in points
+    const scaledImageSize = imageGridSize; // Size in pixels
     
     // Calculate number of images needed to cover the page
     const horizontalCount = Math.ceil(contentWidth / scaledImageSize) + 1;
@@ -203,7 +203,6 @@ export const PuzzlePDFPreview = ({
         textAlign: 'center',
         fontWeight: 'bold',
         position: 'relative',
-        zIndex: 2,
       },
       subtitle: {
         fontSize: fontSizes.subtitleSize,
@@ -211,14 +210,12 @@ export const PuzzlePDFPreview = ({
         textAlign: 'center',
         fontFamily: 'Times-Italic',
         position: 'relative',
-        zIndex: 2,
       },
       instruction: {
         fontSize: fontSizes.instructionSize,
         marginBottom: 20,
         textAlign: 'center',
         position: 'relative',
-        zIndex: 2,
       },
       grid: {
         width: '100%',
@@ -227,7 +224,6 @@ export const PuzzlePDFPreview = ({
         alignItems: 'center',
         marginBottom: 20,
         position: 'relative',
-        zIndex: 2,
       },
       row: {
         display: 'flex',
@@ -236,10 +232,6 @@ export const PuzzlePDFPreview = ({
       cell: {
         width: cellSize,
         height: cellSize,
-        backgroundColor: 'rgba(255, 255, 255, 0.85)',
-        borderStyle: 'solid',
-        borderWidth: 0.5,
-        borderColor: '#777',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -255,16 +247,10 @@ export const PuzzlePDFPreview = ({
         flexWrap: 'wrap',
         justifyContent: 'center',
         position: 'relative',
-        zIndex: 2,
       },
       wordItem: {
-        marginHorizontal: 5,
-        marginVertical: 3,
-        padding: 3,
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        borderRadius: 3,
-        borderWidth: 0.5,
-        borderColor: '#aaa',
+        marginHorizontal: 15,
+        marginVertical: 5,
         fontSize: fontSizes.wordListSize,
       },
     });
