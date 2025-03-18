@@ -84,51 +84,58 @@ export const PuzzlePDFPreview = ({
   // Use the exact font sizes from our calculations
   const pdfStyles = createPDFStyles(fontSizes);
 
-  // Calculate image positions for watermark coverage
-  const createWatermarkPositions = () => {
+  // Calculate how many images we need to cover the page
+  const calculateImageGrid = () => {
     if (!uploadedImages || uploadedImages.length === 0) return [];
     
-    const positions = [];
-    const horizontalCount = Math.ceil(currentWidth / imageGridSize) + 1;
-    const verticalCount = Math.ceil(currentHeight / imageGridSize) + 1;
+    const imageElements = [];
+    const scaledImageSize = imageGridSize; // Size in pixels
+    
+    // Calculate number of images needed to cover the page
+    const horizontalCount = Math.ceil(contentWidth / scaledImageSize) + 1;
+    const verticalCount = Math.ceil(contentHeight / scaledImageSize) + 1;
     
     for (let x = 0; x < horizontalCount; x++) {
       for (let y = 0; y < verticalCount; y++) {
-        positions.push({
-          x: x * imageGridSize,
-          y: y * imageGridSize,
-          width: imageGridSize,
-          height: imageGridSize
+        imageElements.push({
+          x: x * scaledImageSize,
+          y: y * scaledImageSize,
+          size: scaledImageSize,
+          image: uploadedImages[0] // Use the first image for grid
         });
       }
     }
     
-    return positions;
+    return imageElements;
   };
   
-  const watermarkPositions = createWatermarkPositions();
+  const backgroundImages = calculateImageGrid();
   
   return (
     <Document>
       <Page size={[currentWidth, currentHeight]} style={pdfStyles.page}>
-        {/* Watermark layer covering entire page */}
-        {uploadedImages && uploadedImages.length > 0 && watermarkPositions.map((pos, index) => (
-          <Image
-            key={`watermark-${index}`}
-            src={uploadedImages[0]}
-            style={{
-              position: 'absolute',
-              top: pos.y,
-              left: pos.x,
-              width: pos.width,
-              height: pos.height,
-              opacity: imageOpacity,
-              zIndex: 0,
-            }}
-          />
-        ))}
-        
         <View style={pdfStyles.container}>
+          {/* Background image grid */}
+          {uploadedImages && uploadedImages.length > 0 && (
+            <View style={pdfStyles.backgroundGrid}>
+              {backgroundImages.map((img, index) => (
+                <Image
+                  key={index}
+                  src={img.image}
+                  style={{
+                    position: 'absolute',
+                    left: img.x,
+                    top: img.y,
+                    width: img.size,
+                    height: img.size,
+                    opacity: imageOpacity,
+                    zIndex: 0,
+                  }}
+                />
+              ))}
+            </View>
+          )}
+        
           {showTitle && (
             <View style={[pdfStyles.titleContainer, {marginTop: getVerticalOffset(titleOffset)}]}>
               <Text style={pdfStyles.title}>{title.toUpperCase()}</Text>
@@ -201,34 +208,48 @@ export const PuzzlePDFPreview = ({
         padding: 20,
         position: 'relative',
       },
+      backgroundGrid: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 0,
+      },
       titleContainer: {
         zIndex: 1,
-        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-        padding: 5,
+        backgroundColor: uploadedImages?.length ? 'rgba(255, 255, 255, 0.7)' : 'transparent',
+        padding: uploadedImages?.length ? 5 : 0,
         borderRadius: 4,
         alignSelf: 'center',
       },
       subtitleContainer: {
         zIndex: 1,
-        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-        padding: 5,
+        backgroundColor: uploadedImages?.length ? 'rgba(255, 255, 255, 0.7)' : 'transparent',
+        padding: uploadedImages?.length ? 5 : 0,
         borderRadius: 4,
         alignSelf: 'center',
       },
       instructionContainer: {
         zIndex: 1,
-        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-        padding: 5,
+        backgroundColor: uploadedImages?.length ? 'rgba(255, 255, 255, 0.7)' : 'transparent',
+        padding: uploadedImages?.length ? 5 : 0,
         borderRadius: 4,
         alignSelf: 'center',
       },
       gridContainer: {
         zIndex: 1,
         width: '100%',
+        backgroundColor: uploadedImages?.length ? 'rgba(255, 255, 255, 0.8)' : 'transparent',
+        padding: uploadedImages?.length ? 5 : 0,
+        borderRadius: 4,
         alignItems: 'center',
       },
       wordListContainer: {
         zIndex: 1,
+        backgroundColor: uploadedImages?.length ? 'rgba(255, 255, 255, 0.7)' : 'transparent',
+        padding: uploadedImages?.length ? 5 : 0,
+        borderRadius: 4,
         alignSelf: 'center',
         width: '100%',
       },
