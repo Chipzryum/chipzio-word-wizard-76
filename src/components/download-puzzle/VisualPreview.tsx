@@ -131,41 +131,17 @@ export const VisualPreview = ({
         position: 'relative',
       }}
     >
-      {/* Background watermark - strictly confined to the PDF preview area */}
+      {/* Background watermark - cover the entire PDF */}
       {uploadedImages && uploadedImages.length > 0 && (
         <div 
-          className="absolute inset-0 z-0 overflow-hidden"
+          className="absolute inset-0 z-0"
           style={{
+            backgroundImage: `url(${uploadedImages[0]})`,
+            backgroundRepeat: 'repeat',
+            backgroundSize: `${imageGridSize * previewScaleFactor}px`,
             opacity: imageOpacity,
           }}
-        >
-          <div 
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              display: 'grid',
-              gridTemplateColumns: `repeat(auto-fill, ${imageGridSize * previewScaleFactor}px)`,
-              gridTemplateRows: `repeat(auto-fill, ${imageGridSize * previewScaleFactor}px)`,
-            }}
-          >
-            {Array.from({ length: Math.ceil(currentHeight / imageGridSize) * Math.ceil(currentWidth / imageGridSize) }).map((_, index) => (
-              <div key={index} style={{ width: `${imageGridSize * previewScaleFactor}px`, height: `${imageGridSize * previewScaleFactor}px` }}>
-                <img 
-                  src={uploadedImages[0]} 
-                  alt="" 
-                  style={{ 
-                    width: '100%', 
-                    height: '100%', 
-                    objectFit: 'cover',
-                  }} 
-                />
-              </div>
-            ))}
-          </div>
-        </div>
+        />
       )}
       
       <div className="flex flex-col h-full w-full relative z-10">
