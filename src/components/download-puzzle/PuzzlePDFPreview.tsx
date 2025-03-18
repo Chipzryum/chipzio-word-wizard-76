@@ -29,7 +29,6 @@ interface PuzzlePDFPreviewProps {
   wordListSizeMultiplier: number;
   uploadedImages?: string[];
   imageOpacity?: number;
-  imageGridSize?: number;
 }
 
 export const PuzzlePDFPreview = ({
@@ -59,7 +58,6 @@ export const PuzzlePDFPreview = ({
   wordListSizeMultiplier,
   uploadedImages = [],
   imageOpacity = 0.3,
-  imageGridSize = 100,
 }: PuzzlePDFPreviewProps) => {
   if (!puzzle) return null;
   
@@ -81,17 +79,14 @@ export const PuzzlePDFPreview = ({
 
   const fontSizes = calculateFontSizes();
   
-  // Use the exact font sizes from our calculations
-  const pdfStyles = createPDFStyles(fontSizes);
-
   // Calculate how many images we need to cover the page
   const calculateImageGrid = () => {
     if (!uploadedImages || uploadedImages.length === 0) return [];
     
     const imageElements = [];
-    const scaledImageSize = imageGridSize; // Size in pixels
+    const scaledImageSize = 100; // Size in points for PDF (approximately 100px)
     
-    // Calculate number of images needed to cover the page
+    // Calculate number of images needed to cover the page with a bit of overlap
     const horizontalCount = Math.ceil(contentWidth / scaledImageSize) + 1;
     const verticalCount = Math.ceil(contentHeight / scaledImageSize) + 1;
     
@@ -111,6 +106,9 @@ export const PuzzlePDFPreview = ({
   
   const backgroundImages = calculateImageGrid();
   
+  // Use the exact font sizes from our calculations
+  const pdfStyles = createPDFStyles(fontSizes, imageOpacity);
+
   return (
     <Document>
       <Page size={[currentWidth, currentHeight]} style={pdfStyles.page}>
@@ -135,29 +133,47 @@ export const PuzzlePDFPreview = ({
             </View>
           )}
         
-          {showTitle && <Text style={[pdfStyles.title, {marginTop: getVerticalOffset(titleOffset)}]}>{title.toUpperCase()}</Text>}
-          {showSubtitle && <Text style={[pdfStyles.subtitle, {marginTop: getVerticalOffset(subtitleOffset)}]}>{subtitle.toLowerCase()}</Text>}
-          {showInstruction && <Text style={[pdfStyles.instruction, {marginTop: getVerticalOffset(instructionOffset)}]}>{instruction}</Text>}
+          {showTitle && (
+            <View style={[pdfStyles.titleContainer, {marginTop: getVerticalOffset(titleOffset)}]}>
+              <Text style={pdfStyles.title}>{title.toUpperCase()}</Text>
+            </View>
+          )}
+          
+          {showSubtitle && (
+            <View style={[pdfStyles.subtitleContainer, {marginTop: getVerticalOffset(subtitleOffset)}]}>
+              <Text style={pdfStyles.subtitle}>{subtitle.toLowerCase()}</Text>
+            </View>
+          )}
+          
+          {showInstruction && (
+            <View style={[pdfStyles.instructionContainer, {marginTop: getVerticalOffset(instructionOffset)}]}>
+              <Text style={pdfStyles.instruction}>{instruction}</Text>
+            </View>
+          )}
           
           {showGrid && (
-            <View style={[pdfStyles.grid, {marginTop: getVerticalOffset(gridOffset)}]}>
-              {puzzle.grid.map((row, i) => (
-                <View key={i} style={pdfStyles.row}>
-                  {row.map((cell, j) => (
-                    <View key={`${i}-${j}`} style={pdfStyles.cell}>
-                      <Text style={pdfStyles.letter}>{cell}</Text>
-                    </View>
-                  ))}
-                </View>
-              ))}
+            <View style={[pdfStyles.gridContainer, {marginTop: getVerticalOffset(gridOffset)}]}>
+              <View style={pdfStyles.grid}>
+                {puzzle.grid.map((row, i) => (
+                  <View key={i} style={pdfStyles.row}>
+                    {row.map((cell, j) => (
+                      <View key={`${i}-${j}`} style={pdfStyles.cell}>
+                        <Text style={pdfStyles.letter}>{cell}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ))}
+              </View>
             </View>
           )}
           
           {showWordList && (
-            <View style={[pdfStyles.wordList, {marginTop: getVerticalOffset(wordListOffset)}]}>
-              {puzzle.wordPlacements.map(({ word }, index) => (
-                <Text key={index} style={pdfStyles.wordItem}>{word.toLowerCase()}</Text>
-              ))}
+            <View style={[pdfStyles.wordListContainer, {marginTop: getVerticalOffset(wordListOffset)}]}>
+              <View style={pdfStyles.wordList}>
+                {puzzle.wordPlacements.map(({ word }, index) => (
+                  <Text key={index} style={pdfStyles.wordItem}>{word.toLowerCase()}</Text>
+                ))}
+              </View>
             </View>
           )}
         </View>
@@ -171,7 +187,7 @@ export const PuzzlePDFPreview = ({
     subtitleSize: number; 
     instructionSize: number; 
     wordListSize: number;
-  }) {
+  }, imageOpacity: number) {
     // Apply the exact multipliers as in the preview
     // The letter size calculation remains based on cell size
     const cappedLetterSizeMultiplier = Math.min(letterSizeMultiplier, 1.3);
@@ -195,35 +211,55 @@ export const PuzzlePDFPreview = ({
         left: 0,
         right: 0,
         bottom: 0,
-        zIndex: -1,
+        zIndex: 0,
+      },
+      titleContainer: {
+        zIndex: 1,
+        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+        padding: 4,
+        borderRadius: 4,
+        marginBottom: 10,
       },
       title: {
         fontSize: fontSizes.titleSize,
-        marginBottom: 10,
         textAlign: 'center',
         fontWeight: 'bold',
-        position: 'relative',
+      },
+      subtitleContainer: {
+        zIndex: 1,
+        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+        padding: 4,
+        borderRadius: 4,
+        marginBottom: 10,
       },
       subtitle: {
         fontSize: fontSizes.subtitleSize,
-        marginBottom: 10,
         textAlign: 'center',
         fontFamily: 'Times-Italic',
-        position: 'relative',
+      },
+      instructionContainer: {
+        zIndex: 1,
+        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+        padding: 4,
+        borderRadius: 4,
+        marginBottom: 20,
       },
       instruction: {
         fontSize: fontSizes.instructionSize,
-        marginBottom: 20,
         textAlign: 'center',
-        position: 'relative',
+      },
+      gridContainer: {
+        zIndex: 1,
+        backgroundColor: 'rgba(255, 255, 255, 0.85)',
+        padding: 8,
+        borderRadius: 4,
+        alignItems: 'center',
+        marginBottom: 20,
       },
       grid: {
-        width: '100%',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        marginBottom: 20,
-        position: 'relative',
       },
       row: {
         display: 'flex',
@@ -235,23 +271,34 @@ export const PuzzlePDFPreview = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: 'white',
+        borderWidth: 0.5,
+        borderColor: '#cccccc',
       },
       letter: {
         textAlign: 'center',
         alignSelf: 'center',
         fontSize: letterSize,
       },
+      wordListContainer: {
+        zIndex: 1,
+        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+        padding: 8,
+        borderRadius: 4,
+      },
       wordList: {
         display: 'flex',
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'center',
-        position: 'relative',
       },
       wordItem: {
         marginHorizontal: 15,
         marginVertical: 5,
         fontSize: fontSizes.wordListSize,
+        backgroundColor: '#f1f1f1',
+        padding: 2,
+        borderRadius: 3,
       },
     });
   }
