@@ -92,8 +92,8 @@ export const PuzzlePDFPreview = ({
     const scaledImageSize = imageGridSize; // Size in pixels
     
     // Calculate number of images needed to cover the page
-    const horizontalCount = Math.ceil(contentWidth / scaledImageSize) + 1;
-    const verticalCount = Math.ceil(contentHeight / scaledImageSize) + 1;
+    const horizontalCount = Math.ceil(currentWidth / scaledImageSize) + 1;
+    const verticalCount = Math.ceil(currentHeight / scaledImageSize) + 1;
     
     for (let x = 0; x < horizontalCount; x++) {
       for (let y = 0; y < verticalCount; y++) {
@@ -115,24 +115,23 @@ export const PuzzlePDFPreview = ({
     <Document>
       <Page size={[currentWidth, currentHeight]} style={pdfStyles.page}>
         <View style={pdfStyles.container}>
-          {/* Background image grid */}
+          {/* Background image as a single repeated pattern */}
           {uploadedImages && uploadedImages.length > 0 && (
             <View style={pdfStyles.backgroundGrid}>
-              {backgroundImages.map((img, index) => (
-                <Image
-                  key={index}
-                  src={img.image}
-                  style={{
-                    position: 'absolute',
-                    left: img.x,
-                    top: img.y,
-                    width: img.size,
-                    height: img.size,
-                    opacity: imageOpacity,
-                    zIndex: 0,
-                  }}
-                />
-              ))}
+              <Image
+                src={uploadedImages[0]}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: currentWidth,
+                  height: currentHeight,
+                  opacity: imageOpacity,
+                  objectFit: 'cover',
+                  backgroundSize: `${imageGridSize}px`,
+                  backgroundRepeat: 'repeat',
+                }}
+              />
             </View>
           )}
         
@@ -240,7 +239,7 @@ export const PuzzlePDFPreview = ({
       gridContainer: {
         zIndex: 1,
         width: '100%',
-        backgroundColor: uploadedImages?.length ? 'rgba(255, 255, 255, 0.8)' : 'transparent',
+        backgroundColor: 'transparent',
         padding: uploadedImages?.length ? 5 : 0,
         borderRadius: 4,
         alignItems: 'center',
