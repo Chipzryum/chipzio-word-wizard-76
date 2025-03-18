@@ -1,5 +1,5 @@
 
-import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image, Svg, Pattern, Rect } from "@react-pdf/renderer";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 
 interface PuzzlePDFPreviewProps {
@@ -115,23 +115,23 @@ export const PuzzlePDFPreview = ({
     <Document>
       <Page size={[currentWidth, currentHeight]} style={pdfStyles.page}>
         <View style={pdfStyles.container}>
-          {/* Background image as a single repeated pattern */}
+          {/* Background image as a repeating pattern */}
           {uploadedImages && uploadedImages.length > 0 && (
             <View style={pdfStyles.backgroundGrid}>
-              <Image
-                src={uploadedImages[0]}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: currentWidth,
-                  height: currentHeight,
-                  opacity: imageOpacity,
-                  objectFit: 'cover',
-                  backgroundSize: `${imageGridSize}px`,
-                  backgroundRepeat: 'repeat',
-                }}
-              />
+              {backgroundImages.map((img, index) => (
+                <Image
+                  key={`bg-${index}`}
+                  src={img.image}
+                  style={{
+                    position: 'absolute',
+                    left: img.x,
+                    top: img.y,
+                    width: img.size,
+                    height: img.size,
+                    opacity: imageOpacity,
+                  }}
+                />
+              ))}
             </View>
           )}
         
