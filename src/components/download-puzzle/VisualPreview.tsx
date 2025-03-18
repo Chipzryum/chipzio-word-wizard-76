@@ -41,6 +41,7 @@ interface VisualPreviewProps {
   getVerticalOffset: (offset: number) => number;
   uploadedImages?: string[];
   imageOpacity?: number;
+  imageGridSize?: number;
 }
 
 export const VisualPreview = ({
@@ -76,6 +77,7 @@ export const VisualPreview = ({
   getVerticalOffset,
   uploadedImages = [],
   imageOpacity = 0.3,
+  imageGridSize = 100,
 }: VisualPreviewProps) => {
   if (showLivePreview && isPDFReady) {
     return (
@@ -108,6 +110,7 @@ export const VisualPreview = ({
             wordListSizeMultiplier={wordListSizeMultiplier}
             uploadedImages={uploadedImages}
             imageOpacity={imageOpacity}
+            imageGridSize={imageGridSize}
           />
         </PDFViewer>
       </div>
@@ -122,7 +125,7 @@ export const VisualPreview = ({
     if (!uploadedImages || uploadedImages.length === 0) return [];
     
     const imageElements = [];
-    const scaledImageSize = 100 * previewScaleFactor; // Size in pixels for preview
+    const scaledImageSize = imageGridSize * previewScaleFactor; // Use the provided grid size scaled for preview
     
     // Calculate number of images needed to cover the preview
     const horizontalCount = Math.ceil((currentWidth * previewScaleFactor) / scaledImageSize) + 1;

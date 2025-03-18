@@ -29,6 +29,7 @@ interface PuzzlePDFPreviewProps {
   wordListSizeMultiplier: number;
   uploadedImages?: string[];
   imageOpacity?: number;
+  imageGridSize?: number;
 }
 
 export const PuzzlePDFPreview = ({
@@ -58,6 +59,7 @@ export const PuzzlePDFPreview = ({
   wordListSizeMultiplier,
   uploadedImages = [],
   imageOpacity = 0.3,
+  imageGridSize = 100,
 }: PuzzlePDFPreviewProps) => {
   if (!puzzle) return null;
   
@@ -84,7 +86,7 @@ export const PuzzlePDFPreview = ({
     if (!uploadedImages || uploadedImages.length === 0) return [];
     
     const imageElements = [];
-    const scaledImageSize = 100; // Size in points for PDF (approximately 100px)
+    const scaledImageSize = imageGridSize || 100; // Use the provided grid size or default to 100
     
     // Calculate number of images needed to cover the page with a bit of overlap
     const horizontalCount = Math.ceil(contentWidth / scaledImageSize) + 1;
