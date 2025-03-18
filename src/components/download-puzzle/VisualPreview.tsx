@@ -125,8 +125,8 @@ export const VisualPreview = ({
     if (!uploadedImages || uploadedImages.length === 0) return null;
     
     const calculatedImageSize = imageGridSize * previewScaleFactor;
-    const horizontalCount = Math.ceil(currentWidth * previewScaleFactor / calculatedImageSize);
-    const verticalCount = Math.ceil(currentHeight * previewScaleFactor / calculatedImageSize);
+    const horizontalCount = Math.ceil(currentWidth * previewScaleFactor / calculatedImageSize) + 1;
+    const verticalCount = Math.ceil(currentHeight * previewScaleFactor / calculatedImageSize) + 1;
     
     const imageElements = [];
     
@@ -164,25 +164,10 @@ export const VisualPreview = ({
         maxHeight: '380px',
       }}
     >
-      {/* Background image pattern - fill the entire PDF area */}
+      {/* Background image pattern */}
       {uploadedImages && uploadedImages.length > 0 && (
-        <div 
-          className="absolute inset-0 overflow-hidden pointer-events-none"
-          style={{
-            width: `${currentWidth * previewScaleFactor}px`,
-            height: `${currentHeight * previewScaleFactor}px`,
-          }}
-        >
-          <div 
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `url(${uploadedImages[0]})`,
-              backgroundSize: `${imageGridSize * previewScaleFactor}px`,
-              backgroundRepeat: 'repeat',
-              opacity: imageOpacity,
-              zIndex: 0
-            }}
-          />
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {createBackgroundPattern()}
         </div>
       )}
       
@@ -234,9 +219,9 @@ export const VisualPreview = ({
             className="flex flex-col items-center justify-center relative z-10"
             style={{
               marginTop: `${getVerticalOffset(gridOffset) * previewScaleFactor}px`,
-              backgroundColor: 'transparent',
-              padding: '4px',
-              borderRadius: '4px',
+              backgroundColor: uploadedImages?.length ? 'rgba(255,255,255,0.8)' : 'transparent',
+              padding: uploadedImages?.length ? '4px' : '0',
+              borderRadius: uploadedImages?.length ? '4px' : '0',
             }}
           >
             {puzzle.grid.map((row, i) => (
