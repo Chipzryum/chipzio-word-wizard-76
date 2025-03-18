@@ -39,9 +39,6 @@ interface VisualPreviewProps {
     wordListSize: number;
   };
   getVerticalOffset: (offset: number) => number;
-  uploadedImages?: string[];
-  imageOpacity?: number;
-  imageGridSize?: number;
 }
 
 export const VisualPreview = ({
@@ -75,9 +72,6 @@ export const VisualPreview = ({
   previewScaleFactor,
   fontSizes,
   getVerticalOffset,
-  uploadedImages = [],
-  imageOpacity = 0.3,
-  imageGridSize = 100,
 }: VisualPreviewProps) => {
   if (showLivePreview && isPDFReady) {
     return (
@@ -108,9 +102,6 @@ export const VisualPreview = ({
             subtitleSizeMultiplier={subtitleSizeMultiplier}
             instructionSizeMultiplier={instructionSizeMultiplier}
             wordListSizeMultiplier={wordListSizeMultiplier}
-            uploadedImages={uploadedImages}
-            imageOpacity={imageOpacity}
-            imageGridSize={imageGridSize}
           />
         </PDFViewer>
       </div>
@@ -119,33 +110,6 @@ export const VisualPreview = ({
 
   console.log("Rendering VisualPreview with showWordList:", showWordList);
   console.log("Puzzle words:", puzzle?.wordPlacements.map(wp => wp.word));
-  
-  // Calculate how many images we need to cover the preview area
-  const calculateImageGrid = () => {
-    if (!uploadedImages || uploadedImages.length === 0) return [];
-    
-    const imageElements = [];
-    const scaledImageSize = imageGridSize * previewScaleFactor; // Use the provided grid size scaled for preview
-    
-    // Calculate number of images needed to cover the preview
-    const horizontalCount = Math.ceil((currentWidth * previewScaleFactor) / scaledImageSize) + 1;
-    const verticalCount = Math.ceil((currentHeight * previewScaleFactor) / scaledImageSize) + 1;
-    
-    for (let x = 0; x < horizontalCount; x++) {
-      for (let y = 0; y < verticalCount; y++) {
-        imageElements.push({
-          x: x * scaledImageSize,
-          y: y * scaledImageSize,
-          size: scaledImageSize,
-          image: uploadedImages[0] // Use the first image for the background
-        });
-      }
-    }
-    
-    return imageElements;
-  };
-  
-  const backgroundImages = calculateImageGrid();
 
   return (
     <div 
@@ -157,38 +121,13 @@ export const VisualPreview = ({
         maxHeight: '380px',
       }}
     >
-      {/* Background images */}
-      {uploadedImages && uploadedImages.length > 0 && (
-        <div className="absolute inset-0 z-0 overflow-hidden">
-          {backgroundImages.map((img, index) => (
-            <div
-              key={index}
-              className="absolute"
-              style={{
-                left: `${img.x}px`,
-                top: `${img.y}px`,
-                width: `${img.size}px`,
-                height: `${img.size}px`,
-                opacity: imageOpacity,
-                backgroundImage: `url(${img.image})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }}
-            />
-          ))}
-        </div>
-      )}
-      
-      <div className="flex flex-col h-full relative z-10">
+      <div className="flex flex-col h-full">
         {showTitle && (
           <div 
-            className="text-center font-bold font-serif relative"
+            className="text-center font-bold font-serif"
             style={{
               fontSize: `${fontSizes.titleSize * previewScaleFactor * titleSizeMultiplier}px`,
               marginTop: `${getVerticalOffset(titleOffset) * previewScaleFactor}px`,
-              backgroundColor: 'rgba(255, 255, 255, 0.7)',
-              padding: '4px',
-              borderRadius: '4px',
             }}
           >
             {title.toUpperCase()}
@@ -196,13 +135,10 @@ export const VisualPreview = ({
         )}
         {showSubtitle && (
           <div 
-            className="text-center italic font-serif relative"
+            className="text-center italic font-serif"
             style={{
               fontSize: `${fontSizes.subtitleSize * previewScaleFactor * subtitleSizeMultiplier}px`,
               marginTop: `${getVerticalOffset(subtitleOffset) * previewScaleFactor}px`,
-              backgroundColor: 'rgba(255, 255, 255, 0.7)',
-              padding: '4px',
-              borderRadius: '4px',
             }}
           >
             {subtitle.toLowerCase()}
@@ -210,13 +146,10 @@ export const VisualPreview = ({
         )}
         {showInstruction && (
           <div 
-            className="text-center mb-4 relative"
+            className="text-center mb-4"
             style={{
               fontSize: `${fontSizes.instructionSize * previewScaleFactor * instructionSizeMultiplier}px`,
               marginTop: `${getVerticalOffset(instructionOffset) * previewScaleFactor}px`,
-              backgroundColor: 'rgba(255, 255, 255, 0.7)',
-              padding: '4px',
-              borderRadius: '4px',
             }}
           >
             {instruction}
@@ -224,12 +157,9 @@ export const VisualPreview = ({
         )}
         {showGrid && puzzle && (
           <div 
-            className="flex flex-col items-center justify-center relative"
+            className="flex flex-col items-center justify-center"
             style={{
               marginTop: `${getVerticalOffset(gridOffset) * previewScaleFactor}px`,
-              backgroundColor: 'rgba(255, 255, 255, 0.85)',
-              padding: '8px',
-              borderRadius: '4px',
             }}
           >
             {puzzle.grid.map((row, i) => (
@@ -237,7 +167,7 @@ export const VisualPreview = ({
                 {row.map((letter, j) => (
                   <div
                     key={`${i}-${j}`}
-                    className="flex items-center justify-center border border-gray-300 bg-white"
+                    className="flex items-center justify-center border border-gray-300"
                     style={{
                       width: `${cellSize * previewScaleFactor}px`,
                       height: `${cellSize * previewScaleFactor}px`,
@@ -253,13 +183,10 @@ export const VisualPreview = ({
         )}
         {showWordList && puzzle && puzzle.wordPlacements && puzzle.wordPlacements.length > 0 && (
           <div 
-            className="flex flex-wrap justify-center mt-4 px-2 relative"
+            className="flex flex-wrap justify-center mt-4 px-2"
             style={{
               marginTop: `${getVerticalOffset(wordListOffset) * previewScaleFactor}px`,
               fontSize: `${fontSizes.wordListSize * previewScaleFactor * wordListSizeMultiplier}px`,
-              backgroundColor: 'rgba(255, 255, 255, 0.7)',
-              padding: '8px',
-              borderRadius: '4px',
             }}
           >
             {puzzle.wordPlacements.map(({ word }, index) => (
