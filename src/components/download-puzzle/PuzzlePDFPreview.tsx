@@ -129,35 +129,54 @@ export const PuzzlePDFPreview = ({
                     width: img.size,
                     height: img.size,
                     opacity: imageOpacity,
+                    zIndex: 0,
                   }}
                 />
               ))}
             </View>
           )}
         
-          {showTitle && <Text style={[pdfStyles.title, {marginTop: getVerticalOffset(titleOffset)}]}>{title.toUpperCase()}</Text>}
-          {showSubtitle && <Text style={[pdfStyles.subtitle, {marginTop: getVerticalOffset(subtitleOffset)}]}>{subtitle.toLowerCase()}</Text>}
-          {showInstruction && <Text style={[pdfStyles.instruction, {marginTop: getVerticalOffset(instructionOffset)}]}>{instruction}</Text>}
+          {showTitle && (
+            <View style={[pdfStyles.titleContainer, {marginTop: getVerticalOffset(titleOffset)}]}>
+              <Text style={pdfStyles.title}>{title.toUpperCase()}</Text>
+            </View>
+          )}
+          
+          {showSubtitle && (
+            <View style={[pdfStyles.subtitleContainer, {marginTop: getVerticalOffset(subtitleOffset)}]}>
+              <Text style={pdfStyles.subtitle}>{subtitle.toLowerCase()}</Text>
+            </View>
+          )}
+          
+          {showInstruction && (
+            <View style={[pdfStyles.instructionContainer, {marginTop: getVerticalOffset(instructionOffset)}]}>
+              <Text style={pdfStyles.instruction}>{instruction}</Text>
+            </View>
+          )}
           
           {showGrid && (
-            <View style={[pdfStyles.grid, {marginTop: getVerticalOffset(gridOffset)}]}>
-              {puzzle.grid.map((row, i) => (
-                <View key={i} style={pdfStyles.row}>
-                  {row.map((cell, j) => (
-                    <View key={`${i}-${j}`} style={pdfStyles.cell}>
-                      <Text style={pdfStyles.letter}>{cell}</Text>
-                    </View>
-                  ))}
-                </View>
-              ))}
+            <View style={[pdfStyles.gridContainer, {marginTop: getVerticalOffset(gridOffset)}]}>
+              <View style={pdfStyles.grid}>
+                {puzzle.grid.map((row, i) => (
+                  <View key={i} style={pdfStyles.row}>
+                    {row.map((cell, j) => (
+                      <View key={`${i}-${j}`} style={pdfStyles.cell}>
+                        <Text style={pdfStyles.letter}>{cell}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ))}
+              </View>
             </View>
           )}
           
           {showWordList && (
-            <View style={[pdfStyles.wordList, {marginTop: getVerticalOffset(wordListOffset)}]}>
-              {puzzle.wordPlacements.map(({ word }, index) => (
-                <Text key={index} style={pdfStyles.wordItem}>{word.toLowerCase()}</Text>
-              ))}
+            <View style={[pdfStyles.wordListContainer, {marginTop: getVerticalOffset(wordListOffset)}]}>
+              <View style={pdfStyles.wordList}>
+                {puzzle.wordPlacements.map(({ word }, index) => (
+                  <Text key={index} style={pdfStyles.wordItem}>{word.toLowerCase()}</Text>
+                ))}
+              </View>
             </View>
           )}
         </View>
@@ -195,27 +214,61 @@ export const PuzzlePDFPreview = ({
         left: 0,
         right: 0,
         bottom: 0,
-        zIndex: -1,
+        zIndex: 0,
+      },
+      titleContainer: {
+        zIndex: 1,
+        backgroundColor: uploadedImages?.length ? 'rgba(255, 255, 255, 0.7)' : 'transparent',
+        padding: uploadedImages?.length ? 5 : 0,
+        borderRadius: 4,
+        alignSelf: 'center',
+      },
+      subtitleContainer: {
+        zIndex: 1,
+        backgroundColor: uploadedImages?.length ? 'rgba(255, 255, 255, 0.7)' : 'transparent',
+        padding: uploadedImages?.length ? 5 : 0,
+        borderRadius: 4,
+        alignSelf: 'center',
+      },
+      instructionContainer: {
+        zIndex: 1,
+        backgroundColor: uploadedImages?.length ? 'rgba(255, 255, 255, 0.7)' : 'transparent',
+        padding: uploadedImages?.length ? 5 : 0,
+        borderRadius: 4,
+        alignSelf: 'center',
+      },
+      gridContainer: {
+        zIndex: 1,
+        width: '100%',
+        backgroundColor: uploadedImages?.length ? 'rgba(255, 255, 255, 0.8)' : 'transparent',
+        padding: uploadedImages?.length ? 5 : 0,
+        borderRadius: 4,
+        alignItems: 'center',
+      },
+      wordListContainer: {
+        zIndex: 1,
+        backgroundColor: uploadedImages?.length ? 'rgba(255, 255, 255, 0.7)' : 'transparent',
+        padding: uploadedImages?.length ? 5 : 0,
+        borderRadius: 4,
+        alignSelf: 'center',
+        width: '100%',
       },
       title: {
         fontSize: fontSizes.titleSize,
         marginBottom: 10,
         textAlign: 'center',
         fontWeight: 'bold',
-        position: 'relative',
       },
       subtitle: {
         fontSize: fontSizes.subtitleSize,
         marginBottom: 10,
         textAlign: 'center',
         fontFamily: 'Times-Italic',
-        position: 'relative',
       },
       instruction: {
         fontSize: fontSizes.instructionSize,
         marginBottom: 20,
         textAlign: 'center',
-        position: 'relative',
       },
       grid: {
         width: '100%',
@@ -223,7 +276,6 @@ export const PuzzlePDFPreview = ({
         flexDirection: 'column',
         alignItems: 'center',
         marginBottom: 20,
-        position: 'relative',
       },
       row: {
         display: 'flex',
@@ -235,6 +287,9 @@ export const PuzzlePDFPreview = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        borderWidth: 0.5,
+        borderColor: '#d1d5db',
       },
       letter: {
         textAlign: 'center',
@@ -246,12 +301,14 @@ export const PuzzlePDFPreview = ({
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'center',
-        position: 'relative',
       },
       wordItem: {
         marginHorizontal: 15,
         marginVertical: 5,
         fontSize: fontSizes.wordListSize,
+        backgroundColor: 'rgba(229, 231, 235, 0.9)',
+        padding: 4,
+        borderRadius: 4,
       },
     });
   }

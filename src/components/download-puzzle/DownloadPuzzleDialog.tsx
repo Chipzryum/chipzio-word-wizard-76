@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
@@ -477,6 +476,9 @@ export function DownloadPuzzleDialog({
                   previewScaleFactor={previewScaleFactor}
                   fontSizes={fontSizes}
                   getVerticalOffset={getVerticalOffset}
+                  uploadedImages={uploadedImages}
+                  imageOpacity={imageOpacity}
+                  imageGridSize={imageGridSize}
                 />
               </div>
               
@@ -709,6 +711,9 @@ export function DownloadPuzzleDialog({
                   previewScaleFactor={previewScaleFactor}
                   fontSizes={fontSizes}
                   getVerticalOffset={getVerticalOffset}
+                  uploadedImages={uploadedImages}
+                  imageOpacity={imageOpacity}
+                  imageGridSize={imageGridSize}
                 />
               </div>
               
@@ -898,6 +903,9 @@ export function DownloadPuzzleDialog({
                   previewScaleFactor={previewScaleFactor}
                   fontSizes={fontSizes}
                   getVerticalOffset={getVerticalOffset}
+                  uploadedImages={uploadedImages}
+                  imageOpacity={imageOpacity}
+                  imageGridSize={imageGridSize}
                 />
               </div>
               
@@ -1057,6 +1065,9 @@ export function DownloadPuzzleDialog({
                   previewScaleFactor={previewScaleFactor}
                   fontSizes={fontSizes}
                   getVerticalOffset={getVerticalOffset}
+                  uploadedImages={uploadedImages}
+                  imageOpacity={imageOpacity}
+                  imageGridSize={imageGridSize}
                 />
               </div>
               
@@ -1076,15 +1087,10 @@ export function DownloadPuzzleDialog({
   );
 }
 
-// Function used for element positioning
 const moveElement = (element: string, direction: 'up' | 'down') => {
-  // This function is no longer used with the slider implementation
-  // but kept for compatibility with ControlPanel
   return;
 };
 
 const togglePositioning = (element: string) => {
-  // This function is no longer used with the slider implementation
-  // but kept for compatibility with ControlPanel
   return;
 };
