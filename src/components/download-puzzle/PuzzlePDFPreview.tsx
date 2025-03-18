@@ -1,5 +1,4 @@
-
-import { Document, Page, Text, View, StyleSheet, Image, Svg, Pattern, Rect } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 
 interface PuzzlePDFPreviewProps {
