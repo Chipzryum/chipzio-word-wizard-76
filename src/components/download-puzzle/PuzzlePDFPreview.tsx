@@ -64,6 +64,7 @@ export const PuzzlePDFPreview = ({
   if (!puzzle) return null;
   
   // Calculate font sizes based on page dimensions and multipliers
+  // Use the same calculation method as in the DownloadPuzzleDialog component
   const calculateFontSizes = () => {
     // Base sizes for A4
     const a4Width = 595.28;
@@ -88,11 +89,11 @@ export const PuzzlePDFPreview = ({
     if (!uploadedImages || uploadedImages.length === 0) return [];
     
     const imageElements = [];
-    const scaledImageSize = imageGridSize; // Size in points (PDF units)
+    const scaledImageSize = imageGridSize; // Size in pixels
     
     // Calculate number of images needed to cover the page
-    const horizontalCount = Math.ceil(currentWidth / scaledImageSize) + 1;
-    const verticalCount = Math.ceil(currentHeight / scaledImageSize) + 1;
+    const horizontalCount = Math.ceil(contentWidth / scaledImageSize) + 1;
+    const verticalCount = Math.ceil(contentHeight / scaledImageSize) + 1;
     
     for (let x = 0; x < horizontalCount; x++) {
       for (let y = 0; y < verticalCount; y++) {
@@ -113,60 +114,33 @@ export const PuzzlePDFPreview = ({
   return (
     <Document>
       <Page size={[currentWidth, currentHeight]} style={pdfStyles.page}>
-        {/* Background image grid - rendered first to be behind content */}
-        {uploadedImages && uploadedImages.length > 0 && (
-          <View style={pdfStyles.backgroundGrid}>
-            {backgroundImages.map((img, index) => (
-              <Image
-                key={`img-${index}`}
-                src={img.image}
-                style={{
-                  position: 'absolute',
-                  left: img.x,
-                  top: img.y,
-                  width: img.size,
-                  height: img.size,
-                  opacity: imageOpacity,
-                }}
-              />
-            ))}
-          </View>
-        )}
-        
-        {/* Content container with semi-transparent background for readability */}
         <View style={pdfStyles.container}>
-          {showTitle && (
-            <Text style={[
-              pdfStyles.title, 
-              {marginTop: getVerticalOffset(titleOffset)},
-              pdfStyles.textBackground
-            ]}>
-              {title.toUpperCase()}
-            </Text>
+          {/* Background image grid */}
+          {uploadedImages && uploadedImages.length > 0 && (
+            <View style={pdfStyles.backgroundGrid}>
+              {backgroundImages.map((img, index) => (
+                <Image
+                  key={index}
+                  src={img.image}
+                  style={{
+                    position: 'absolute',
+                    left: img.x,
+                    top: img.y,
+                    width: img.size,
+                    height: img.size,
+                    opacity: imageOpacity,
+                  }}
+                />
+              ))}
+            </View>
           )}
-          
-          {showSubtitle && (
-            <Text style={[
-              pdfStyles.subtitle, 
-              {marginTop: getVerticalOffset(subtitleOffset)},
-              pdfStyles.textBackground
-            ]}>
-              {subtitle.toLowerCase()}
-            </Text>
-          )}
-          
-          {showInstruction && (
-            <Text style={[
-              pdfStyles.instruction, 
-              {marginTop: getVerticalOffset(instructionOffset)},
-              pdfStyles.textBackground
-            ]}>
-              {instruction}
-            </Text>
-          )}
+        
+          {showTitle && <Text style={[pdfStyles.title, {marginTop: getVerticalOffset(titleOffset)}]}>{title.toUpperCase()}</Text>}
+          {showSubtitle && <Text style={[pdfStyles.subtitle, {marginTop: getVerticalOffset(subtitleOffset)}]}>{subtitle.toLowerCase()}</Text>}
+          {showInstruction && <Text style={[pdfStyles.instruction, {marginTop: getVerticalOffset(instructionOffset)}]}>{instruction}</Text>}
           
           {showGrid && (
-            <View style={[pdfStyles.grid, {marginTop: getVerticalOffset(gridOffset)}, pdfStyles.gridBackground]}>
+            <View style={[pdfStyles.grid, {marginTop: getVerticalOffset(gridOffset)}]}>
               {puzzle.grid.map((row, i) => (
                 <View key={i} style={pdfStyles.row}>
                   {row.map((cell, j) => (
@@ -180,7 +154,7 @@ export const PuzzlePDFPreview = ({
           )}
           
           {showWordList && (
-            <View style={[pdfStyles.wordList, {marginTop: getVerticalOffset(wordListOffset)}, pdfStyles.wordListBackground]}>
+            <View style={[pdfStyles.wordList, {marginTop: getVerticalOffset(wordListOffset)}]}>
               {puzzle.wordPlacements.map(({ word }, index) => (
                 <Text key={index} style={pdfStyles.wordItem}>{word.toLowerCase()}</Text>
               ))}
@@ -207,7 +181,6 @@ export const PuzzlePDFPreview = ({
       page: {
         padding: 40,
         fontFamily: 'Times-Roman',
-        position: 'relative',
       },
       container: {
         flex: 1,
@@ -215,8 +188,6 @@ export const PuzzlePDFPreview = ({
         borderColor: '#000',
         padding: 20,
         position: 'relative',
-        backgroundColor: 'transparent', // Container should be transparent to show background images
-        zIndex: 2, // Place above background images
       },
       backgroundGrid: {
         position: 'absolute',
@@ -224,7 +195,7 @@ export const PuzzlePDFPreview = ({
         left: 0,
         right: 0,
         bottom: 0,
-        zIndex: 1, // Lower z-index so background is behind content
+        zIndex: -1,
       },
       title: {
         fontSize: fontSizes.titleSize,
@@ -232,7 +203,6 @@ export const PuzzlePDFPreview = ({
         textAlign: 'center',
         fontWeight: 'bold',
         position: 'relative',
-        zIndex: 3,
       },
       subtitle: {
         fontSize: fontSizes.subtitleSize,
@@ -240,14 +210,12 @@ export const PuzzlePDFPreview = ({
         textAlign: 'center',
         fontFamily: 'Times-Italic',
         position: 'relative',
-        zIndex: 3,
       },
       instruction: {
         fontSize: fontSizes.instructionSize,
         marginBottom: 20,
         textAlign: 'center',
         position: 'relative',
-        zIndex: 3,
       },
       grid: {
         width: '100%',
@@ -256,8 +224,6 @@ export const PuzzlePDFPreview = ({
         alignItems: 'center',
         marginBottom: 20,
         position: 'relative',
-        zIndex: 3,
-        padding: 10,
       },
       row: {
         display: 'flex',
@@ -269,9 +235,6 @@ export const PuzzlePDFPreview = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'white',
-        borderWidth: 0.5,
-        borderColor: '#ccc',
       },
       letter: {
         textAlign: 'center',
@@ -284,29 +247,11 @@ export const PuzzlePDFPreview = ({
         flexWrap: 'wrap',
         justifyContent: 'center',
         position: 'relative',
-        zIndex: 3,
-        padding: 8,
       },
       wordItem: {
         marginHorizontal: 15,
         marginVertical: 5,
         fontSize: fontSizes.wordListSize,
-        padding: 4,
-        backgroundColor: '#f8f8f8',
-        borderRadius: 3,
-      },
-      // Semi-transparent backgrounds for readability
-      textBackground: {
-        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-        padding: 3,
-        borderRadius: 2,
-      },
-      gridBackground: {
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-      },
-      wordListBackground: {
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        borderRadius: 4,
       },
     });
   }
