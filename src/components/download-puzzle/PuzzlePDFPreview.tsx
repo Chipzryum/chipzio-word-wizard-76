@@ -64,7 +64,6 @@ export const PuzzlePDFPreview = ({
   if (!puzzle) return null;
   
   // Calculate font sizes based on page dimensions and multipliers
-  // Use the same calculation method as in the DownloadPuzzleDialog component
   const calculateFontSizes = () => {
     // Base sizes for A4
     const a4Width = 595.28;
@@ -84,7 +83,7 @@ export const PuzzlePDFPreview = ({
   // Use the exact font sizes from our calculations
   const pdfStyles = createPDFStyles(fontSizes);
 
-  // Calculate image positions for watermark coverage
+  // Calculate watermark grid to cover the entire page
   const createWatermarkPositions = () => {
     if (!uploadedImages || uploadedImages.length === 0) return [];
     
@@ -92,8 +91,8 @@ export const PuzzlePDFPreview = ({
     const horizontalCount = Math.ceil(currentWidth / imageGridSize) + 1;
     const verticalCount = Math.ceil(currentHeight / imageGridSize) + 1;
     
-    for (let x = 0; x < horizontalCount; x++) {
-      for (let y = 0; y < verticalCount; y++) {
+    for (let y = 0; y < verticalCount; y++) {
+      for (let x = 0; x < horizontalCount; x++) {
         positions.push({
           x: x * imageGridSize,
           y: y * imageGridSize,
@@ -111,7 +110,7 @@ export const PuzzlePDFPreview = ({
   return (
     <Document>
       <Page size={[currentWidth, currentHeight]} style={pdfStyles.page}>
-        {/* Watermark layer covering entire page */}
+        {/* Background watermark layer covering entire page */}
         {uploadedImages && uploadedImages.length > 0 && watermarkPositions.map((pos, index) => (
           <Image
             key={`watermark-${index}`}
@@ -191,15 +190,13 @@ export const PuzzlePDFPreview = ({
     
     return StyleSheet.create({
       page: {
-        padding: 40,
         fontFamily: 'Times-Roman',
       },
       container: {
         flex: 1,
-        borderWidth: 1,
-        borderColor: '#000',
         padding: 20,
         position: 'relative',
+        zIndex: 1,
       },
       titleContainer: {
         zIndex: 1,
