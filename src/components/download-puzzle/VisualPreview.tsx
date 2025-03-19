@@ -120,40 +120,6 @@ export const VisualPreview = ({
   console.log("Rendering VisualPreview with showWordList:", showWordList);
   console.log("Puzzle words:", puzzle?.wordPlacements.map(wp => wp.word));
 
-  // Create background grid pattern for the preview
-  const createBackgroundPattern = () => {
-    if (!uploadedImages || uploadedImages.length === 0) return null;
-    
-    const calculatedImageSize = imageGridSize * previewScaleFactor;
-    const horizontalCount = Math.ceil(currentWidth * previewScaleFactor / calculatedImageSize) + 1;
-    const verticalCount = Math.ceil(currentHeight * previewScaleFactor / calculatedImageSize) + 1;
-    
-    const imageElements = [];
-    
-    for (let x = 0; x < horizontalCount; x++) {
-      for (let y = 0; y < verticalCount; y++) {
-        imageElements.push(
-          <div 
-            key={`${x}-${y}`} 
-            className="absolute"
-            style={{
-              left: x * calculatedImageSize,
-              top: y * calculatedImageSize,
-              width: calculatedImageSize,
-              height: calculatedImageSize,
-              backgroundImage: `url(${uploadedImages[0]})`,
-              backgroundSize: 'cover',
-              opacity: imageOpacity,
-              zIndex: 0
-            }}
-          />
-        );
-      }
-    }
-    
-    return imageElements;
-  };
-
   return (
     <div 
       className="relative border-2 border-black bg-white p-4 overflow-hidden"
@@ -164,23 +130,28 @@ export const VisualPreview = ({
         maxHeight: '380px',
       }}
     >
-      {/* Background image pattern */}
+      {/* Apply background pattern only inside the PDF preview area */}
       {uploadedImages && uploadedImages.length > 0 && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {createBackgroundPattern()}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 1 }}>
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${uploadedImages[0]})`,
+              backgroundSize: `${imageGridSize * previewScaleFactor}px`,
+              backgroundRepeat: 'repeat',
+              opacity: imageOpacity,
+            }}
+          />
         </div>
       )}
       
-      <div className="flex flex-col h-full relative z-10">
+      <div className="flex flex-col h-full relative" style={{ zIndex: 2 }}>
         {showTitle && (
           <div 
-            className="text-center font-bold font-serif relative z-10"
+            className="text-center font-bold font-serif relative"
             style={{
               fontSize: `${fontSizes.titleSize * previewScaleFactor * titleSizeMultiplier}px`,
               marginTop: `${getVerticalOffset(titleOffset) * previewScaleFactor}px`,
-              backgroundColor: uploadedImages?.length ? 'rgba(255,255,255,0.7)' : 'transparent',
-              padding: uploadedImages?.length ? '2px 8px' : '0',
-              borderRadius: uploadedImages?.length ? '4px' : '0',
             }}
           >
             {title.toUpperCase()}
@@ -188,13 +159,10 @@ export const VisualPreview = ({
         )}
         {showSubtitle && (
           <div 
-            className="text-center italic font-serif relative z-10"
+            className="text-center italic font-serif relative"
             style={{
               fontSize: `${fontSizes.subtitleSize * previewScaleFactor * subtitleSizeMultiplier}px`,
               marginTop: `${getVerticalOffset(subtitleOffset) * previewScaleFactor}px`,
-              backgroundColor: uploadedImages?.length ? 'rgba(255,255,255,0.7)' : 'transparent',
-              padding: uploadedImages?.length ? '2px 8px' : '0',
-              borderRadius: uploadedImages?.length ? '4px' : '0',
             }}
           >
             {subtitle.toLowerCase()}
@@ -202,13 +170,10 @@ export const VisualPreview = ({
         )}
         {showInstruction && (
           <div 
-            className="text-center mb-4 relative z-10"
+            className="text-center mb-4 relative"
             style={{
               fontSize: `${fontSizes.instructionSize * previewScaleFactor * instructionSizeMultiplier}px`,
               marginTop: `${getVerticalOffset(instructionOffset) * previewScaleFactor}px`,
-              backgroundColor: uploadedImages?.length ? 'rgba(255,255,255,0.7)' : 'transparent',
-              padding: uploadedImages?.length ? '2px 8px' : '0',
-              borderRadius: uploadedImages?.length ? '4px' : '0',
             }}
           >
             {instruction}
@@ -216,12 +181,9 @@ export const VisualPreview = ({
         )}
         {showGrid && puzzle && (
           <div 
-            className="flex flex-col items-center justify-center relative z-10"
+            className="flex flex-col items-center justify-center relative"
             style={{
               marginTop: `${getVerticalOffset(gridOffset) * previewScaleFactor}px`,
-              backgroundColor: uploadedImages?.length ? 'rgba(255,255,255,0.8)' : 'transparent',
-              padding: uploadedImages?.length ? '4px' : '0',
-              borderRadius: uploadedImages?.length ? '4px' : '0',
             }}
           >
             {puzzle.grid.map((row, i) => (
@@ -234,7 +196,7 @@ export const VisualPreview = ({
                       width: `${cellSize * previewScaleFactor}px`,
                       height: `${cellSize * previewScaleFactor}px`,
                       fontSize: `${letterSize * previewScaleFactor}px`,
-                      backgroundColor: 'rgba(255,255,255,0.9)',
+                      backgroundColor: 'rgba(255,255,255,0.6)', // Reduced opacity to show watermark through
                     }}
                   >
                     {letter}
@@ -246,7 +208,7 @@ export const VisualPreview = ({
         )}
         {showWordList && puzzle && puzzle.wordPlacements && puzzle.wordPlacements.length > 0 && (
           <div 
-            className="flex flex-wrap justify-center mt-4 px-2 relative z-10"
+            className="flex flex-wrap justify-center mt-4 px-2 relative"
             style={{
               marginTop: `${getVerticalOffset(wordListOffset) * previewScaleFactor}px`,
               fontSize: `${fontSizes.wordListSize * previewScaleFactor * wordListSizeMultiplier}px`,

@@ -92,8 +92,8 @@ export const PuzzlePDFPreview = ({
     const scaledImageSize = imageGridSize; // Size in pixels
     
     // Calculate number of images needed to cover the page
-    const horizontalCount = Math.ceil(contentWidth / scaledImageSize) + 1;
-    const verticalCount = Math.ceil(contentHeight / scaledImageSize) + 1;
+    const horizontalCount = Math.ceil(currentWidth / scaledImageSize) + 1;
+    const verticalCount = Math.ceil(currentHeight / scaledImageSize) + 1;
     
     for (let x = 0; x < horizontalCount; x++) {
       for (let y = 0; y < verticalCount; y++) {
@@ -114,28 +114,27 @@ export const PuzzlePDFPreview = ({
   return (
     <Document>
       <Page size={[currentWidth, currentHeight]} style={pdfStyles.page}>
-        <View style={pdfStyles.container}>
-          {/* Background image grid */}
-          {uploadedImages && uploadedImages.length > 0 && (
-            <View style={pdfStyles.backgroundGrid}>
-              {backgroundImages.map((img, index) => (
-                <Image
-                  key={index}
-                  src={img.image}
-                  style={{
-                    position: 'absolute',
-                    left: img.x,
-                    top: img.y,
-                    width: img.size,
-                    height: img.size,
-                    opacity: imageOpacity,
-                    zIndex: 0,
-                  }}
-                />
-              ))}
-            </View>
-          )}
+        {/* Background image grid - now positioned as an absolute overlay covering the entire page */}
+        {uploadedImages && uploadedImages.length > 0 && (
+          <View style={pdfStyles.fullPageBackground}>
+            {backgroundImages.map((img, index) => (
+              <Image
+                key={index}
+                src={img.image}
+                style={{
+                  position: 'absolute',
+                  left: img.x,
+                  top: img.y,
+                  width: img.size,
+                  height: img.size,
+                  opacity: imageOpacity,
+                }}
+              />
+            ))}
+          </View>
+        )}
         
+        <View style={pdfStyles.container}>
           {showTitle && (
             <View style={[pdfStyles.titleContainer, {marginTop: getVerticalOffset(titleOffset)}]}>
               <Text style={pdfStyles.title}>{title.toUpperCase()}</Text>
@@ -200,6 +199,15 @@ export const PuzzlePDFPreview = ({
       page: {
         padding: 40,
         fontFamily: 'Times-Roman',
+        position: 'relative',
+      },
+      fullPageBackground: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: currentWidth,
+        height: currentHeight,
+        zIndex: 0,
       },
       container: {
         flex: 1,
@@ -207,49 +215,27 @@ export const PuzzlePDFPreview = ({
         borderColor: '#000',
         padding: 20,
         position: 'relative',
-      },
-      backgroundGrid: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 0,
+        zIndex: 1,
       },
       titleContainer: {
-        zIndex: 1,
-        backgroundColor: uploadedImages?.length ? 'rgba(255, 255, 255, 0.7)' : 'transparent',
-        padding: uploadedImages?.length ? 5 : 0,
-        borderRadius: 4,
+        zIndex: 2,
         alignSelf: 'center',
       },
       subtitleContainer: {
-        zIndex: 1,
-        backgroundColor: uploadedImages?.length ? 'rgba(255, 255, 255, 0.7)' : 'transparent',
-        padding: uploadedImages?.length ? 5 : 0,
-        borderRadius: 4,
+        zIndex: 2,
         alignSelf: 'center',
       },
       instructionContainer: {
-        zIndex: 1,
-        backgroundColor: uploadedImages?.length ? 'rgba(255, 255, 255, 0.7)' : 'transparent',
-        padding: uploadedImages?.length ? 5 : 0,
-        borderRadius: 4,
+        zIndex: 2,
         alignSelf: 'center',
       },
       gridContainer: {
-        zIndex: 1,
+        zIndex: 2,
         width: '100%',
-        backgroundColor: uploadedImages?.length ? 'rgba(255, 255, 255, 0.8)' : 'transparent',
-        padding: uploadedImages?.length ? 5 : 0,
-        borderRadius: 4,
         alignItems: 'center',
       },
       wordListContainer: {
-        zIndex: 1,
-        backgroundColor: uploadedImages?.length ? 'rgba(255, 255, 255, 0.7)' : 'transparent',
-        padding: uploadedImages?.length ? 5 : 0,
-        borderRadius: 4,
+        zIndex: 2,
         alignSelf: 'center',
         width: '100%',
       },
@@ -287,7 +273,7 @@ export const PuzzlePDFPreview = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        backgroundColor: 'rgba(255, 255, 255, 0.6)',
         borderWidth: 0.5,
         borderColor: '#d1d5db',
       },
@@ -306,7 +292,7 @@ export const PuzzlePDFPreview = ({
         marginHorizontal: 15,
         marginVertical: 5,
         fontSize: fontSizes.wordListSize,
-        backgroundColor: 'rgba(229, 231, 235, 0.9)',
+        backgroundColor: 'rgba(229, 231, 235, 0.6)',
         padding: 4,
         borderRadius: 4,
       },

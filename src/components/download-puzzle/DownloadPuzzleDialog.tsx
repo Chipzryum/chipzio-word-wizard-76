@@ -429,22 +429,6 @@ export function DownloadPuzzleDialog({
             <div className="space-y-4">
               <Label>Preview</Label>
               <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-                {uploadedImages.length > 0 && (
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    <div 
-                      className="w-full h-full"
-                      style={{
-                        backgroundImage: uploadedImages.length > 0 
-                          ? `url(${uploadedImages[0]})` 
-                          : 'none',
-                        backgroundSize: `${imageGridSize}px ${imageGridSize}px`,
-                        backgroundRepeat: 'repeat',
-                        opacity: imageOpacity,
-                      }}
-                    />
-                  </div>
-                )}
-                
                 <VisualPreview 
                   puzzle={puzzle}
                   showLivePreview={showLivePreview}
@@ -664,22 +648,6 @@ export function DownloadPuzzleDialog({
             <div className="space-y-4">
               <Label>Preview</Label>
               <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-                {uploadedImages.length > 0 && (
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    <div 
-                      className="w-full h-full"
-                      style={{
-                        backgroundImage: uploadedImages.length > 0 
-                          ? `url(${uploadedImages[0]})` 
-                          : 'none',
-                        backgroundSize: `${imageGridSize}px ${imageGridSize}px`,
-                        backgroundRepeat: 'repeat',
-                        opacity: imageOpacity,
-                      }}
-                    />
-                  </div>
-                )}
-                
                 <VisualPreview 
                   puzzle={puzzle}
                   showLivePreview={showLivePreview}
@@ -856,22 +824,6 @@ export function DownloadPuzzleDialog({
             <div className="space-y-4">
               <Label>Preview</Label>
               <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-                {uploadedImages.length > 0 && (
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    <div 
-                      className="w-full h-full"
-                      style={{
-                        backgroundImage: uploadedImages.length > 0 
-                          ? `url(${uploadedImages[0]})` 
-                          : 'none',
-                        backgroundSize: `${imageGridSize}px ${imageGridSize}px`,
-                        backgroundRepeat: 'repeat',
-                        opacity: imageOpacity,
-                      }}
-                    />
-                  </div>
-                )}
-                
                 <VisualPreview 
                   puzzle={puzzle}
                   showLivePreview={showLivePreview}
@@ -1018,22 +970,6 @@ export function DownloadPuzzleDialog({
             <div className="space-y-4">
               <Label>Preview</Label>
               <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-                {uploadedImages.length > 0 && (
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    <div 
-                      className="w-full h-full"
-                      style={{
-                        backgroundImage: uploadedImages.length > 0 
-                          ? `url(${uploadedImages[0]})` 
-                          : 'none',
-                        backgroundSize: `${imageGridSize}px ${imageGridSize}px`,
-                        backgroundRepeat: 'repeat',
-                        opacity: imageOpacity,
-                      }}
-                    />
-                  </div>
-                )}
-                
                 <VisualPreview 
                   puzzle={puzzle}
                   showLivePreview={showLivePreview}
