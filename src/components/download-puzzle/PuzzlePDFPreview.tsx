@@ -64,7 +64,6 @@ export const PuzzlePDFPreview = ({
   if (!puzzle) return null;
   
   // Calculate font sizes based on page dimensions and multipliers
-  // Use the same calculation method as in the DownloadPuzzleDialog component
   const calculateFontSizes = () => {
     // Base sizes for A4
     const a4Width = 595.28;
@@ -84,55 +83,34 @@ export const PuzzlePDFPreview = ({
   // Use the exact font sizes from our calculations
   const pdfStyles = createPDFStyles(fontSizes);
 
-  // Calculate how many images we need to cover the page
-  const calculateImageGrid = () => {
-    if (!uploadedImages || uploadedImages.length === 0) return [];
+  // Improved background image approach - create a single watermark image that covers the entire page
+  const createBackgroundWatermark = () => {
+    if (!uploadedImages || uploadedImages.length === 0) return null;
     
-    const imageElements = [];
-    const scaledImageSize = imageGridSize; // Size in pixels
-    
-    // Calculate number of images needed to cover the page
-    const horizontalCount = Math.ceil(currentWidth / scaledImageSize) + 1;
-    const verticalCount = Math.ceil(currentHeight / scaledImageSize) + 1;
-    
-    for (let x = 0; x < horizontalCount; x++) {
-      for (let y = 0; y < verticalCount; y++) {
-        imageElements.push({
-          x: x * scaledImageSize,
-          y: y * scaledImageSize,
-          size: scaledImageSize,
-          image: uploadedImages[0] // Use the first image for grid
-        });
-      }
-    }
-    
-    return imageElements;
+    // Use a single image that covers the entire page
+    return (
+      <View style={pdfStyles.imageBackground}>
+        <Image
+          src={uploadedImages[0]}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: currentWidth,
+            height: currentHeight,
+            opacity: imageOpacity,
+            objectFit: 'cover',
+          }}
+        />
+      </View>
+    );
   };
-  
-  const backgroundImages = calculateImageGrid();
   
   return (
     <Document>
       <Page size={[currentWidth, currentHeight]} style={pdfStyles.page}>
-        {/* Background image grid - now positioned as an absolute overlay covering the entire page */}
-        {uploadedImages && uploadedImages.length > 0 && (
-          <View style={pdfStyles.fullPageBackground}>
-            {backgroundImages.map((img, index) => (
-              <Image
-                key={index}
-                src={img.image}
-                style={{
-                  position: 'absolute',
-                  left: img.x,
-                  top: img.y,
-                  width: img.size,
-                  height: img.size,
-                  opacity: imageOpacity,
-                }}
-              />
-            ))}
-          </View>
-        )}
+        {/* Background watermark */}
+        {uploadedImages && uploadedImages.length > 0 && createBackgroundWatermark()}
         
         <View style={pdfStyles.container}>
           {showTitle && (
@@ -201,7 +179,7 @@ export const PuzzlePDFPreview = ({
         fontFamily: 'Times-Roman',
         position: 'relative',
       },
-      fullPageBackground: {
+      imageBackground: {
         position: 'absolute',
         top: 0,
         left: 0,
