@@ -83,25 +83,39 @@ export const PuzzlePDFPreview = ({
   // Use the exact font sizes from our calculations
   const pdfStyles = createPDFStyles(fontSizes);
 
-  // Improved background image approach - create a single watermark image that covers the entire page
-  const createBackgroundWatermark = () => {
+  // Create a tiled background pattern that matches the preview
+  const createTiledBackground = () => {
     if (!uploadedImages || uploadedImages.length === 0) return null;
     
-    // Use a single image that covers the entire page
+    const imageElements = [];
+    
+    // Calculate number of images needed to cover the page completely
+    const horizontalCount = Math.ceil(currentWidth / imageGridSize) + 1;
+    const verticalCount = Math.ceil(currentHeight / imageGridSize) + 1;
+    
+    // Create a grid of images
+    for (let y = 0; y < verticalCount; y++) {
+      for (let x = 0; x < horizontalCount; x++) {
+        imageElements.push(
+          <Image
+            key={`${x}-${y}`}
+            src={uploadedImages[0]}
+            style={{
+              position: 'absolute',
+              left: x * imageGridSize,
+              top: y * imageGridSize,
+              width: imageGridSize,
+              height: imageGridSize,
+              opacity: imageOpacity,
+            }}
+          />
+        );
+      }
+    }
+    
     return (
       <View style={pdfStyles.imageBackground}>
-        <Image
-          src={uploadedImages[0]}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: currentWidth,
-            height: currentHeight,
-            opacity: imageOpacity,
-            objectFit: 'cover',
-          }}
-        />
+        {imageElements}
       </View>
     );
   };
@@ -109,8 +123,8 @@ export const PuzzlePDFPreview = ({
   return (
     <Document>
       <Page size={[currentWidth, currentHeight]} style={pdfStyles.page}>
-        {/* Background watermark */}
-        {uploadedImages && uploadedImages.length > 0 && createBackgroundWatermark()}
+        {/* Tiled background pattern */}
+        {uploadedImages && uploadedImages.length > 0 && createTiledBackground()}
         
         <View style={pdfStyles.container}>
           {showTitle && (
