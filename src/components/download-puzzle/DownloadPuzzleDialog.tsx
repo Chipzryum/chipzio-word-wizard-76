@@ -97,16 +97,12 @@ export function DownloadPuzzleDialog({
   const [imageOpacity, setImageOpacity] = useState(DEFAULT_IMAGE_OPACITY);
   const [imageGridSize, setImageGridSize] = useState(DEFAULT_IMAGE_GRID_SIZE);
   
+  const [imageAngle, setImageAngle] = useState(0);
+  const [imageSpacing, setImageSpacing] = useState(MIN_IMAGE_SPACING);
+  
   const { toast } = useToast();
   
   const previewScaleFactor = 0.25;
-
-  const handleRandomizeImages = () => {
-    if (uploadedImages.length > 0) {
-      const shuffledImages = [...uploadedImages].sort(() => Math.random() - 0.5);
-      setUploadedImages(shuffledImages);
-    }
-  };
 
   const handleUnitChange = (unit: Unit) => {
     setSelectedUnit(unit);
@@ -422,7 +418,12 @@ export function DownloadPuzzleDialog({
                 onImagesChange={setUploadedImages}
                 imageOpacity={imageOpacity}
                 setImageOpacity={setImageOpacity}
-                onRandomizeImages={handleRandomizeImages}
+                imageGridSize={imageGridSize}
+                setImageGridSize={setImageGridSize}
+                imageAngle={imageAngle}
+                setImageAngle={setImageAngle}
+                imageSpacing={imageSpacing}
+                setImageSpacing={setImageSpacing}
               />
             </div>
 
@@ -890,143 +891,4 @@ export function DownloadPuzzleDialog({
                           newImages.splice(index, 1);
                           setUploadedImages(newImages);
                         }}
-                        className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-bl"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                  <label className="w-12 h-12 border-2 border-dashed rounded flex items-center justify-center cursor-pointer hover:bg-secondary/30">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        if (e.target.files && e.target.files[0]) {
-                          const file = e.target.files[0];
-                          const reader = new FileReader();
-                          reader.onload = (event) => {
-                            if (event.target && typeof event.target.result === 'string') {
-                              setUploadedImages([...uploadedImages, event.target.result]);
-                            }
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
-                    +
-                  </label>
-                </div>
-                
-                {uploadedImages.length > 0 && (
-                  <button
-                    onClick={handleRandomizeImages}
-                    className="mt-2 w-full py-1 px-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-md text-sm"
-                  >
-                    Randomize Images
-                  </button>
-                )}
-              </div>
-
-              {uploadedImages.length > 0 && (
-                <>
-                  <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
-                    <div className="grid gap-2">
-                      <div className="flex justify-between items-center">
-                        <Label className="font-medium">Image Opacity</Label>
-                        <span className="text-xs">{(imageOpacity * 100).toFixed(0)}%</span>
-                      </div>
-                      <Slider
-                        value={[imageOpacity * 100]}
-                        min={10}
-                        max={100}
-                        step={1}
-                        onValueChange={(value) => setImageOpacity(value[0] / 100)}
-                        className="cursor-pointer"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
-                    <div className="grid gap-2">
-                      <div className="flex justify-between items-center">
-                        <Label className="font-medium">Image Size</Label>
-                        <span className="text-xs">{imageGridSize}px</span>
-                      </div>
-                      <Slider
-                        value={[imageGridSize]}
-                        min={MIN_IMAGE_GRID_SIZE}
-                        max={MAX_IMAGE_GRID_SIZE}
-                        step={1}
-                        onValueChange={(value) => setImageGridSize(value[0])}
-                        className="cursor-pointer"
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="space-y-4">
-              <Label>Preview</Label>
-              <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-                <VisualPreview 
-                  puzzle={puzzle}
-                  showLivePreview={showLivePreview}
-                  isPDFReady={isPDFReady}
-                  title={title}
-                  subtitle={subtitle}
-                  instruction={instruction}
-                  showTitle={showTitle}
-                  showSubtitle={showSubtitle}
-                  showInstruction={showInstruction}
-                  showGrid={showGrid}
-                  showWordList={showWordList}
-                  titleOffset={titleOffset}
-                  subtitleOffset={subtitleOffset}
-                  instructionOffset={instructionOffset}
-                  gridOffset={gridOffset}
-                  wordListOffset={wordListOffset}
-                  currentWidth={currentWidth}
-                  currentHeight={currentHeight}
-                  contentWidth={contentWidth}
-                  contentHeight={contentHeight}
-                  cellSize={cellSize}
-                  letterSize={letterSize}
-                  letterSizeMultiplier={letterSizeMultiplier}
-                  titleSizeMultiplier={titleSizeMultiplier}
-                  subtitleSizeMultiplier={subtitleSizeMultiplier}
-                  instructionSizeMultiplier={instructionSizeMultiplier}
-                  wordListSizeMultiplier={wordListSizeMultiplier}
-                  previewScaleFactor={previewScaleFactor}
-                  fontSizes={fontSizes}
-                  getVerticalOffset={getVerticalOffset}
-                  uploadedImages={uploadedImages}
-                  imageOpacity={imageOpacity}
-                  imageGridSize={imageGridSize}
-                />
-              </div>
-              
-              <ActionButtons 
-                handleSaveLayout={handleSaveLayout}
-                handleDownload={handleDownload}
-                isGenerating={isGenerating}
-                isPDFReady={isPDFReady}
-                puzzle={puzzle}
-                pdfBlob={pdfBlob}
-              />
-            </div>
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-const moveElement = (element: string, direction: 'up' | 'down') => {
-  return;
-};
-
-const togglePositioning = (element: string) => {
-  return;
-};
+                        className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items
