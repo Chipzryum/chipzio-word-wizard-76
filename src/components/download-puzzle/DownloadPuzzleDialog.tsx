@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
@@ -51,6 +52,9 @@ interface DownloadPuzzleDialogProps {
   onClose: () => void;
   puzzle: PuzzleGrid | null;
 }
+
+// Define the minimum image spacing constant
+const MIN_IMAGE_SPACING = 0;
 
 export function DownloadPuzzleDialog({
   open,
@@ -106,6 +110,38 @@ export function DownloadPuzzleDialog({
 
   const handleUnitChange = (unit: Unit) => {
     setSelectedUnit(unit);
+  };
+
+  // Function to toggle positioning mode
+  const togglePositioning = (element: string | null) => {
+    setPositioningElement(element);
+  };
+
+  // Function to move element by updating its offset
+  const moveElement = (direction: 'up' | 'down', amount: number = 1) => {
+    if (!positioningElement) return;
+    
+    const change = direction === 'up' ? -amount : amount;
+    
+    switch (positioningElement) {
+      case 'title':
+        setTitleOffset(prev => prev + change);
+        break;
+      case 'subtitle':
+        setSubtitleOffset(prev => prev + change);
+        break;
+      case 'instruction':
+        setInstructionOffset(prev => prev + change);
+        break;
+      case 'grid':
+        setGridOffset(prev => prev + change);
+        break;
+      case 'wordList':
+        setWordListOffset(prev => prev + change);
+        break;
+      default:
+        break;
+    }
   };
 
   const currentWidth = selectedSize === "Custom" ? customWidth : PAGE_SIZES[selectedSize].width;
@@ -250,6 +286,8 @@ export function DownloadPuzzleDialog({
           uploadedImages={uploadedImages}
           imageOpacity={imageOpacity}
           imageGridSize={imageGridSize}
+          imageAngle={imageAngle}
+          imageSpacing={imageSpacing}
         />
       ).toBlob();
       
@@ -335,7 +373,7 @@ export function DownloadPuzzleDialog({
     showTitle, showSubtitle, showInstruction, showWordList, showGrid,
     titleOffset, subtitleOffset, instructionOffset, gridOffset, wordListOffset,
     title, subtitle, instruction, selectedSize, customWidth, customHeight,
-    uploadedImages, imageOpacity, imageGridSize
+    uploadedImages, imageOpacity, imageGridSize, imageAngle, imageSpacing
   ]);
 
   console.log("Word list toggle status:", showWordList);
@@ -464,6 +502,8 @@ export function DownloadPuzzleDialog({
                   uploadedImages={uploadedImages}
                   imageOpacity={imageOpacity}
                   imageGridSize={imageGridSize}
+                  imageAngle={imageAngle}
+                  imageSpacing={imageSpacing}
                 />
               </div>
               
@@ -683,6 +723,8 @@ export function DownloadPuzzleDialog({
                   uploadedImages={uploadedImages}
                   imageOpacity={imageOpacity}
                   imageGridSize={imageGridSize}
+                  imageAngle={imageAngle}
+                  imageSpacing={imageSpacing}
                 />
               </div>
               
@@ -859,6 +901,8 @@ export function DownloadPuzzleDialog({
                   uploadedImages={uploadedImages}
                   imageOpacity={imageOpacity}
                   imageGridSize={imageGridSize}
+                  imageAngle={imageAngle}
+                  imageSpacing={imageSpacing}
                 />
               </div>
               
@@ -891,4 +935,162 @@ export function DownloadPuzzleDialog({
                           newImages.splice(index, 1);
                           setUploadedImages(newImages);
                         }}
-                        className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items
+                        className="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center rounded-full text-xs"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        if (event.target?.result) {
+                          setUploadedImages([...uploadedImages, event.target.result as string]);
+                        }
+                      };
+                      reader.readAsDataURL(e.target.files[0]);
+                    }
+                  }}
+                  className="w-full mb-4"
+                />
+              </div>
+              
+              {uploadedImages.length > 0 && (
+                <>
+                  <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                    <div className="grid gap-2">
+                      <Label className="font-medium">Image Opacity</Label>
+                      <Slider
+                        value={[imageOpacity * 100]}
+                        min={5}
+                        max={100}
+                        step={1}
+                        onValueChange={(value) => setImageOpacity(value[0] / 100)}
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>5%</span>
+                        <span>{Math.round(imageOpacity * 100)}%</span>
+                        <span>100%</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                    <div className="grid gap-2">
+                      <Label className="font-medium">Image Size</Label>
+                      <Slider
+                        value={[imageGridSize]}
+                        min={MIN_IMAGE_GRID_SIZE}
+                        max={MAX_IMAGE_GRID_SIZE}
+                        step={1}
+                        onValueChange={(value) => setImageGridSize(value[0])}
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Small</span>
+                        <span>{imageGridSize}</span>
+                        <span>Large</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                    <div className="grid gap-2">
+                      <Label className="font-medium">Image Angle</Label>
+                      <Slider
+                        value={[imageAngle]}
+                        min={0}
+                        max={90}
+                        step={5}
+                        onValueChange={(value) => setImageAngle(value[0])}
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>0°</span>
+                        <span>{imageAngle}°</span>
+                        <span>90°</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                    <div className="grid gap-2">
+                      <Label className="font-medium">Image Spacing</Label>
+                      <Slider
+                        value={[imageSpacing]}
+                        min={0}
+                        max={50}
+                        step={2}
+                        onValueChange={(value) => setImageSpacing(value[0])}
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>None</span>
+                        <span>{imageSpacing}px</span>
+                        <span>Max</span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+            
+            <div className="space-y-4">
+              <Label>Preview</Label>
+              <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
+                <VisualPreview 
+                  puzzle={puzzle}
+                  showLivePreview={showLivePreview}
+                  isPDFReady={isPDFReady}
+                  title={title}
+                  subtitle={subtitle}
+                  instruction={instruction}
+                  showTitle={showTitle}
+                  showSubtitle={showSubtitle}
+                  showInstruction={showInstruction}
+                  showGrid={showGrid}
+                  showWordList={showWordList}
+                  titleOffset={titleOffset}
+                  subtitleOffset={subtitleOffset}
+                  instructionOffset={instructionOffset}
+                  gridOffset={gridOffset}
+                  wordListOffset={wordListOffset}
+                  currentWidth={currentWidth}
+                  currentHeight={currentHeight}
+                  contentWidth={contentWidth}
+                  contentHeight={contentHeight}
+                  cellSize={cellSize}
+                  letterSize={letterSize}
+                  letterSizeMultiplier={letterSizeMultiplier}
+                  titleSizeMultiplier={titleSizeMultiplier}
+                  subtitleSizeMultiplier={subtitleSizeMultiplier}
+                  instructionSizeMultiplier={instructionSizeMultiplier}
+                  wordListSizeMultiplier={wordListSizeMultiplier}
+                  previewScaleFactor={previewScaleFactor}
+                  fontSizes={fontSizes}
+                  getVerticalOffset={getVerticalOffset}
+                  uploadedImages={uploadedImages}
+                  imageOpacity={imageOpacity}
+                  imageGridSize={imageGridSize}
+                  imageAngle={imageAngle}
+                  imageSpacing={imageSpacing}
+                />
+              </div>
+              
+              <ActionButtons 
+                handleSaveLayout={handleSaveLayout}
+                handleDownload={handleDownload}
+                isGenerating={isGenerating}
+                isPDFReady={isPDFReady}
+                puzzle={puzzle}
+                pdfBlob={pdfBlob}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}
