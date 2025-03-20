@@ -83,19 +83,29 @@ export const PuzzlePDFPreview = ({
   // Use the exact font sizes from our calculations
   const pdfStyles = createPDFStyles(fontSizes);
 
-  // Create a tiled background pattern that matches the preview
+  // Create a tiled background pattern that's confined to a single page
   const createTiledBackground = () => {
     if (!uploadedImages || uploadedImages.length === 0) return null;
     
     const imageElements = [];
     
     // Calculate number of images needed to cover the page completely
-    const horizontalCount = Math.ceil(currentWidth / imageGridSize) + 1;
-    const verticalCount = Math.ceil(currentHeight / imageGridSize) + 1;
+    // Make sure not to exceed the page boundaries
+    const horizontalCount = Math.ceil(currentWidth / imageGridSize);
+    const verticalCount = Math.ceil(currentHeight / imageGridSize);
     
-    // Create a grid of images
+    // Create a grid of images that stays within page boundaries
     for (let y = 0; y < verticalCount; y++) {
       for (let x = 0; x < horizontalCount; x++) {
+        // Calculate the actual width and height to avoid overflow
+        const imgWidth = x === horizontalCount - 1 && x * imageGridSize + imageGridSize > currentWidth
+          ? currentWidth - (x * imageGridSize)
+          : imageGridSize;
+          
+        const imgHeight = y === verticalCount - 1 && y * imageGridSize + imageGridSize > currentHeight
+          ? currentHeight - (y * imageGridSize)
+          : imageGridSize;
+        
         imageElements.push(
           <Image
             key={`${x}-${y}`}
@@ -104,8 +114,8 @@ export const PuzzlePDFPreview = ({
               position: 'absolute',
               left: x * imageGridSize,
               top: y * imageGridSize,
-              width: imageGridSize,
-              height: imageGridSize,
+              width: imgWidth,
+              height: imgHeight,
               opacity: imageOpacity,
             }}
           />
@@ -120,9 +130,10 @@ export const PuzzlePDFPreview = ({
     );
   };
   
+  // Ensure we're only creating a single page document
   return (
     <Document>
-      <Page size={[currentWidth, currentHeight]} style={pdfStyles.page}>
+      <Page size={[currentWidth, currentHeight]} style={pdfStyles.page} wrap={false}>
         {/* Tiled background pattern */}
         {uploadedImages && uploadedImages.length > 0 && createTiledBackground()}
         
@@ -192,6 +203,7 @@ export const PuzzlePDFPreview = ({
         padding: 40,
         fontFamily: 'Times-Roman',
         position: 'relative',
+        overflow: 'hidden', // Prevent content from overflowing to next page
       },
       imageBackground: {
         position: 'absolute',
@@ -200,6 +212,7 @@ export const PuzzlePDFPreview = ({
         width: currentWidth,
         height: currentHeight,
         zIndex: 0,
+        overflow: 'hidden', // Ensure background stays within page
       },
       container: {
         flex: 1,
