@@ -1,4 +1,3 @@
-
 import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 
@@ -30,6 +29,8 @@ interface PuzzlePDFPreviewProps {
   uploadedImages?: string[];
   imageOpacity?: number;
   imageGridSize?: number;
+  imageAngle?: number;
+  imageSpacing?: number;
 }
 
 export const PuzzlePDFPreview = ({
@@ -60,6 +61,8 @@ export const PuzzlePDFPreview = ({
   uploadedImages = [],
   imageOpacity = 0.3,
   imageGridSize = 100,
+  imageAngle = 0,
+  imageSpacing = 0,
 }: PuzzlePDFPreviewProps) => {
   if (!puzzle) return null;
   
@@ -91,20 +94,30 @@ export const PuzzlePDFPreview = ({
     
     // Calculate number of images needed to cover the page completely
     // Make sure not to exceed the page boundaries
-    const horizontalCount = Math.ceil(currentWidth / imageGridSize);
-    const verticalCount = Math.ceil(currentHeight / imageGridSize);
+    const horizontalCount = Math.ceil(currentWidth / (imageGridSize + imageSpacing)) + 1;
+    const verticalCount = Math.ceil(currentHeight / (imageGridSize + imageSpacing)) + 1;
     
     // Create a grid of images that stays within page boundaries
     for (let y = 0; y < verticalCount; y++) {
       for (let x = 0; x < horizontalCount; x++) {
         // Calculate the actual width and height to avoid overflow
-        const imgWidth = x === horizontalCount - 1 && x * imageGridSize + imageGridSize > currentWidth
-          ? currentWidth - (x * imageGridSize)
+        const imgWidth = x === horizontalCount - 1 && x * (imageGridSize + imageSpacing) + imageGridSize > currentWidth
+          ? currentWidth - (x * (imageGridSize + imageSpacing))
           : imageGridSize;
           
-        const imgHeight = y === verticalCount - 1 && y * imageGridSize + imageGridSize > currentHeight
-          ? currentHeight - (y * imageGridSize)
+        const imgHeight = y === verticalCount - 1 && y * (imageGridSize + imageSpacing) + imageGridSize > currentHeight
+          ? currentHeight - (y * (imageGridSize + imageSpacing))
           : imageGridSize;
+        
+        // Skip images that would be completely off-page
+        if (imgWidth <= 0 || imgHeight <= 0) continue;
+        
+        // Calculate position with spacing included
+        const posX = x * (imageGridSize + imageSpacing);
+        const posY = y * (imageGridSize + imageSpacing);
+        
+        // Skip images that would start beyond page boundaries
+        if (posX >= currentWidth || posY >= currentHeight) continue;
         
         imageElements.push(
           <Image
@@ -112,11 +125,13 @@ export const PuzzlePDFPreview = ({
             src={uploadedImages[0]}
             style={{
               position: 'absolute',
-              left: x * imageGridSize,
-              top: y * imageGridSize,
+              left: posX,
+              top: posY,
               width: imgWidth,
               height: imgHeight,
               opacity: imageOpacity,
+              transform: `rotate(${imageAngle}deg)`,
+              transformOrigin: 'center',
             }}
           />
         );
