@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
@@ -117,13 +116,13 @@ export function DownloadPuzzleDialog({
     setPositioningElement(element);
   };
 
-  // Function to move element by updating its offset
-  const moveElement = (direction: 'up' | 'down', amount: number = 1) => {
-    if (!positioningElement) return;
-    
+  // FIXED: Updated moveElement function signature to match what ControlPanel expects
+  const moveElement = (element: string, direction: 'up' | 'down') => {
+    // Default amount is 1 if not specified
+    const amount = 1;
     const change = direction === 'up' ? -amount : amount;
     
-    switch (positioningElement) {
+    switch (element) {
       case 'title':
         setTitleOffset(prev => prev + change);
         break;
