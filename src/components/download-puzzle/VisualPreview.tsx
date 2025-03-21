@@ -1,3 +1,4 @@
+
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { PDFViewer } from "@react-pdf/renderer";
 import { PuzzlePDFPreview } from "./PuzzlePDFPreview";
@@ -125,6 +126,59 @@ export const VisualPreview = ({
   console.log("Rendering VisualPreview with showWordList:", showWordList);
   console.log("Puzzle words:", puzzle?.wordPlacements.map(wp => wp.word));
 
+  // Create a tiled background similar to the PDF version
+  const createTiledBackground = () => {
+    if (!uploadedImages || uploadedImages.length === 0) return null;
+    
+    const imageElements = [];
+    
+    // Calculate number of images needed to cover the preview completely with spacing
+    const adjustedImageSize = imageGridSize * previewScaleFactor;
+    const adjustedSpacing = imageSpacing * previewScaleFactor;
+    const totalImageSize = adjustedImageSize + adjustedSpacing;
+    
+    // Add extra rows/columns to ensure rotation covers the entire page
+    const extraCoverForRotation = imageAngle > 0 ? 2 : 0;
+    const horizontalCount = Math.ceil(currentWidth * previewScaleFactor / totalImageSize) + extraCoverForRotation;
+    const verticalCount = Math.ceil(currentHeight * previewScaleFactor / totalImageSize) + extraCoverForRotation;
+    
+    // Starting position offset for rotation coverage
+    const offsetX = imageAngle > 0 ? -adjustedImageSize : 0;
+    const offsetY = imageAngle > 0 ? -adjustedImageSize : 0;
+    
+    for (let y = 0; y < verticalCount; y++) {
+      for (let x = 0; x < horizontalCount; x++) {
+        const posX = offsetX + x * (adjustedImageSize + adjustedSpacing);
+        const posY = offsetY + y * (adjustedImageSize + adjustedSpacing);
+        
+        imageElements.push(
+          <div
+            key={`${x}-${y}`}
+            style={{
+              position: 'absolute',
+              left: `${posX}px`,
+              top: `${posY}px`,
+              width: `${adjustedImageSize}px`,
+              height: `${adjustedImageSize}px`,
+              backgroundImage: `url(${uploadedImages[0]})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              opacity: imageOpacity,
+              transform: `rotate(${imageAngle}deg)`,
+              transformOrigin: 'center',
+            }}
+          />
+        );
+      }
+    }
+    
+    return (
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 1 }}>
+        {imageElements}
+      </div>
+    );
+  };
+
   return (
     <div 
       className="relative border-2 border-black bg-white p-4 overflow-hidden"
@@ -135,22 +189,8 @@ export const VisualPreview = ({
         maxHeight: '380px',
       }}
     >
-      {/* Apply background pattern only inside the PDF preview area */}
-      {uploadedImages && uploadedImages.length > 0 && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 1 }}>
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `url(${uploadedImages[0]})`,
-              backgroundSize: `${imageGridSize * previewScaleFactor}px`,
-              backgroundRepeat: 'repeat',
-              transform: `rotate(${imageAngle}deg)`,
-              opacity: imageOpacity,
-              margin: `${imageSpacing * previewScaleFactor}px`,
-            }}
-          />
-        </div>
-      )}
+      {/* Apply tiled background pattern with individual rotated images */}
+      {uploadedImages && uploadedImages.length > 0 && createTiledBackground()}
       
       <div className="flex flex-col h-full relative" style={{ zIndex: 2 }}>
         {showTitle && (
