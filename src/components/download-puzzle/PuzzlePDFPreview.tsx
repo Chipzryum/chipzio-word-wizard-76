@@ -1,8 +1,10 @@
+
 import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
+import { CombinedPuzzleGrid } from "./DownloadPuzzleDialog";
 
 interface PuzzlePDFPreviewProps {
-  puzzle: PuzzleGrid | null;
+  puzzle: CombinedPuzzleGrid | null;
   title: string;
   subtitle: string;
   instruction: string;

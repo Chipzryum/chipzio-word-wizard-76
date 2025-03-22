@@ -47,21 +47,22 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 
+export type CombinedPuzzleGrid = PuzzleGrid | CrosswordGrid;
+
 interface DownloadPuzzleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  puzzle: PuzzleGrid | CrosswordGrid;
+  puzzle: CombinedPuzzleGrid;
   defaultValues?: {
     title: string;
     subtitle: string;
     instruction: string;
   };
-  puzzleType: "wordsearch" | "crossword";
+  puzzleType?: "wordsearch" | "crossword";
   showSolution?: boolean;
   visualPreviewComponent?: "wordsearch" | "crossword";
 }
 
-// Define the minimum image spacing constant
 const MIN_IMAGE_SPACING = 0;
 
 export function DownloadPuzzleDialog({
@@ -482,7 +483,7 @@ export function DownloadPuzzleDialog({
               <Label>Preview</Label>
               <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
                 <VisualPreview 
-                  puzzle={puzzle}
+                  puzzle={puzzle as PuzzleGrid}
                   showLivePreview={showLivePreview}
                   isPDFReady={isPDFReady}
                   title={title}
@@ -525,7 +526,7 @@ export function DownloadPuzzleDialog({
                 handleDownload={handleDownload}
                 isGenerating={isGenerating}
                 isPDFReady={isPDFReady}
-                puzzle={puzzle}
+                puzzle={puzzle as PuzzleGrid}
                 pdfBlob={pdfBlob}
               />
               
@@ -703,7 +704,7 @@ export function DownloadPuzzleDialog({
               <Label>Preview</Label>
               <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
                 <VisualPreview 
-                  puzzle={puzzle}
+                  puzzle={puzzle as PuzzleGrid}
                   showLivePreview={showLivePreview}
                   isPDFReady={isPDFReady}
                   title={title}
@@ -746,7 +747,7 @@ export function DownloadPuzzleDialog({
                 handleDownload={handleDownload}
                 isGenerating={isGenerating}
                 isPDFReady={isPDFReady}
-                puzzle={puzzle}
+                puzzle={puzzle as PuzzleGrid}
                 pdfBlob={pdfBlob}
               />
             </div>
@@ -881,7 +882,7 @@ export function DownloadPuzzleDialog({
               <Label>Preview</Label>
               <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
                 <VisualPreview 
-                  puzzle={puzzle}
+                  puzzle={puzzle as PuzzleGrid}
                   showLivePreview={showLivePreview}
                   isPDFReady={isPDFReady}
                   title={title}
@@ -924,7 +925,7 @@ export function DownloadPuzzleDialog({
                 handleDownload={handleDownload}
                 isGenerating={isGenerating}
                 isPDFReady={isPDFReady}
-                puzzle={puzzle}
+                puzzle={puzzle as PuzzleGrid}
                 pdfBlob={pdfBlob}
               />
             </div>
@@ -1054,7 +1055,7 @@ export function DownloadPuzzleDialog({
               <Label>Preview</Label>
               <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
                 <VisualPreview 
-                  puzzle={puzzle}
+                  puzzle={puzzle as PuzzleGrid}
                   showLivePreview={showLivePreview}
                   isPDFReady={isPDFReady}
                   title={title}
@@ -1097,7 +1098,7 @@ export function DownloadPuzzleDialog({
                 handleDownload={handleDownload}
                 isGenerating={isGenerating}
                 isPDFReady={isPDFReady}
-                puzzle={puzzle}
+                puzzle={puzzle as PuzzleGrid}
                 pdfBlob={pdfBlob}
               />
             </div>

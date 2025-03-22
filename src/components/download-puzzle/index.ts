@@ -1,2 +1,2 @@
 
-export { DownloadPuzzleDialog } from './DownloadPuzzleDialog';
+export { DownloadPuzzleDialog, type CombinedPuzzleGrid } from './DownloadPuzzleDialog';
