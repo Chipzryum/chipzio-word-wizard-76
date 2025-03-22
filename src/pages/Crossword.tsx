@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -44,7 +43,6 @@ const Crossword = () => {
   const [selectedTab, setSelectedTab] = useState("word-input");
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
 
-  // Generate the crossword puzzle
   const generatePuzzle = useCallback(() => {
     if (words.length < 3) {
       toast({
@@ -58,13 +56,9 @@ const Crossword = () => {
     setIsGenerating(true);
     setPuzzle(null);
 
-    // Use a slight delay to allow the UI to update
     setTimeout(() => {
       try {
-        // Prepare words for crossword generation
         const processedWords = prepareWordsForCrossword(words);
-        
-        // Generate the crossword puzzle
         const newPuzzle = generateCrossword(processedWords, gridSize, gridSize);
         
         if (newPuzzle) {
@@ -93,7 +87,6 @@ const Crossword = () => {
     }, 100);
   }, [words, gridSize, toast]);
 
-  // Add a word to the list
   const addWord = () => {
     const trimmedWord = inputWord.trim();
     
@@ -132,15 +125,13 @@ const Crossword = () => {
     setInputWord("");
   };
 
-  // Remove a word from the list
   const removeWord = (word: string) => {
     setWords(words.filter((w) => w !== word));
   };
 
-  // Process multiple words from textarea
   const processMultipleWords = () => {
     const newWords = customWords
-      .split(/[\n,;]/) // Split by newline, comma, or semicolon
+      .split(/[\n,;]/)
       .map((word) => word.trim())
       .filter((word) => word.length >= 3 && !word.includes(" "))
       .filter((word) => !words.includes(word.toUpperCase()));
@@ -168,19 +159,16 @@ const Crossword = () => {
     }
   };
 
-  // Clear all words
   const clearAllWords = () => {
     setWords([]);
     setCustomWords("");
     setPuzzle(null);
   };
 
-  // Toggle solution display
   const toggleSolution = () => {
     setShowSolution(!showSolution);
   };
 
-  // Default PDF properties for the crossword
   const defaultPDFProps = {
     title: "CROSSWORD PUZZLE",
     subtitle: "educational crossword",
@@ -215,7 +203,6 @@ const Crossword = () => {
         </section>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left Column - Controls */}
           <div className="space-y-6 animate-fade-right">
             <Card className="p-6">
               <Tabs
@@ -370,7 +357,6 @@ const Crossword = () => {
             )}
           </div>
 
-          {/* Right Column - Preview */}
           <div className="animate-fade-left">
             <Card className="p-6">
               <div className="flex justify-between items-center mb-4">
@@ -409,47 +395,44 @@ const Crossword = () => {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center w-full h-full p-2">
-                    {/* Crossword Preview */}
-                    <div className="flex flex-col items-center overflow-auto w-full">
-                      <div className="mb-2 text-sm font-medium text-muted-foreground">
-                        {puzzle.wordPlacements.length} words placed (out of {words.length})
-                      </div>
-                      <div className="grid grid-flow-row gap-0 border border-black">
-                        {puzzle.grid.map((row, i) => (
-                          <div key={i} className="flex">
-                            {row.map((cell, j) => {
-                              const wordNumber = isWordStart(puzzle.wordPlacements, i, j);
-                              const isEmpty = cell === '';
-                              
-                              return (
-                                <div
-                                  key={`${i}-${j}`}
-                                  className={`flex items-center justify-center border border-gray-900 relative ${isEmpty ? 'bg-gray-900' : 'bg-white'}`}
-                                  style={{
-                                    width: '30px',
-                                    height: '30px',
-                                  }}
-                                >
-                                  {wordNumber !== null && (
-                                    <span 
-                                      className="absolute text-xs font-bold"
-                                      style={{
-                                        top: '1px',
-                                        left: '1px',
-                                      }}
-                                    >
-                                      {wordNumber}
-                                    </span>
-                                  )}
-                                  {!isEmpty && showSolution && (
-                                    <span>{cell}</span>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ))}
-                      </div>
+                    <div className="mb-2 text-sm font-medium text-muted-foreground">
+                      {puzzle.wordPlacements.length} words placed (out of {words.length})
+                    </div>
+                    <div className="grid grid-flow-row gap-0 border border-black">
+                      {puzzle.grid.map((row, i) => (
+                        <div key={i} className="flex">
+                          {row.map((cell, j) => {
+                            const wordNumber = isWordStart(puzzle.wordPlacements, i, j);
+                            const isEmpty = cell === '';
+                            
+                            return (
+                              <div
+                                key={`${i}-${j}`}
+                                className={`flex items-center justify-center border border-gray-900 relative ${isEmpty ? 'bg-gray-900' : 'bg-white'}`}
+                                style={{
+                                  width: '30px',
+                                  height: '30px',
+                                }}
+                              >
+                                {wordNumber !== null && (
+                                  <span 
+                                    className="absolute text-xs font-bold"
+                                    style={{
+                                      top: '1px',
+                                      left: '1px',
+                                    }}
+                                  >
+                                    {wordNumber}
+                                  </span>
+                                )}
+                                {!isEmpty && showSolution && (
+                                  <span>{cell}</span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -491,17 +474,11 @@ const Crossword = () => {
         </div>
       </main>
 
-      {/* Download Dialog */}
       {showDownloadDialog && puzzle && (
         <DownloadPuzzleDialog 
           open={showDownloadDialog}
           onOpenChange={setShowDownloadDialog}
-          puzzle={{
-            grid: puzzle.grid,
-            wordPlacements: puzzle.wordPlacements,
-            width: puzzle.width,
-            height: puzzle.height
-          }}
+          puzzle={puzzle}
           defaultValues={defaultPDFProps}
           puzzleType="crossword"
           showSolution={showSolution}

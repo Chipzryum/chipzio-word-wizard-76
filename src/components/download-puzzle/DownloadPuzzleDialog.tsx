@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
+import { CrosswordGrid } from "@/utils/crosswordUtils";
 import { pdf } from "@react-pdf/renderer";
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -48,8 +49,16 @@ import {
 
 interface DownloadPuzzleDialogProps {
   open: boolean;
-  onClose: () => void;
-  puzzle: PuzzleGrid | null;
+  onOpenChange: (open: boolean) => void;
+  puzzle: PuzzleGrid | CrosswordGrid;
+  defaultValues?: {
+    title: string;
+    subtitle: string;
+    instruction: string;
+  };
+  puzzleType: "wordsearch" | "crossword";
+  showSolution?: boolean;
+  visualPreviewComponent?: "wordsearch" | "crossword";
 }
 
 // Define the minimum image spacing constant
@@ -57,13 +66,21 @@ const MIN_IMAGE_SPACING = 0;
 
 export function DownloadPuzzleDialog({
   open,
-  onClose,
+  onOpenChange,
   puzzle,
+  defaultValues = {
+    title: "Puzzle",
+    subtitle: "educational puzzle",
+    instruction: "Can you solve the puzzle?"
+  },
+  puzzleType = "wordsearch",
+  showSolution = false,
+  visualPreviewComponent = "wordsearch"
 }: DownloadPuzzleDialogProps) {
   
-  const [title, setTitle] = useState("Word Search Puzzle");
-  const [subtitle, setSubtitle] = useState("word search");
-  const [instruction, setInstruction] = useState("Can you find all the words?");
+  const [title, setTitle] = useState(defaultValues.title);
+  const [subtitle, setSubtitle] = useState(defaultValues.subtitle);
+  const [instruction, setInstruction] = useState(defaultValues.instruction);
   const [selectedSize, setSelectedSize] = useState<PageSize>("A4");
   const [selectedUnit, setSelectedUnit] = useState<Unit>("Points");
   const [customWidth, setCustomWidth] = useState(PAGE_SIZES.A4.width);
@@ -111,14 +128,11 @@ export function DownloadPuzzleDialog({
     setSelectedUnit(unit);
   };
 
-  // Function to toggle positioning mode
   const togglePositioning = (element: string | null) => {
     setPositioningElement(element);
   };
 
-  // FIXED: Updated moveElement function signature to match what ControlPanel expects
   const moveElement = (element: string, direction: 'up' | 'down') => {
-    // Default amount is 1 if not specified
     const amount = 1;
     const change = direction === 'up' ? -amount : amount;
     
@@ -343,7 +357,7 @@ export function DownloadPuzzleDialog({
         description: "PDF downloaded successfully!",
       });
       
-      onClose();
+      onOpenChange(false);
     } catch (error) {
       console.error('Failed to download PDF:', error);
       toast({
@@ -378,7 +392,7 @@ export function DownloadPuzzleDialog({
   console.log("Word list toggle status:", showWordList);
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Download Puzzle</DialogTitle>
