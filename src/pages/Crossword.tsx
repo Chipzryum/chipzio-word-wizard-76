@@ -1,18 +1,9 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Grid2X2,
   Download,
@@ -30,17 +21,18 @@ import { generateCrossword, prepareWordsForCrossword, CrosswordGrid, isWordStart
 import { DEFAULT_VALUES, PAGE_SIZES, PAGE_SIZE_OPTIONS } from "@/components/download-puzzle/constants";
 import { useToast } from "@/components/ui/use-toast";
 import { DownloadPuzzleDialog } from "@/components/download-puzzle";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 const Crossword = () => {
   const { toast } = useToast();
   const [words, setWords] = useState<string[]>([]);
-  const [inputWord, setInputWord] = useState("");
+  const [clues, setClues] = useState<string[]>([]);
   const [gridSize, setGridSize] = useState(15);
   const [puzzle, setPuzzle] = useState<CrosswordGrid | null>(null);
-  const [customWords, setCustomWords] = useState("");
+  const [bulkInput, setBulkInput] = useState("");
   const [showSolution, setShowSolution] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedTab, setSelectedTab] = useState("word-input");
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
 
   const generatePuzzle = useCallback(() => {
@@ -58,7 +50,7 @@ const Crossword = () => {
 
     setTimeout(() => {
       try {
-        const processedWords = prepareWordsForCrossword(words);
+        const processedWords = prepareWordsForCrossword(words, clues);
         const newPuzzle = generateCrossword(processedWords, gridSize, gridSize);
         
         if (newPuzzle) {
@@ -85,83 +77,61 @@ const Crossword = () => {
         setIsGenerating(false);
       }
     }, 100);
-  }, [words, gridSize, toast]);
+  }, [words, clues, gridSize, toast]);
 
-  const addWord = () => {
-    const trimmedWord = inputWord.trim();
+  const processWordAndClues = () => {
+    const lines = bulkInput.split('\n').filter(line => line.trim());
+    const newWords: string[] = [];
+    const newClues: string[] = [];
     
-    if (!trimmedWord) {
-      return;
-    }
+    let hasErrors = false;
     
-    if (trimmedWord.length < 3) {
+    lines.forEach((line, index) => {
+      const parts = line.split(',');
+      if (parts.length < 2) {
+        hasErrors = true;
+        return;
+      }
+      
+      const word = parts[0].trim();
+      const clue = parts.slice(1).join(',').trim();
+      
+      if (word.length < 3) {
+        hasErrors = true;
+        return;
+      }
+      
+      if (word.includes(' ')) {
+        hasErrors = true;
+        return;
+      }
+      
+      newWords.push(word);
+      newClues.push(clue);
+    });
+    
+    if (hasErrors) {
       toast({
-        title: "Word too short",
-        description: "Words must be at least 3 characters long.",
+        title: "Invalid format",
+        description: "Some lines were not formatted correctly. Each line should have a word and clue separated by a comma. Words must be at least 3 characters long without spaces.",
         variant: "destructive",
       });
-      return;
     }
     
-    if (trimmedWord.includes(" ")) {
-      toast({
-        title: "Invalid word",
-        description: "Words cannot contain spaces. Add each word separately.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (words.includes(trimmedWord.toUpperCase())) {
-      toast({
-        title: "Duplicate word",
-        description: "This word is already in the list.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setWords([...words, trimmedWord]);
-    setInputWord("");
-  };
-
-  const removeWord = (word: string) => {
-    setWords(words.filter((w) => w !== word));
-  };
-
-  const processMultipleWords = () => {
-    const newWords = customWords
-      .split(/[\n,;]/)
-      .map((word) => word.trim())
-      .filter((word) => word.length >= 3 && !word.includes(" "))
-      .filter((word) => !words.includes(word.toUpperCase()));
-
     if (newWords.length > 0) {
-      setWords([...words, ...newWords]);
-      setCustomWords("");
+      setWords(newWords);
+      setClues(newClues);
       toast({
-        title: "Words Added",
-        description: `${newWords.length} new word(s) added to the list.`,
-      });
-    } else {
-      toast({
-        title: "No valid words",
-        description: "Make sure words are at least 3 characters long and don't contain spaces.",
-        variant: "destructive",
+        title: "Words and clues added",
+        description: `${newWords.length} word(s) and clues were added successfully.`,
       });
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addWord();
-    }
-  };
-
-  const clearAllWords = () => {
+  const clearAll = () => {
     setWords([]);
-    setCustomWords("");
+    setClues([]);
+    setBulkInput("");
     setPuzzle(null);
   };
 
@@ -205,142 +175,105 @@ const Crossword = () => {
         <div className="grid lg:grid-cols-2 gap-8">
           <div className="space-y-6 animate-fade-right">
             <Card className="p-6">
-              <Tabs
-                defaultValue="word-input"
-                value={selectedTab}
-                onValueChange={setSelectedTab}
-                className="w-full"
-              >
-                <TabsList className="grid grid-cols-3 mb-4">
-                  <TabsTrigger value="word-input">Word Input</TabsTrigger>
-                  <TabsTrigger value="bulk-input">Bulk Input</TabsTrigger>
-                  <TabsTrigger value="settings">Settings</TabsTrigger>
-                </TabsList>
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium mb-2">Word & Clue Input</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Enter one word and its clue per line, separated by a comma.<br />
+                  Example: <code>apple, A crunchy red fruit</code>
+                </p>
+                
+                <Textarea
+                  value={bulkInput}
+                  onChange={(e) => setBulkInput(e.target.value)}
+                  placeholder="word, clue description"
+                  className="h-[200px] font-mono"
+                />
+                
+                <div className="flex justify-between">
+                  <Button
+                    variant="outline"
+                    onClick={clearAll}
+                    disabled={!bulkInput.trim() && words.length === 0}
+                  >
+                    Clear All
+                  </Button>
+                  <Button
+                    onClick={processWordAndClues}
+                    disabled={!bulkInput.trim()}
+                  >
+                    Process Words & Clues
+                  </Button>
+                </div>
+                
+                {words.length > 0 && (
+                  <div className="p-3 bg-muted rounded-md">
+                    <p className="text-sm font-medium mb-1">Words added: {words.length}</p>
+                    <div className="text-xs text-muted-foreground max-h-[100px] overflow-y-auto">
+                      {words.map((word, index) => (
+                        <div key={index} className="mb-1">
+                          <strong>{word}</strong>: {clues[index]}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
 
-                <TabsContent value="word-input" className="space-y-4">
-                  <div className="flex gap-2">
-                    <Input
-                      value={inputWord}
-                      onChange={(e) => setInputWord(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Enter a word..."
-                      className="flex-1"
+            <Card className="p-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium mb-2">Settings</h3>
+                
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">
+                      Grid Size: {gridSize}×{gridSize}
+                    </label>
+                    <Slider
+                      value={[gridSize]}
+                      onValueChange={(values) => setGridSize(values[0])}
+                      min={8}
+                      max={20}
+                      step={1}
                     />
-                    <Button onClick={addWord}>Add</Button>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Larger grids can fit more words but may be harder to solve
+                    </p>
                   </div>
 
-                  <div className="h-[200px] overflow-y-auto border rounded-md p-2">
-                    {words.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                        <Info size={24} className="mb-2" />
-                        <p>Add words to create your crossword puzzle</p>
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap gap-2">
-                        {words.map((word, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center gap-1 bg-secondary rounded-full px-3 py-1"
-                          >
-                            <span>{word}</span>
-                            <button
-                              onClick={() => removeWord(word)}
-                              className="text-muted-foreground hover:text-foreground"
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex justify-between">
-                    <Button
-                      variant="outline"
-                      onClick={clearAllWords}
-                      disabled={words.length === 0}
+                  <div className="flex items-center space-x-2 mt-4">
+                    <Checkbox
+                      id="showSolution"
+                      checked={showSolution}
+                      onCheckedChange={() => toggleSolution()}
+                    />
+                    <Label
+                      htmlFor="showSolution"
+                      className="text-sm font-medium cursor-pointer"
                     >
-                      Clear All
-                    </Button>
-                    <Button
-                      onClick={generatePuzzle}
-                      disabled={words.length < 3 || isGenerating}
-                      className="gap-2"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <RotateCw className="h-4 w-4 animate-spin" />
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-4 w-4" />
-                          Generate Crossword
-                        </>
-                      )}
-                    </Button>
+                      Show solution in preview
+                    </Label>
                   </div>
-                </TabsContent>
-
-                <TabsContent value="bulk-input" className="space-y-4">
-                  <Textarea
-                    value={customWords}
-                    onChange={(e) => setCustomWords(e.target.value)}
-                    placeholder="Enter multiple words separated by commas, semicolons, or new lines..."
-                    className="h-[200px]"
-                  />
-                  <div className="flex justify-between">
-                    <Button
-                      variant="outline"
-                      onClick={() => setCustomWords("")}
-                      disabled={!customWords}
-                    >
-                      Clear
-                    </Button>
-                    <Button
-                      onClick={processMultipleWords}
-                      disabled={!customWords.trim()}
-                    >
-                      Add Words
-                    </Button>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="settings" className="space-y-4">
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium mb-1 block">
-                        Grid Size: {gridSize}×{gridSize}
-                      </label>
-                      <Slider
-                        value={[gridSize]}
-                        onValueChange={(values) => setGridSize(values[0])}
-                        min={8}
-                        max={20}
-                        step={1}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Larger grids can fit more words but may be harder to solve
-                      </p>
-                    </div>
-
-                    <div className="flex items-center space-x-2 mt-4">
-                      <Checkbox
-                        id="showSolution"
-                        checked={showSolution}
-                        onCheckedChange={() => toggleSolution()}
-                      />
-                      <label
-                        htmlFor="showSolution"
-                        className="text-sm font-medium cursor-pointer"
-                      >
-                        Show solution in preview
-                      </label>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
+                </div>
+                
+                <Button
+                  onClick={generatePuzzle}
+                  disabled={words.length < 3 || isGenerating}
+                  className="w-full gap-2"
+                >
+                  {isGenerating ? (
+                    <>
+                      <RotateCw className="h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      Generate Crossword
+                    </>
+                  )}
+                </Button>
+              </div>
             </Card>
 
             {words.length > 0 && !puzzle && (
@@ -390,7 +323,7 @@ const Crossword = () => {
                     <Grid2X2 className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                     <h3 className="text-xl font-medium mb-2">No puzzle yet</h3>
                     <p className="text-muted-foreground">
-                      Add at least 3 words and click Generate to create a crossword
+                      Add words and clues, then click Generate to create a crossword
                     </p>
                   </div>
                 ) : (
