@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
-import { generateCrossword, prepareWordsForCrossword, CrosswordGrid } from "@/utils/crosswordUtils";
+import { generateCrossword, prepareWordsForCrossword, CrosswordGrid, isWordStart } from "@/utils/crosswordUtils";
 import { DEFAULT_VALUES, PAGE_SIZES, PAGE_SIZE_OPTIONS } from "@/components/download-puzzle/constants";
 import { useToast } from "@/components/ui/use-toast";
 import { DownloadPuzzleDialog } from "@/components/download-puzzle";
