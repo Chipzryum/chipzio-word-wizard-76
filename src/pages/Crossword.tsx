@@ -50,10 +50,25 @@ const Crossword = () => {
 
     setTimeout(() => {
       try {
-        const processedWords = prepareWordsForCrossword(words, clues);
+        // Fix: Only pass words to prepareWordsForCrossword, and create a wordData array with both words and clues
+        const processedWords = prepareWordsForCrossword(words);
+        
+        // Create a dictionary to map processed words to their clues
+        const cluesMap: { [word: string]: string } = {};
+        words.forEach((word, index) => {
+          // Convert word to uppercase to match the processed format
+          const upperWord = word.toUpperCase();
+          cluesMap[upperWord] = clues[index] || '';
+        });
+        
         const newPuzzle = generateCrossword(processedWords, gridSize, gridSize);
         
         if (newPuzzle) {
+          // Update clues in the puzzle
+          newPuzzle.wordPlacements.forEach(placement => {
+            placement.clue = cluesMap[placement.word] || placement.clue;
+          });
+          
           setPuzzle(newPuzzle);
           toast({
             title: "Crossword Generated",
