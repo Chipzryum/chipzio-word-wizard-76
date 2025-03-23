@@ -1,10 +1,10 @@
-
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { PDFViewer } from "@react-pdf/renderer";
 import { PuzzlePDFPreview } from "./PuzzlePDFPreview";
+import { CombinedPuzzleGrid } from "./DownloadPuzzleDialog";
 
 interface VisualPreviewProps {
-  puzzle: PuzzleGrid | null;
+  puzzle: CombinedPuzzleGrid | null;
   showLivePreview: boolean;
   isPDFReady: boolean;
   title: string;
@@ -44,6 +44,7 @@ interface VisualPreviewProps {
   imageGridSize?: number;
   imageAngle?: number;
   imageSpacing?: number;
+  includeSolution?: boolean;
 }
 
 export const VisualPreview = ({
@@ -82,6 +83,7 @@ export const VisualPreview = ({
   imageGridSize = 100,
   imageAngle = 0,
   imageSpacing = 0,
+  includeSolution = true,
 }: VisualPreviewProps) => {
   if (showLivePreview && isPDFReady) {
     return (
@@ -117,6 +119,7 @@ export const VisualPreview = ({
             imageGridSize={imageGridSize}
             imageAngle={imageAngle}
             imageSpacing={imageSpacing}
+            includeSolution={includeSolution}
           />
         </PDFViewer>
       </div>

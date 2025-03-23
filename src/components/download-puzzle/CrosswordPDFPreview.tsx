@@ -1,4 +1,3 @@
-
 import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { CrosswordGrid, isWordStart } from "@/utils/crosswordUtils";
 
@@ -33,6 +32,7 @@ interface CrosswordPDFPreviewProps {
   imageAngle?: number;
   imageSpacing?: number;
   showSolution?: boolean;
+  includeSolution?: boolean;
 }
 
 export const CrosswordPDFPreview = ({
@@ -66,6 +66,7 @@ export const CrosswordPDFPreview = ({
   imageAngle = 0,
   imageSpacing = 0,
   showSolution = false,
+  includeSolution = true,
 }: CrosswordPDFPreviewProps) => {
   if (!puzzle) return null;
   
@@ -158,86 +159,96 @@ export const CrosswordPDFPreview = ({
     .filter(placement => placement.direction === 'down')
     .sort((a, b) => (a.number || 0) - (b.number || 0));
   
-  // Ensure we're only creating a single page document
-  return (
-    <Document>
-      <Page size={[currentWidth, currentHeight]} style={pdfStyles.page} wrap={false}>
-        {/* Tiled background pattern */}
-        {uploadedImages && uploadedImages.length > 0 && createTiledBackground()}
+  // Create a puzzle page with the given showSolution setting
+  const createPuzzlePage = (forSolution: boolean) => (
+    <Page size={[currentWidth, currentHeight]} style={pdfStyles.page} wrap={false}>
+      {/* Tiled background pattern */}
+      {uploadedImages && uploadedImages.length > 0 && createTiledBackground()}
+      
+      <View style={pdfStyles.container}>
+        {showTitle && (
+          <View style={[pdfStyles.titleContainer, {marginTop: getVerticalOffset(titleOffset)}]}>
+            <Text style={pdfStyles.title}>
+              {forSolution ? `${title.toUpperCase()} - SOLUTION` : title.toUpperCase()}
+            </Text>
+          </View>
+        )}
         
-        <View style={pdfStyles.container}>
-          {showTitle && (
-            <View style={[pdfStyles.titleContainer, {marginTop: getVerticalOffset(titleOffset)}]}>
-              <Text style={pdfStyles.title}>{title.toUpperCase()}</Text>
+        {showSubtitle && (
+          <View style={[pdfStyles.subtitleContainer, {marginTop: getVerticalOffset(subtitleOffset)}]}>
+            <Text style={pdfStyles.subtitle}>{subtitle.toLowerCase()}</Text>
+          </View>
+        )}
+        
+        {showInstruction && !forSolution && (
+          <View style={[pdfStyles.instructionContainer, {marginTop: getVerticalOffset(instructionOffset)}]}>
+            <Text style={pdfStyles.instruction}>{instruction}</Text>
+          </View>
+        )}
+        
+        {showGrid && (
+          <View style={[pdfStyles.gridContainer, {marginTop: getVerticalOffset(gridOffset)}]}>
+            <View style={pdfStyles.grid}>
+              {puzzle.grid.map((row, i) => (
+                <View key={i} style={pdfStyles.row}>
+                  {row.map((cell, j) => {
+                    const wordNumber = isWordStart(puzzle.wordPlacements, i, j);
+                    const isEmpty = cell === '';
+                    
+                    return (
+                      <View key={`${i}-${j}`} style={[
+                        pdfStyles.cell,
+                        isEmpty ? pdfStyles.emptyCell : null
+                      ]}>
+                        {wordNumber !== null && (
+                          <Text style={pdfStyles.cellNumber}>{wordNumber}</Text>
+                        )}
+                        {!isEmpty && forSolution && (
+                          <Text style={pdfStyles.letter}>{cell}</Text>
+                        )}
+                      </View>
+                    );
+                  })}
+                </View>
+              ))}
             </View>
-          )}
-          
-          {showSubtitle && (
-            <View style={[pdfStyles.subtitleContainer, {marginTop: getVerticalOffset(subtitleOffset)}]}>
-              <Text style={pdfStyles.subtitle}>{subtitle.toLowerCase()}</Text>
-            </View>
-          )}
-          
-          {showInstruction && (
-            <View style={[pdfStyles.instructionContainer, {marginTop: getVerticalOffset(instructionOffset)}]}>
-              <Text style={pdfStyles.instruction}>{instruction}</Text>
-            </View>
-          )}
-          
-          {showGrid && (
-            <View style={[pdfStyles.gridContainer, {marginTop: getVerticalOffset(gridOffset)}]}>
-              <View style={pdfStyles.grid}>
-                {puzzle.grid.map((row, i) => (
-                  <View key={i} style={pdfStyles.row}>
-                    {row.map((cell, j) => {
-                      const wordNumber = isWordStart(puzzle.wordPlacements, i, j);
-                      const isEmpty = cell === '';
-                      
-                      return (
-                        <View key={`${i}-${j}`} style={[
-                          pdfStyles.cell,
-                          isEmpty ? pdfStyles.emptyCell : null
-                        ]}>
-                          {wordNumber !== null && (
-                            <Text style={pdfStyles.cellNumber}>{wordNumber}</Text>
-                          )}
-                          {!isEmpty && showSolution && (
-                            <Text style={pdfStyles.letter}>{cell}</Text>
-                          )}
-                        </View>
-                      );
-                    })}
-                  </View>
+          </View>
+        )}
+        
+        {showWordList && (
+          <View style={[pdfStyles.wordListContainer, {marginTop: getVerticalOffset(wordListOffset)}]}>
+            <View style={pdfStyles.cluesContainer}>
+              <View style={pdfStyles.clueColumn}>
+                <Text style={pdfStyles.clueHeader}>ACROSS</Text>
+                {acrossClues.map((placement) => (
+                  <Text key={`across-${placement.number}`} style={pdfStyles.clueItem}>
+                    {placement.number}. {placement.clue}
+                    {forSolution ? ` (${placement.word})` : ''}
+                  </Text>
+                ))}
+              </View>
+              
+              <View style={pdfStyles.clueColumn}>
+                <Text style={pdfStyles.clueHeader}>DOWN</Text>
+                {downClues.map((placement) => (
+                  <Text key={`down-${placement.number}`} style={pdfStyles.clueItem}>
+                    {placement.number}. {placement.clue}
+                    {forSolution ? ` (${placement.word})` : ''}
+                  </Text>
                 ))}
               </View>
             </View>
-          )}
-          
-          {showWordList && (
-            <View style={[pdfStyles.wordListContainer, {marginTop: getVerticalOffset(wordListOffset)}]}>
-              <View style={pdfStyles.cluesContainer}>
-                <View style={pdfStyles.clueColumn}>
-                  <Text style={pdfStyles.clueHeader}>ACROSS</Text>
-                  {acrossClues.map((placement) => (
-                    <Text key={`across-${placement.number}`} style={pdfStyles.clueItem}>
-                      {placement.number}. {placement.clue}
-                    </Text>
-                  ))}
-                </View>
-                
-                <View style={pdfStyles.clueColumn}>
-                  <Text style={pdfStyles.clueHeader}>DOWN</Text>
-                  {downClues.map((placement) => (
-                    <Text key={`down-${placement.number}`} style={pdfStyles.clueItem}>
-                      {placement.number}. {placement.clue}
-                    </Text>
-                  ))}
-                </View>
-              </View>
-            </View>
-          )}
-        </View>
-      </Page>
+          </View>
+        )}
+      </View>
+    </Page>
+  );
+  
+  // Ensure we're creating either one or two pages based on the includeSolution flag
+  return (
+    <Document>
+      {createPuzzlePage(false)}
+      {includeSolution && createPuzzlePage(true)}
     </Document>
   );
 

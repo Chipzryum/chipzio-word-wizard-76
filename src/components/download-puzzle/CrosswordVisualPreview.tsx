@@ -1,4 +1,3 @@
-
 import { CrosswordGrid, isWordStart } from "@/utils/crosswordUtils";
 import { PDFViewer } from "@react-pdf/renderer";
 import { CrosswordPDFPreview } from "./CrosswordPDFPreview";
@@ -45,6 +44,7 @@ interface CrosswordVisualPreviewProps {
   imageAngle?: number;
   imageSpacing?: number;
   showSolution?: boolean;
+  includeSolution?: boolean;
 }
 
 export const CrosswordVisualPreview = ({
@@ -84,6 +84,7 @@ export const CrosswordVisualPreview = ({
   imageAngle = 0,
   imageSpacing = 0,
   showSolution = false,
+  includeSolution = true,
 }: CrosswordVisualPreviewProps) => {
   if (showLivePreview && isPDFReady) {
     return (
@@ -120,6 +121,7 @@ export const CrosswordVisualPreview = ({
             imageAngle={imageAngle}
             imageSpacing={imageSpacing}
             showSolution={showSolution}
+            includeSolution={includeSolution}
           />
         </PDFViewer>
       </div>
