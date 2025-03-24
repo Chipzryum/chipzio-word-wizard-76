@@ -1,3 +1,4 @@
+
 import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { CrosswordGrid, isWordStart } from "@/utils/crosswordUtils";
 
@@ -244,7 +245,7 @@ export const CrosswordPDFPreview = ({
     </Page>
   );
   
-  // Ensure we're creating either one or two pages based on the includeSolution flag
+  // Ensure we're creating both pages: worksheet and solution
   return (
     <Document>
       {createPuzzlePage(false)}

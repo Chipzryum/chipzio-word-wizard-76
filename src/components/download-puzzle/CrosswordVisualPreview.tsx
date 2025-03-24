@@ -1,3 +1,4 @@
+
 import { CrosswordGrid, isWordStart } from "@/utils/crosswordUtils";
 import { PDFViewer } from "@react-pdf/renderer";
 import { CrosswordPDFPreview } from "./CrosswordPDFPreview";
@@ -212,7 +213,7 @@ export const CrosswordVisualPreview = ({
               marginTop: `${getVerticalOffset(titleOffset) * previewScaleFactor}px`,
             }}
           >
-            {title.toUpperCase()}
+            {showSolution ? `${title.toUpperCase()} - SOLUTION` : title.toUpperCase()}
           </div>
         )}
         {showSubtitle && (
@@ -226,7 +227,7 @@ export const CrosswordVisualPreview = ({
             {subtitle.toLowerCase()}
           </div>
         )}
-        {showInstruction && (
+        {showInstruction && !showSolution && (
           <div 
             className="text-center mb-4 relative"
             style={{
@@ -297,6 +298,7 @@ export const CrosswordVisualPreview = ({
               {acrossClues.map((placement) => (
                 <div key={`across-${placement.number}`} className="text-xs mb-1">
                   {placement.number}. {placement.clue}
+                  {showSolution ? ` (${placement.word})` : ''}
                 </div>
               ))}
             </div>
@@ -305,6 +307,7 @@ export const CrosswordVisualPreview = ({
               {downClues.map((placement) => (
                 <div key={`down-${placement.number}`} className="text-xs mb-1">
                   {placement.number}. {placement.clue}
+                  {showSolution ? ` (${placement.word})` : ''}
                 </div>
               ))}
             </div>
