@@ -1,3 +1,4 @@
+
 import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { CrosswordGrid, isWordStart } from "@/utils/crosswordUtils";
 
@@ -195,15 +196,14 @@ export const CrosswordPDFPreview = ({
                     const wordNumber = isWordStart(puzzle.wordPlacements, i, j);
                     const isEmpty = cell === '';
                     
-                    return (
-                      <View key={`${i}-${j}`} style={[
-                        pdfStyles.cell,
-                        isEmpty ? pdfStyles.emptyCell : null
-                      ]}>
+                    return isEmpty ? (
+                      <View key={`${i}-${j}`} style={pdfStyles.emptyCell} />
+                    ) : (
+                      <View key={`${i}-${j}`} style={pdfStyles.cell}>
                         {wordNumber !== null && (
                           <Text style={pdfStyles.cellNumber}>{wordNumber}</Text>
                         )}
-                        {!isEmpty && forSolution && (
+                        {forSolution && (
                           <Text style={pdfStyles.letter}>{cell}</Text>
                         )}
                       </View>
@@ -223,7 +223,6 @@ export const CrosswordPDFPreview = ({
                 {acrossClues.map((placement) => (
                   <Text key={`across-${placement.number}`} style={pdfStyles.clueItem}>
                     {placement.number}. {placement.clue}
-                    {forSolution ? ` (${placement.word})` : ''}
                   </Text>
                 ))}
               </View>
@@ -233,7 +232,6 @@ export const CrosswordPDFPreview = ({
                 {downClues.map((placement) => (
                   <Text key={`down-${placement.number}`} style={pdfStyles.clueItem}>
                     {placement.number}. {placement.clue}
-                    {forSolution ? ` (${placement.word})` : ''}
                   </Text>
                 ))}
               </View>
@@ -352,7 +350,10 @@ export const CrosswordPDFPreview = ({
         position: 'relative',
       },
       emptyCell: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        width: cellSize,
+        height: cellSize,
+        backgroundColor: 'transparent', // Make empty cells transparent
+        borderWidth: 0,
       },
       cellNumber: {
         position: 'absolute',
