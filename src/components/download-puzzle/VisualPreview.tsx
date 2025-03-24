@@ -129,19 +129,23 @@ export const VisualPreview = ({
   console.log("Rendering VisualPreview with showWordList:", showWordList);
   console.log("Puzzle words:", puzzle?.wordPlacements.map(wp => wp.word));
 
+  // Create a tiled background similar to the PDF version
   const createTiledBackground = () => {
     if (!uploadedImages || uploadedImages.length === 0) return null;
     
     const imageElements = [];
     
+    // Calculate number of images needed to cover the preview completely with spacing
     const adjustedImageSize = imageGridSize * previewScaleFactor;
     const adjustedSpacing = imageSpacing * previewScaleFactor;
     const totalImageSize = adjustedImageSize + adjustedSpacing;
     
+    // Add extra rows/columns to ensure rotation covers the entire page
     const extraCoverForRotation = imageAngle > 0 ? 2 : 0;
     const horizontalCount = Math.ceil(currentWidth * previewScaleFactor / totalImageSize) + extraCoverForRotation;
     const verticalCount = Math.ceil(currentHeight * previewScaleFactor / totalImageSize) + extraCoverForRotation;
     
+    // Starting position offset for rotation coverage
     const offsetX = imageAngle > 0 ? -adjustedImageSize : 0;
     const offsetY = imageAngle > 0 ? -adjustedImageSize : 0;
     
@@ -188,6 +192,7 @@ export const VisualPreview = ({
         maxHeight: '380px',
       }}
     >
+      {/* Apply tiled background pattern with individual rotated images */}
       {uploadedImages && uploadedImages.length > 0 && createTiledBackground()}
       
       <div className="flex flex-col h-full relative" style={{ zIndex: 2 }}>
@@ -241,7 +246,7 @@ export const VisualPreview = ({
                       width: `${cellSize * previewScaleFactor}px`,
                       height: `${cellSize * previewScaleFactor}px`,
                       fontSize: `${letterSize * previewScaleFactor}px`,
-                      backgroundColor: 'rgba(255,255,255,0.6)',
+                      backgroundColor: 'rgba(255,255,255,0.6)', // Reduced opacity to show watermark through
                     }}
                   >
                     {letter}

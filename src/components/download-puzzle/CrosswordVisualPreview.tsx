@@ -1,4 +1,3 @@
-
 import { CrosswordGrid, isWordStart } from "@/utils/crosswordUtils";
 import { PDFViewer } from "@react-pdf/renderer";
 import { CrosswordPDFPreview } from "./CrosswordPDFPreview";
@@ -213,7 +212,7 @@ export const CrosswordVisualPreview = ({
               marginTop: `${getVerticalOffset(titleOffset) * previewScaleFactor}px`,
             }}
           >
-            {showSolution ? `${title.toUpperCase()} - SOLUTION` : title.toUpperCase()}
+            {title.toUpperCase()}
           </div>
         )}
         {showSubtitle && (
@@ -227,7 +226,7 @@ export const CrosswordVisualPreview = ({
             {subtitle.toLowerCase()}
           </div>
         )}
-        {showInstruction && !showSolution && (
+        {showInstruction && (
           <div 
             className="text-center mb-4 relative"
             style={{
@@ -251,19 +250,10 @@ export const CrosswordVisualPreview = ({
                   const wordNumber = isWordStart(puzzle.wordPlacements, i, j);
                   const isEmpty = cell === '';
                   
-                  return isEmpty ? (
+                  return (
                     <div
                       key={`${i}-${j}`}
-                      className="invisible"
-                      style={{
-                        width: `${cellSize * previewScaleFactor}px`,
-                        height: `${cellSize * previewScaleFactor}px`,
-                      }}
-                    />
-                  ) : (
-                    <div
-                      key={`${i}-${j}`}
-                      className="flex items-center justify-center border border-gray-900 relative bg-white bg-opacity-60"
+                      className={`flex items-center justify-center border border-gray-900 relative ${isEmpty ? 'bg-gray-900' : 'bg-white bg-opacity-60'}`}
                       style={{
                         width: `${cellSize * previewScaleFactor}px`,
                         height: `${cellSize * previewScaleFactor}px`,
@@ -281,7 +271,7 @@ export const CrosswordVisualPreview = ({
                           {wordNumber}
                         </span>
                       )}
-                      {showSolution && (
+                      {!isEmpty && showSolution && (
                         <span style={{ fontSize: `${letterSize * previewScaleFactor}px` }}>
                           {cell}
                         </span>
