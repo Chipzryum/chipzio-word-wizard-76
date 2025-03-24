@@ -13,9 +13,11 @@ import { pdf } from "@react-pdf/renderer";
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { VisualPreview } from "./VisualPreview";
+import { CrosswordVisualPreview } from "./CrosswordVisualPreview";
 import { ControlPanel } from "./ControlPanel";
 import { ActionButtons } from "./ActionButtons";
 import { PuzzlePDFPreview } from "./PuzzlePDFPreview";
+import { CrosswordPDFPreview } from "./CrosswordPDFPreview";
 import { 
   PAGE_SIZES, 
   UNITS, 
@@ -271,39 +273,82 @@ export function DownloadPuzzleDialog({
       const cappedLetterSizeMultiplier = Math.min(letterSizeMultiplier, MAX_LETTER_SIZE);
       console.log("Creating PDF with cappedLetterSizeMultiplier:", cappedLetterSizeMultiplier);
       
-      const blob = await pdf(
-        <PuzzlePDFPreview
-          puzzle={puzzle}
-          title={title}
-          subtitle={subtitle}
-          instruction={instruction}
-          showTitle={showTitle}
-          showSubtitle={showSubtitle}
-          showInstruction={showInstruction}
-          showGrid={showGrid}
-          showWordList={showWordList}
-          titleOffset={titleOffset}
-          subtitleOffset={subtitleOffset}
-          instructionOffset={instructionOffset}
-          gridOffset={gridOffset}
-          wordListOffset={wordListOffset}
-          currentWidth={currentWidth}
-          currentHeight={currentHeight}
-          contentWidth={contentWidth}
-          contentHeight={contentHeight}
-          cellSize={cellSize}
-          letterSizeMultiplier={letterSizeMultiplier}
-          titleSizeMultiplier={titleSizeMultiplier}
-          subtitleSizeMultiplier={subtitleSizeMultiplier}
-          instructionSizeMultiplier={instructionSizeMultiplier}
-          wordListSizeMultiplier={wordListSizeMultiplier}
-          uploadedImages={uploadedImages}
-          imageOpacity={imageOpacity}
-          imageGridSize={imageGridSize}
-          imageAngle={imageAngle}
-          imageSpacing={imageSpacing}
-        />
-      ).toBlob();
+      let pdfDocument;
+      
+      if (puzzleType === "crossword") {
+        pdfDocument = (
+          <CrosswordPDFPreview
+            puzzle={puzzle as CrosswordGrid}
+            title={title}
+            subtitle={subtitle}
+            instruction={instruction}
+            showTitle={showTitle}
+            showSubtitle={showSubtitle}
+            showInstruction={showInstruction}
+            showGrid={showGrid}
+            showWordList={showWordList}
+            titleOffset={titleOffset}
+            subtitleOffset={subtitleOffset}
+            instructionOffset={instructionOffset}
+            gridOffset={gridOffset}
+            wordListOffset={wordListOffset}
+            currentWidth={currentWidth}
+            currentHeight={currentHeight}
+            contentWidth={contentWidth}
+            contentHeight={contentHeight}
+            cellSize={cellSize}
+            letterSizeMultiplier={letterSizeMultiplier}
+            titleSizeMultiplier={titleSizeMultiplier}
+            subtitleSizeMultiplier={subtitleSizeMultiplier}
+            instructionSizeMultiplier={instructionSizeMultiplier}
+            wordListSizeMultiplier={wordListSizeMultiplier}
+            uploadedImages={uploadedImages}
+            imageOpacity={imageOpacity}
+            imageGridSize={imageGridSize}
+            imageAngle={imageAngle}
+            imageSpacing={imageSpacing}
+            showSolution={false}
+            includeSolution={true}
+          />
+        );
+      } else {
+        pdfDocument = (
+          <PuzzlePDFPreview
+            puzzle={puzzle as PuzzleGrid}
+            title={title}
+            subtitle={subtitle}
+            instruction={instruction}
+            showTitle={showTitle}
+            showSubtitle={showSubtitle}
+            showInstruction={showInstruction}
+            showGrid={showGrid}
+            showWordList={showWordList}
+            titleOffset={titleOffset}
+            subtitleOffset={subtitleOffset}
+            instructionOffset={instructionOffset}
+            gridOffset={gridOffset}
+            wordListOffset={wordListOffset}
+            currentWidth={currentWidth}
+            currentHeight={currentHeight}
+            contentWidth={contentWidth}
+            contentHeight={contentHeight}
+            cellSize={cellSize}
+            letterSizeMultiplier={letterSizeMultiplier}
+            titleSizeMultiplier={titleSizeMultiplier}
+            subtitleSizeMultiplier={subtitleSizeMultiplier}
+            instructionSizeMultiplier={instructionSizeMultiplier}
+            wordListSizeMultiplier={wordListSizeMultiplier}
+            uploadedImages={uploadedImages}
+            imageOpacity={imageOpacity}
+            imageGridSize={imageGridSize}
+            imageAngle={imageAngle}
+            imageSpacing={imageSpacing}
+            includeSolution={true}
+          />
+        );
+      }
+      
+      const blob = await pdf(pdfDocument).toBlob();
       
       console.log("PDF blob generated successfully:", blob);
       setPdfBlob(blob);
@@ -376,6 +421,93 @@ export function DownloadPuzzleDialog({
   const getPositionValue = (offset: number) => {
     if (offset === 0) return '0';
     return offset > 0 ? `+${offset}` : `${offset}`;
+  };
+
+  const renderPreview = () => {
+    if (visualPreviewComponent === "crossword") {
+      return (
+        <CrosswordVisualPreview 
+          puzzle={puzzle as CrosswordGrid}
+          showLivePreview={showLivePreview}
+          isPDFReady={isPDFReady}
+          title={title}
+          subtitle={subtitle}
+          instruction={instruction}
+          showTitle={showTitle}
+          showSubtitle={showSubtitle}
+          showInstruction={showInstruction}
+          showGrid={showGrid}
+          showWordList={showWordList}
+          titleOffset={titleOffset}
+          subtitleOffset={subtitleOffset}
+          instructionOffset={instructionOffset}
+          gridOffset={gridOffset}
+          wordListOffset={wordListOffset}
+          currentWidth={currentWidth}
+          currentHeight={currentHeight}
+          contentWidth={contentWidth}
+          contentHeight={contentHeight}
+          cellSize={cellSize}
+          letterSize={letterSize}
+          letterSizeMultiplier={letterSizeMultiplier}
+          titleSizeMultiplier={titleSizeMultiplier}
+          subtitleSizeMultiplier={subtitleSizeMultiplier}
+          instructionSizeMultiplier={instructionSizeMultiplier}
+          wordListSizeMultiplier={wordListSizeMultiplier}
+          previewScaleFactor={previewScaleFactor}
+          fontSizes={fontSizes}
+          getVerticalOffset={getVerticalOffset}
+          uploadedImages={uploadedImages}
+          imageOpacity={imageOpacity}
+          imageGridSize={imageGridSize}
+          imageAngle={imageAngle}
+          imageSpacing={imageSpacing}
+          showSolution={showSolution}
+          includeSolution={true}
+        />
+      );
+    } else {
+      return (
+        <VisualPreview 
+          puzzle={puzzle as PuzzleGrid}
+          showLivePreview={showLivePreview}
+          isPDFReady={isPDFReady}
+          title={title}
+          subtitle={subtitle}
+          instruction={instruction}
+          showTitle={showTitle}
+          showSubtitle={showSubtitle}
+          showInstruction={showInstruction}
+          showGrid={showGrid}
+          showWordList={showWordList}
+          titleOffset={titleOffset}
+          subtitleOffset={subtitleOffset}
+          instructionOffset={instructionOffset}
+          gridOffset={gridOffset}
+          wordListOffset={wordListOffset}
+          currentWidth={currentWidth}
+          currentHeight={currentHeight}
+          contentWidth={contentWidth}
+          contentHeight={contentHeight}
+          cellSize={cellSize}
+          letterSize={letterSize}
+          letterSizeMultiplier={letterSizeMultiplier}
+          titleSizeMultiplier={titleSizeMultiplier}
+          subtitleSizeMultiplier={subtitleSizeMultiplier}
+          instructionSizeMultiplier={instructionSizeMultiplier}
+          wordListSizeMultiplier={wordListSizeMultiplier}
+          previewScaleFactor={previewScaleFactor}
+          fontSizes={fontSizes}
+          getVerticalOffset={getVerticalOffset}
+          uploadedImages={uploadedImages}
+          imageOpacity={imageOpacity}
+          imageGridSize={imageGridSize}
+          imageAngle={imageAngle}
+          imageSpacing={imageSpacing}
+          includeSolution={true}
+        />
+      );
+    }
   };
 
   useEffect(() => {
@@ -482,43 +614,7 @@ export function DownloadPuzzleDialog({
             <div className="space-y-4">
               <Label>Preview</Label>
               <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-                <VisualPreview 
-                  puzzle={puzzle as PuzzleGrid}
-                  showLivePreview={showLivePreview}
-                  isPDFReady={isPDFReady}
-                  title={title}
-                  subtitle={subtitle}
-                  instruction={instruction}
-                  showTitle={showTitle}
-                  showSubtitle={showSubtitle}
-                  showInstruction={showInstruction}
-                  showGrid={showGrid}
-                  showWordList={showWordList}
-                  titleOffset={titleOffset}
-                  subtitleOffset={subtitleOffset}
-                  instructionOffset={instructionOffset}
-                  gridOffset={gridOffset}
-                  wordListOffset={wordListOffset}
-                  currentWidth={currentWidth}
-                  currentHeight={currentHeight}
-                  contentWidth={contentWidth}
-                  contentHeight={contentHeight}
-                  cellSize={cellSize}
-                  letterSize={letterSize}
-                  letterSizeMultiplier={letterSizeMultiplier}
-                  titleSizeMultiplier={titleSizeMultiplier}
-                  subtitleSizeMultiplier={subtitleSizeMultiplier}
-                  instructionSizeMultiplier={instructionSizeMultiplier}
-                  wordListSizeMultiplier={wordListSizeMultiplier}
-                  previewScaleFactor={previewScaleFactor}
-                  fontSizes={fontSizes}
-                  getVerticalOffset={getVerticalOffset}
-                  uploadedImages={uploadedImages}
-                  imageOpacity={imageOpacity}
-                  imageGridSize={imageGridSize}
-                  imageAngle={imageAngle}
-                  imageSpacing={imageSpacing}
-                />
+                {renderPreview()}
               </div>
               
               <ActionButtons 
@@ -526,7 +622,7 @@ export function DownloadPuzzleDialog({
                 handleDownload={handleDownload}
                 isGenerating={isGenerating}
                 isPDFReady={isPDFReady}
-                puzzle={puzzle as PuzzleGrid}
+                puzzle={puzzle}
                 pdfBlob={pdfBlob}
               />
               
@@ -703,43 +799,7 @@ export function DownloadPuzzleDialog({
             <div className="space-y-4">
               <Label>Preview</Label>
               <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-                <VisualPreview 
-                  puzzle={puzzle as PuzzleGrid}
-                  showLivePreview={showLivePreview}
-                  isPDFReady={isPDFReady}
-                  title={title}
-                  subtitle={subtitle}
-                  instruction={instruction}
-                  showTitle={showTitle}
-                  showSubtitle={showSubtitle}
-                  showInstruction={showInstruction}
-                  showGrid={showGrid}
-                  showWordList={showWordList}
-                  titleOffset={titleOffset}
-                  subtitleOffset={subtitleOffset}
-                  instructionOffset={instructionOffset}
-                  gridOffset={gridOffset}
-                  wordListOffset={wordListOffset}
-                  currentWidth={currentWidth}
-                  currentHeight={currentHeight}
-                  contentWidth={contentWidth}
-                  contentHeight={contentHeight}
-                  cellSize={cellSize}
-                  letterSize={letterSize}
-                  letterSizeMultiplier={letterSizeMultiplier}
-                  titleSizeMultiplier={titleSizeMultiplier}
-                  subtitleSizeMultiplier={subtitleSizeMultiplier}
-                  instructionSizeMultiplier={instructionSizeMultiplier}
-                  wordListSizeMultiplier={wordListSizeMultiplier}
-                  previewScaleFactor={previewScaleFactor}
-                  fontSizes={fontSizes}
-                  getVerticalOffset={getVerticalOffset}
-                  uploadedImages={uploadedImages}
-                  imageOpacity={imageOpacity}
-                  imageGridSize={imageGridSize}
-                  imageAngle={imageAngle}
-                  imageSpacing={imageSpacing}
-                />
+                {renderPreview()}
               </div>
               
               <ActionButtons 
@@ -747,7 +807,7 @@ export function DownloadPuzzleDialog({
                 handleDownload={handleDownload}
                 isGenerating={isGenerating}
                 isPDFReady={isPDFReady}
-                puzzle={puzzle as PuzzleGrid}
+                puzzle={puzzle}
                 pdfBlob={pdfBlob}
               />
             </div>
@@ -881,43 +941,7 @@ export function DownloadPuzzleDialog({
             <div className="space-y-4">
               <Label>Preview</Label>
               <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-                <VisualPreview 
-                  puzzle={puzzle as PuzzleGrid}
-                  showLivePreview={showLivePreview}
-                  isPDFReady={isPDFReady}
-                  title={title}
-                  subtitle={subtitle}
-                  instruction={instruction}
-                  showTitle={showTitle}
-                  showSubtitle={showSubtitle}
-                  showInstruction={showInstruction}
-                  showGrid={showGrid}
-                  showWordList={showWordList}
-                  titleOffset={titleOffset}
-                  subtitleOffset={subtitleOffset}
-                  instructionOffset={instructionOffset}
-                  gridOffset={gridOffset}
-                  wordListOffset={wordListOffset}
-                  currentWidth={currentWidth}
-                  currentHeight={currentHeight}
-                  contentWidth={contentWidth}
-                  contentHeight={contentHeight}
-                  cellSize={cellSize}
-                  letterSize={letterSize}
-                  letterSizeMultiplier={letterSizeMultiplier}
-                  titleSizeMultiplier={titleSizeMultiplier}
-                  subtitleSizeMultiplier={subtitleSizeMultiplier}
-                  instructionSizeMultiplier={instructionSizeMultiplier}
-                  wordListSizeMultiplier={wordListSizeMultiplier}
-                  previewScaleFactor={previewScaleFactor}
-                  fontSizes={fontSizes}
-                  getVerticalOffset={getVerticalOffset}
-                  uploadedImages={uploadedImages}
-                  imageOpacity={imageOpacity}
-                  imageGridSize={imageGridSize}
-                  imageAngle={imageAngle}
-                  imageSpacing={imageSpacing}
-                />
+                {renderPreview()}
               </div>
               
               <ActionButtons 
@@ -925,7 +949,7 @@ export function DownloadPuzzleDialog({
                 handleDownload={handleDownload}
                 isGenerating={isGenerating}
                 isPDFReady={isPDFReady}
-                puzzle={puzzle as PuzzleGrid}
+                puzzle={puzzle}
                 pdfBlob={pdfBlob}
               />
             </div>
@@ -1054,43 +1078,7 @@ export function DownloadPuzzleDialog({
             <div className="space-y-4">
               <Label>Preview</Label>
               <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-                <VisualPreview 
-                  puzzle={puzzle as PuzzleGrid}
-                  showLivePreview={showLivePreview}
-                  isPDFReady={isPDFReady}
-                  title={title}
-                  subtitle={subtitle}
-                  instruction={instruction}
-                  showTitle={showTitle}
-                  showSubtitle={showSubtitle}
-                  showInstruction={showInstruction}
-                  showGrid={showGrid}
-                  showWordList={showWordList}
-                  titleOffset={titleOffset}
-                  subtitleOffset={subtitleOffset}
-                  instructionOffset={instructionOffset}
-                  gridOffset={gridOffset}
-                  wordListOffset={wordListOffset}
-                  currentWidth={currentWidth}
-                  currentHeight={currentHeight}
-                  contentWidth={contentWidth}
-                  contentHeight={contentHeight}
-                  cellSize={cellSize}
-                  letterSize={letterSize}
-                  letterSizeMultiplier={letterSizeMultiplier}
-                  titleSizeMultiplier={titleSizeMultiplier}
-                  subtitleSizeMultiplier={subtitleSizeMultiplier}
-                  instructionSizeMultiplier={instructionSizeMultiplier}
-                  wordListSizeMultiplier={wordListSizeMultiplier}
-                  previewScaleFactor={previewScaleFactor}
-                  fontSizes={fontSizes}
-                  getVerticalOffset={getVerticalOffset}
-                  uploadedImages={uploadedImages}
-                  imageOpacity={imageOpacity}
-                  imageGridSize={imageGridSize}
-                  imageAngle={imageAngle}
-                  imageSpacing={imageSpacing}
-                />
+                {renderPreview()}
               </div>
               
               <ActionButtons 
@@ -1098,7 +1086,7 @@ export function DownloadPuzzleDialog({
                 handleDownload={handleDownload}
                 isGenerating={isGenerating}
                 isPDFReady={isPDFReady}
-                puzzle={puzzle as PuzzleGrid}
+                puzzle={puzzle}
                 pdfBlob={pdfBlob}
               />
             </div>

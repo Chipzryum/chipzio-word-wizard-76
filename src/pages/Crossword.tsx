@@ -20,7 +20,7 @@ import { toast } from "@/components/ui/use-toast";
 import { generateCrossword, prepareWordsForCrossword, CrosswordGrid, isWordStart } from "@/utils/crosswordUtils";
 import { DEFAULT_VALUES, PAGE_SIZES, PAGE_SIZE_OPTIONS } from "@/components/download-puzzle/constants";
 import { useToast } from "@/components/ui/use-toast";
-import { DownloadPuzzleDialog } from "@/components/download-puzzle";
+import { DownloadPuzzleDialog, CrosswordVisualPreview } from "@/components/download-puzzle";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
@@ -159,6 +159,26 @@ const Crossword = () => {
     subtitle: "educational crossword",
     instruction: "Solve the crossword using the clues provided",
     ...DEFAULT_VALUES,
+  };
+  
+  // For preview scaling
+  const previewScaleFactor = 0.25;
+  
+  // Calculate font sizes for preview
+  const calculateFontSizes = () => {
+    return {
+      titleSize: 24,
+      subtitleSize: 16,
+      instructionSize: 12,
+      wordListSize: 10,
+    };
+  };
+  
+  const fontSizes = calculateFontSizes();
+  
+  // Function to get vertical offset for positioning
+  const getVerticalOffset = (offset: number) => {
+    return 0; // Default for preview
   };
 
   return (
@@ -346,42 +366,39 @@ const Crossword = () => {
                     <div className="mb-2 text-sm font-medium text-muted-foreground">
                       {puzzle.wordPlacements.length} words placed (out of {words.length})
                     </div>
-                    <div className="grid grid-flow-row gap-0 border border-black">
-                      {puzzle.grid.map((row, i) => (
-                        <div key={i} className="flex">
-                          {row.map((cell, j) => {
-                            const wordNumber = isWordStart(puzzle.wordPlacements, i, j);
-                            const isEmpty = cell === '';
-                            
-                            return (
-                              <div
-                                key={`${i}-${j}`}
-                                className={`flex items-center justify-center border border-gray-900 relative ${isEmpty ? 'bg-gray-900' : 'bg-white'}`}
-                                style={{
-                                  width: '30px',
-                                  height: '30px',
-                                }}
-                              >
-                                {wordNumber !== null && (
-                                  <span 
-                                    className="absolute text-xs font-bold"
-                                    style={{
-                                      top: '1px',
-                                      left: '1px',
-                                    }}
-                                  >
-                                    {wordNumber}
-                                  </span>
-                                )}
-                                {!isEmpty && showSolution && (
-                                  <span>{cell}</span>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ))}
-                    </div>
+                    <CrosswordVisualPreview
+                      puzzle={puzzle}
+                      showLivePreview={false}
+                      isPDFReady={false}
+                      title="CROSSWORD PUZZLE"
+                      subtitle="educational crossword"
+                      instruction="Solve the crossword using the clues provided"
+                      showTitle={true}
+                      showSubtitle={true}
+                      showInstruction={true}
+                      showGrid={true}
+                      showWordList={true}
+                      titleOffset={0}
+                      subtitleOffset={0}
+                      instructionOffset={0}
+                      gridOffset={0}
+                      wordListOffset={0}
+                      currentWidth={500}
+                      currentHeight={700}
+                      contentWidth={400}
+                      contentHeight={600}
+                      cellSize={30}
+                      letterSize={18}
+                      letterSizeMultiplier={1}
+                      titleSizeMultiplier={1}
+                      subtitleSizeMultiplier={1}
+                      instructionSizeMultiplier={1}
+                      wordListSizeMultiplier={1}
+                      previewScaleFactor={previewScaleFactor}
+                      fontSizes={fontSizes}
+                      getVerticalOffset={getVerticalOffset}
+                      showSolution={showSolution}
+                    />
                   </div>
                 )}
               </div>
