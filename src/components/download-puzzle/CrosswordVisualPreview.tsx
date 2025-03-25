@@ -1,7 +1,12 @@
 
-import { CrosswordGrid, isWordStart } from "@/utils/crosswordUtils";
+import { CrosswordGrid } from "@/utils/crosswordUtils";
 import { PDFViewer } from "@react-pdf/renderer";
 import { CrosswordPDFPreview } from "./CrosswordPDFPreview";
+import { 
+  TiledBackground, 
+  CrosswordGridDisplay, 
+  CrosswordClueList 
+} from "./crossword-components";
 
 interface CrosswordVisualPreviewProps {
   puzzle: CrosswordGrid | null;
@@ -129,68 +134,6 @@ export const CrosswordVisualPreview = ({
     );
   }
 
-  // Create a tiled background similar to the PDF version
-  const createTiledBackground = () => {
-    if (!uploadedImages || uploadedImages.length === 0) return null;
-    
-    const imageElements = [];
-    
-    // Calculate number of images needed to cover the preview completely with spacing
-    const adjustedImageSize = imageGridSize * previewScaleFactor;
-    const adjustedSpacing = imageSpacing * previewScaleFactor;
-    const totalImageSize = adjustedImageSize + adjustedSpacing;
-    
-    // Add extra rows/columns to ensure rotation covers the entire page
-    const extraCoverForRotation = imageAngle > 0 ? 2 : 0;
-    const horizontalCount = Math.ceil(currentWidth * previewScaleFactor / totalImageSize) + extraCoverForRotation;
-    const verticalCount = Math.ceil(currentHeight * previewScaleFactor / totalImageSize) + extraCoverForRotation;
-    
-    // Starting position offset for rotation coverage
-    const offsetX = imageAngle > 0 ? -adjustedImageSize : 0;
-    const offsetY = imageAngle > 0 ? -adjustedImageSize : 0;
-    
-    for (let y = 0; y < verticalCount; y++) {
-      for (let x = 0; x < horizontalCount; x++) {
-        const posX = offsetX + x * (adjustedImageSize + adjustedSpacing);
-        const posY = offsetY + y * (adjustedImageSize + adjustedSpacing);
-        
-        imageElements.push(
-          <div
-            key={`${x}-${y}`}
-            style={{
-              position: 'absolute',
-              left: `${posX}px`,
-              top: `${posY}px`,
-              width: `${adjustedImageSize}px`,
-              height: `${adjustedImageSize}px`,
-              backgroundImage: `url(${uploadedImages[0]})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              opacity: imageOpacity,
-              transform: `rotate(${imageAngle}deg)`,
-              transformOrigin: 'center',
-            }}
-          />
-        );
-      }
-    }
-    
-    return (
-      <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 1 }}>
-        {imageElements}
-      </div>
-    );
-  };
-
-  // Categorize word placements by direction for clues
-  const acrossClues = puzzle?.wordPlacements
-    .filter(placement => placement.direction === 'across')
-    .sort((a, b) => (a.number || 0) - (b.number || 0)) || [];
-    
-  const downClues = puzzle?.wordPlacements
-    .filter(placement => placement.direction === 'down')
-    .sort((a, b) => (a.number || 0) - (b.number || 0)) || [];
-
   return (
     <div 
       className="relative border-2 border-black bg-white p-4 overflow-hidden"
@@ -202,7 +145,18 @@ export const CrosswordVisualPreview = ({
       }}
     >
       {/* Apply tiled background pattern with individual rotated images */}
-      {uploadedImages && uploadedImages.length > 0 && createTiledBackground()}
+      {uploadedImages && uploadedImages.length > 0 && (
+        <TiledBackground
+          uploadedImages={uploadedImages}
+          currentWidth={currentWidth}
+          currentHeight={currentHeight}
+          imageGridSize={imageGridSize}
+          imageSpacing={imageSpacing}
+          imageOpacity={imageOpacity}
+          imageAngle={imageAngle}
+          previewScaleFactor={previewScaleFactor}
+        />
+      )}
       
       <div className="flex flex-col h-full relative" style={{ zIndex: 2 }}>
         {showTitle && (
@@ -245,72 +199,31 @@ export const CrosswordVisualPreview = ({
               marginTop: `${getVerticalOffset(gridOffset) * previewScaleFactor}px`,
             }}
           >
-            {puzzle.grid.map((row, i) => (
-              <div key={i} className="flex">
-                {row.map((cell, j) => {
-                  const wordNumber = isWordStart(puzzle.wordPlacements, i, j);
-                  const isEmpty = cell === '';
-                  
-                  return (
-                    <div
-                      key={`${i}-${j}`}
-                      className={`flex items-center justify-center border border-gray-900 relative ${isEmpty ? 'bg-black' : 'bg-white bg-opacity-60'}`}
-                      style={{
-                        width: `${cellSize * previewScaleFactor}px`,
-                        height: `${cellSize * previewScaleFactor}px`,
-                      }}
-                    >
-                      {wordNumber !== null && (
-                        <span 
-                          className="absolute text-xs font-bold"
-                          style={{
-                            top: '1px',
-                            left: '1px',
-                            fontSize: `${8 * previewScaleFactor}px`,
-                          }}
-                        >
-                          {wordNumber}
-                        </span>
-                      )}
-                      {!isEmpty && showSolution && (
-                        <span style={{ fontSize: `${letterSize * previewScaleFactor}px` }}>
-                          {cell}
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+            <CrosswordGridDisplay
+              puzzle={puzzle}
+              cellSize={cellSize}
+              letterSize={letterSize}
+              previewScaleFactor={previewScaleFactor}
+              showSolution={showSolution}
+            />
           </div>
         )}
         {showWordList && puzzle && (
           <div 
-            className="grid grid-cols-2 gap-2 mt-4 px-2 relative overflow-auto"
+            className="relative"
             style={{
               marginTop: `${getVerticalOffset(wordListOffset) * previewScaleFactor}px`,
               fontSize: `${fontSizes.wordListSize * previewScaleFactor * wordListSizeMultiplier}px`,
               maxHeight: '140px', // Increased from 120px
             }}
           >
-            <div>
-              <div className="font-bold mb-1">ACROSS</div>
-              {acrossClues.map((placement) => (
-                <div key={`across-${placement.number}`} className="text-xs mb-1">
-                  {placement.number}. {placement.clue}
-                  {showSolution ? ` (${placement.word})` : ''}
-                </div>
-              ))}
-            </div>
-            <div>
-              <div className="font-bold mb-1">DOWN</div>
-              {downClues.map((placement) => (
-                <div key={`down-${placement.number}`} className="text-xs mb-1">
-                  {placement.number}. {placement.clue}
-                  {showSolution ? ` (${placement.word})` : ''}
-                </div>
-              ))}
-            </div>
+            <CrosswordClueList
+              puzzle={puzzle}
+              showSolution={showSolution}
+              fontSizes={fontSizes}
+              wordListSizeMultiplier={wordListSizeMultiplier}
+              previewScaleFactor={previewScaleFactor}
+            />
           </div>
         )}
       </div>
