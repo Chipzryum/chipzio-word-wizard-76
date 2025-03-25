@@ -33,6 +33,7 @@ interface CrosswordPDFPreviewProps {
   imageSpacing?: number;
   showSolution?: boolean;
   includeSolution?: boolean;
+  showBlackBoxes?: boolean;
 }
 
 export const CrosswordPDFPreview = ({
@@ -67,12 +68,11 @@ export const CrosswordPDFPreview = ({
   imageSpacing = 0,
   showSolution = false,
   includeSolution = true,
+  showBlackBoxes = true,
 }: CrosswordPDFPreviewProps) => {
   if (!puzzle) return null;
   
-  // Calculate font sizes based on page dimensions and multipliers
   const calculateFontSizes = () => {
-    // Base sizes for A4
     const a4Width = 595.28;
     const a4Height = 841.89;
     const sizeRatio = Math.sqrt((currentWidth * currentHeight) / (a4Width * a4Height));
@@ -88,24 +88,18 @@ export const CrosswordPDFPreview = ({
 
   const fontSizes = calculateFontSizes();
   
-  // Use the exact font sizes from our calculations
   const pdfStyles = createPDFStyles(fontSizes);
 
-  // Create a tiled background pattern that's confined to a single page
   const createTiledBackground = () => {
     if (!uploadedImages || uploadedImages.length === 0) return null;
     
     const imageElements = [];
     
-    // Calculate number of images needed to cover the page completely
-    // Make sure not to exceed the page boundaries
     const horizontalCount = Math.ceil(currentWidth / (imageGridSize + imageSpacing)) + 1;
     const verticalCount = Math.ceil(currentHeight / (imageGridSize + imageSpacing)) + 1;
     
-    // Create a grid of images that stays within page boundaries
     for (let y = 0; y < verticalCount; y++) {
       for (let x = 0; x < horizontalCount; x++) {
-        // Calculate the actual width and height to avoid overflow
         const imgWidth = x === horizontalCount - 1 && x * (imageGridSize + imageSpacing) + imageGridSize > currentWidth
           ? currentWidth - (x * (imageGridSize + imageSpacing))
           : imageGridSize;
@@ -114,14 +108,11 @@ export const CrosswordPDFPreview = ({
           ? currentHeight - (y * (imageGridSize + imageSpacing))
           : imageGridSize;
         
-        // Skip images that would be completely off-page
         if (imgWidth <= 0 || imgHeight <= 0) continue;
         
-        // Calculate position with spacing included
         const posX = x * (imageGridSize + imageSpacing);
         const posY = y * (imageGridSize + imageSpacing);
         
-        // Skip images that would start beyond page boundaries
         if (posX >= currentWidth || posY >= currentHeight) continue;
         
         imageElements.push(
@@ -150,7 +141,6 @@ export const CrosswordPDFPreview = ({
     );
   };
 
-  // Categorize word placements by direction
   const acrossClues = puzzle.wordPlacements
     .filter(placement => placement.direction === 'across')
     .sort((a, b) => (a.number || 0) - (b.number || 0));
@@ -159,10 +149,8 @@ export const CrosswordPDFPreview = ({
     .filter(placement => placement.direction === 'down')
     .sort((a, b) => (a.number || 0) - (b.number || 0));
   
-  // Create a puzzle page with the given showSolution setting
   const createPuzzlePage = (forSolution: boolean) => (
     <Page size={[currentWidth, currentHeight]} style={pdfStyles.page} wrap={false}>
-      {/* Tiled background pattern */}
       {uploadedImages && uploadedImages.length > 0 && createTiledBackground()}
       
       <View style={pdfStyles.container}>
@@ -198,7 +186,7 @@ export const CrosswordPDFPreview = ({
                     return (
                       <View key={`${i}-${j}`} style={[
                         pdfStyles.cell,
-                        isEmpty ? pdfStyles.emptyCell : null
+                        isEmpty && showBlackBoxes ? pdfStyles.emptyCell : null
                       ]}>
                         {wordNumber !== null && (
                           <Text style={pdfStyles.cellNumber}>{wordNumber}</Text>
@@ -244,7 +232,6 @@ export const CrosswordPDFPreview = ({
     </Page>
   );
   
-  // Ensure we're creating both pages: worksheet and solution
   return (
     <Document>
       {createPuzzlePage(false)}
@@ -252,7 +239,6 @@ export const CrosswordPDFPreview = ({
     </Document>
   );
 
-  // Create styles for PDF
   function createPDFStyles(fontSizes: { 
     titleSize: number; 
     subtitleSize: number; 
@@ -260,8 +246,6 @@ export const CrosswordPDFPreview = ({
     wordListSize: number;
     numberSize: number;
   }) {
-    // Apply the exact multipliers as in the preview
-    // The letter size calculation remains based on cell size
     const cappedLetterSizeMultiplier = Math.min(letterSizeMultiplier, 1.3);
     const letterSize = cellSize * 0.6 * cappedLetterSizeMultiplier;
     
@@ -270,7 +254,7 @@ export const CrosswordPDFPreview = ({
         padding: 40,
         fontFamily: 'Times-Roman',
         position: 'relative',
-        overflow: 'hidden', // Prevent content from overflowing to next page
+        overflow: 'hidden',
       },
       imageBackground: {
         position: 'absolute',
@@ -279,7 +263,7 @@ export const CrosswordPDFPreview = ({
         width: currentWidth,
         height: currentHeight,
         zIndex: 0,
-        overflow: 'hidden', // Ensure background stays within page
+        overflow: 'hidden',
       },
       container: {
         flex: 1,
@@ -388,9 +372,7 @@ export const CrosswordPDFPreview = ({
     });
   }
 
-  // Calculate vertical position offset
   function getVerticalOffset(offset: number) {
-    // Each unit is 10 points, limit to prevent going off page
     const maxAllowedOffset = Math.min(5, (contentHeight / 6) / 10);
     return Math.max(-maxAllowedOffset, Math.min(offset * 10, maxAllowedOffset * 10));
   }
