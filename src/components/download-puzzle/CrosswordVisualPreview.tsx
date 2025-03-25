@@ -198,7 +198,7 @@ export const CrosswordVisualPreview = ({
         width: `${currentWidth * previewScaleFactor}px`,
         height: `${currentHeight * previewScaleFactor}px`,
         maxWidth: '100%',
-        maxHeight: '380px',
+        maxHeight: '420px', // Increased from 380px for a larger preview
       }}
     >
       {/* Apply tiled background pattern with individual rotated images */}
@@ -254,7 +254,7 @@ export const CrosswordVisualPreview = ({
                   return (
                     <div
                       key={`${i}-${j}`}
-                      className={`flex items-center justify-center border border-gray-900 relative ${isEmpty ? 'bg-gray-900' : 'bg-white bg-opacity-60'}`}
+                      className={`flex items-center justify-center border border-gray-900 relative ${isEmpty ? 'bg-black' : 'bg-white bg-opacity-60'}`}
                       style={{
                         width: `${cellSize * previewScaleFactor}px`,
                         height: `${cellSize * previewScaleFactor}px`,
@@ -290,7 +290,7 @@ export const CrosswordVisualPreview = ({
             style={{
               marginTop: `${getVerticalOffset(wordListOffset) * previewScaleFactor}px`,
               fontSize: `${fontSizes.wordListSize * previewScaleFactor * wordListSizeMultiplier}px`,
-              maxHeight: '120px',
+              maxHeight: '140px', // Increased from 120px
             }}
           >
             <div>

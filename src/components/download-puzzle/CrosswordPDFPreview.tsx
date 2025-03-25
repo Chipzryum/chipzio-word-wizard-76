@@ -1,4 +1,3 @@
-
 import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { CrosswordGrid, isWordStart } from "@/utils/crosswordUtils";
 
@@ -353,7 +352,7 @@ export const CrosswordPDFPreview = ({
         position: 'relative',
       },
       emptyCell: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        backgroundColor: 'rgba(0, 0, 0, 1)',
       },
       cellNumber: {
         position: 'absolute',

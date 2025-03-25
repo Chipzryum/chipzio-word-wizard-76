@@ -125,7 +125,7 @@ export function DownloadPuzzleDialog({
   
   const { toast } = useToast();
   
-  const previewScaleFactor = 0.25;
+  const previewScaleFactor = 0.3;
 
   const handleUnitChange = (unit: Unit) => {
     setSelectedUnit(unit);

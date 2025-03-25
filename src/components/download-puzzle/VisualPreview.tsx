@@ -1,3 +1,4 @@
+
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { PDFViewer } from "@react-pdf/renderer";
 import { PuzzlePDFPreview } from "./PuzzlePDFPreview";
@@ -189,7 +190,7 @@ export const VisualPreview = ({
         width: `${currentWidth * previewScaleFactor}px`,
         height: `${currentHeight * previewScaleFactor}px`,
         maxWidth: '100%',
-        maxHeight: '380px',
+        maxHeight: '420px', // Increased from 380px for a larger preview
       }}
     >
       {/* Apply tiled background pattern with individual rotated images */}
@@ -262,11 +263,13 @@ export const VisualPreview = ({
             style={{
               marginTop: `${getVerticalOffset(wordListOffset) * previewScaleFactor}px`,
               fontSize: `${fontSizes.wordListSize * previewScaleFactor * wordListSizeMultiplier}px`,
+              maxHeight: '140px', // Increased from unspecified
+              overflowY: 'auto'
             }}
           >
             {puzzle.wordPlacements.map(({ word }, index) => (
               <span key={index} className="mx-2 px-1 py-0.5 bg-gray-100 rounded-md mb-1">
-                {word.toLowerCase()}
+                {word}
               </span>
             ))}
           </div>
