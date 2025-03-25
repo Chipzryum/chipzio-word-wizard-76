@@ -8,7 +8,6 @@ interface CrosswordGridProps {
   letterSize: number;
   previewScaleFactor: number;
   showSolution: boolean;
-  showBlackBoxes?: boolean;
 }
 
 export const CrosswordGridDisplay = ({
@@ -17,13 +16,9 @@ export const CrosswordGridDisplay = ({
   letterSize,
   previewScaleFactor,
   showSolution,
-  showBlackBoxes = true,
 }: CrosswordGridProps) => {
-  // Increase the effective cell size for better visibility
-  const effectiveCellSize = cellSize * 1.2; // 20% increase in cell size
-
   return (
-    <div className="overflow-auto max-h-[300px] max-w-full">
+    <>
       {puzzle.grid.map((row, i) => (
         <div key={i} className="flex">
           {row.map((cell, j) => {
@@ -33,10 +28,10 @@ export const CrosswordGridDisplay = ({
             return (
               <div
                 key={`${i}-${j}`}
-                className={`flex items-center justify-center border border-gray-900 relative ${isEmpty && showBlackBoxes ? 'bg-black' : 'bg-white bg-opacity-60'}`}
+                className={`flex items-center justify-center border border-gray-900 relative ${isEmpty ? 'bg-black' : 'bg-white bg-opacity-60'}`}
                 style={{
-                  width: `${effectiveCellSize * previewScaleFactor}px`,
-                  height: `${effectiveCellSize * previewScaleFactor}px`,
+                  width: `${cellSize * previewScaleFactor}px`,
+                  height: `${cellSize * previewScaleFactor}px`,
                 }}
               >
                 {wordNumber !== null && (
@@ -45,14 +40,14 @@ export const CrosswordGridDisplay = ({
                     style={{
                       top: '1px',
                       left: '1px',
-                      fontSize: `${10 * previewScaleFactor}px`, // Increased font size for numbers
+                      fontSize: `${8 * previewScaleFactor}px`,
                     }}
                   >
                     {wordNumber}
                   </span>
                 )}
                 {!isEmpty && showSolution && (
-                  <span style={{ fontSize: `${letterSize * 1.2 * previewScaleFactor}px` }}> {/* Increased letter size */}
+                  <span style={{ fontSize: `${letterSize * previewScaleFactor}px` }}>
                     {cell}
                   </span>
                 )}
@@ -61,6 +56,6 @@ export const CrosswordGridDisplay = ({
           })}
         </div>
       ))}
-    </div>
+    </>
   );
 };

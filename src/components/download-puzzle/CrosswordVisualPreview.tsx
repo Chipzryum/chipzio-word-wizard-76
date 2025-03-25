@@ -1,13 +1,12 @@
+
 import { CrosswordGrid } from "@/utils/crosswordUtils";
 import { PDFViewer } from "@react-pdf/renderer";
 import { CrosswordPDFPreview } from "./CrosswordPDFPreview";
 import { 
   TiledBackground, 
   CrosswordGridDisplay, 
-  CrosswordClueList,
-  BlackBoxToggle
+  CrosswordClueList 
 } from "./crossword-components";
-import { useState } from "react";
 
 interface CrosswordVisualPreviewProps {
   puzzle: CrosswordGrid | null;
@@ -93,15 +92,9 @@ export const CrosswordVisualPreview = ({
   showSolution = false,
   includeSolution = true,
 }: CrosswordVisualPreviewProps) => {
-  const [showBlackBoxes, setShowBlackBoxes] = useState(true);
-
   if (showLivePreview && isPDFReady) {
     return (
-      <div className="w-full h-full flex-1 flex flex-col">
-        <BlackBoxToggle 
-          showBlackBoxes={showBlackBoxes} 
-          setShowBlackBoxes={setShowBlackBoxes} 
-        />
+      <div className="w-full h-full flex-1">
         <PDFViewer width="100%" height="100%" className="border-0">
           <CrosswordPDFPreview
             puzzle={puzzle}
@@ -135,7 +128,6 @@ export const CrosswordVisualPreview = ({
             imageSpacing={imageSpacing}
             showSolution={showSolution}
             includeSolution={includeSolution}
-            showBlackBoxes={showBlackBoxes}
           />
         </PDFViewer>
       </div>
@@ -146,19 +138,13 @@ export const CrosswordVisualPreview = ({
     <div 
       className="relative border-2 border-black bg-white p-4 overflow-hidden"
       style={{
-        width: `${currentWidth * previewScaleFactor * 1.15}px`,
-        height: `${currentHeight * previewScaleFactor * 1.15}px`,
+        width: `${currentWidth * previewScaleFactor}px`,
+        height: `${currentHeight * previewScaleFactor}px`,
         maxWidth: '100%',
-        maxHeight: '480px',
+        maxHeight: '420px', // Increased from 380px for a larger preview
       }}
     >
-      <div className="absolute top-2 right-2 z-10">
-        <BlackBoxToggle 
-          showBlackBoxes={showBlackBoxes} 
-          setShowBlackBoxes={setShowBlackBoxes} 
-        />
-      </div>
-
+      {/* Apply tiled background pattern with individual rotated images */}
       {uploadedImages && uploadedImages.length > 0 && (
         <TiledBackground
           uploadedImages={uploadedImages}
@@ -219,7 +205,6 @@ export const CrosswordVisualPreview = ({
               letterSize={letterSize}
               previewScaleFactor={previewScaleFactor}
               showSolution={showSolution}
-              showBlackBoxes={showBlackBoxes}
             />
           </div>
         )}
@@ -229,8 +214,7 @@ export const CrosswordVisualPreview = ({
             style={{
               marginTop: `${getVerticalOffset(wordListOffset) * previewScaleFactor}px`,
               fontSize: `${fontSizes.wordListSize * previewScaleFactor * wordListSizeMultiplier}px`,
-              maxHeight: '160px',
-              overflowY: 'auto',
+              maxHeight: '140px', // Increased from 120px
             }}
           >
             <CrosswordClueList
