@@ -134,14 +134,18 @@ export const CrosswordVisualPreview = ({
     );
   }
 
+  // Calculate aspect ratio based on A4 dimensions (210mm × 297mm)
+  const a4AspectRatio = 210 / 297;
+  const previewWidth = 420;
+  const previewHeight = Math.floor(previewWidth / a4AspectRatio);
+
   return (
     <div 
       className="relative border-2 border-black bg-white p-4 overflow-hidden"
       style={{
-        width: `${currentWidth * previewScaleFactor}px`,
-        height: `${currentHeight * previewScaleFactor}px`,
+        width: `${previewWidth}px`,
+        height: `${previewHeight}px`,
         maxWidth: '100%',
-        maxHeight: '420px', // Increased from 380px for a larger preview
       }}
     >
       {/* Apply tiled background pattern with individual rotated images */}
@@ -208,7 +212,7 @@ export const CrosswordVisualPreview = ({
             />
           </div>
         )}
-        {showWordList && puzzle && (
+        {showWordList && puzzle && puzzle.acrossClues && puzzle.downClues && (
           <div 
             className="relative"
             style={{

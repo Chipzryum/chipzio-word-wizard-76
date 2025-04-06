@@ -128,7 +128,12 @@ export const VisualPreview = ({
   }
 
   console.log("Rendering VisualPreview with showWordList:", showWordList);
-  console.log("Puzzle words:", puzzle?.wordPlacements.map(wp => wp.word));
+  console.log("Puzzle words:", puzzle?.wordPlacements?.map(wp => wp.word));
+  
+  // Calculate aspect ratio based on A4 dimensions (210mm × 297mm)
+  const a4AspectRatio = 210 / 297;
+  const previewWidth = 420;
+  const previewHeight = Math.floor(previewWidth / a4AspectRatio);
 
   // Create a tiled background similar to the PDF version
   const createTiledBackground = () => {
@@ -187,10 +192,9 @@ export const VisualPreview = ({
     <div 
       className="relative border-2 border-black bg-white p-4 overflow-hidden"
       style={{
-        width: `${currentWidth * previewScaleFactor}px`,
-        height: `${currentHeight * previewScaleFactor}px`,
+        width: `${previewWidth}px`,
+        height: `${previewHeight}px`,
         maxWidth: '100%',
-        maxHeight: '420px', // Increased from 380px for a larger preview
       }}
     >
       {/* Apply tiled background pattern with individual rotated images */}
@@ -263,7 +267,7 @@ export const VisualPreview = ({
             style={{
               marginTop: `${getVerticalOffset(wordListOffset) * previewScaleFactor}px`,
               fontSize: `${fontSizes.wordListSize * previewScaleFactor * wordListSizeMultiplier}px`,
-              maxHeight: '140px', // Increased from unspecified
+              maxHeight: '140px',
               overflowY: 'auto'
             }}
           >

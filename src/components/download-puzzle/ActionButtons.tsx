@@ -1,5 +1,5 @@
 
-import { Download, Save } from "lucide-react";
+import { Download, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ActionButtonsProps {
@@ -27,7 +27,7 @@ export const ActionButtons = ({
         onClick={handleSaveLayout}
         disabled={isGenerating || !puzzle}
       >
-        <Save className="h-4 w-4" />
+        {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
         {isGenerating ? "Generating..." : "Save Layout"}
       </Button>
       <Button
@@ -38,7 +38,7 @@ export const ActionButtons = ({
         disabled={!isPDFReady || !pdfBlob}
       >
         <Download className="h-4 w-4" />
-        Download PDF with Solution
+        Download
       </Button>
     </div>
   );
