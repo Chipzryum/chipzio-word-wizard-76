@@ -30,8 +30,8 @@ export const CrosswordGridDisplay = ({
                 key={`${i}-${j}`}
                 className={`flex items-center justify-center border border-gray-900 relative ${isEmpty ? 'bg-black' : 'bg-white bg-opacity-60'}`}
                 style={{
-                  width: `${cellSize}px`,
-                  height: `${cellSize}px`,
+                  width: `${cellSize * previewScaleFactor}px`,
+                  height: `${cellSize * previewScaleFactor}px`,
                 }}
               >
                 {wordNumber !== null && (
@@ -47,7 +47,7 @@ export const CrosswordGridDisplay = ({
                   </span>
                 )}
                 {!isEmpty && showSolution && (
-                  <span style={{ fontSize: `${letterSize}px` }}>
+                  <span style={{ fontSize: `${letterSize * previewScaleFactor}px` }}>
                     {cell}
                   </span>
                 )}

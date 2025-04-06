@@ -2,7 +2,11 @@
 import { CrosswordGrid } from "@/utils/crosswordUtils";
 import { PDFViewer } from "@react-pdf/renderer";
 import { CrosswordPDFPreview } from "./CrosswordPDFPreview";
-import { CrosswordClueList, CrosswordGridDisplay, TiledBackground } from "./crossword-components";
+import { 
+  TiledBackground, 
+  CrosswordGridDisplay, 
+  CrosswordClueList 
+} from "./crossword-components";
 
 interface CrosswordVisualPreviewProps {
   puzzle: CrosswordGrid | null;
@@ -130,30 +134,27 @@ export const CrosswordVisualPreview = ({
     );
   }
 
-  // A4 aspect ratio is roughly 1:1.414 (width:height)
-  const previewAspectRatio = 1 / 1.414;
-  
   return (
     <div 
-      className="relative border-2 border-black bg-white p-4 overflow-hidden mx-auto"
+      className="relative border-2 border-black bg-white p-4 overflow-hidden"
       style={{
-        width: `${Math.min(currentWidth * previewScaleFactor, 420)}px`,
-        height: `${Math.min(currentWidth * previewScaleFactor / previewAspectRatio, 593)}px`,
-        maxWidth: '100%', 
-        maxHeight: '593px',
+        width: `${currentWidth * previewScaleFactor}px`,
+        height: `${currentHeight * previewScaleFactor}px`,
+        maxWidth: '100%',
+        maxHeight: '420px', // Increased from 380px for a larger preview
       }}
     >
-      {/* Apply tiled background pattern */}
+      {/* Apply tiled background pattern with individual rotated images */}
       {uploadedImages && uploadedImages.length > 0 && (
-        <TiledBackground 
-          uploadedImages={uploadedImages} 
-          imageOpacity={imageOpacity}
-          imageGridSize={imageGridSize}
-          previewScaleFactor={previewScaleFactor}
-          imageAngle={imageAngle}
-          imageSpacing={imageSpacing}
+        <TiledBackground
+          uploadedImages={uploadedImages}
           currentWidth={currentWidth}
           currentHeight={currentHeight}
+          imageGridSize={imageGridSize}
+          imageSpacing={imageSpacing}
+          imageOpacity={imageOpacity}
+          imageAngle={imageAngle}
+          previewScaleFactor={previewScaleFactor}
         />
       )}
       
@@ -166,7 +167,7 @@ export const CrosswordVisualPreview = ({
               marginTop: `${getVerticalOffset(titleOffset) * previewScaleFactor}px`,
             }}
           >
-            {title.toUpperCase()}
+            {showSolution ? `${title.toUpperCase()} - SOLUTION` : title.toUpperCase()}
           </div>
         )}
         {showSubtitle && (
@@ -180,7 +181,7 @@ export const CrosswordVisualPreview = ({
             {subtitle.toLowerCase()}
           </div>
         )}
-        {showInstruction && (
+        {showInstruction && !showSolution && (
           <div 
             className="text-center mb-4 relative"
             style={{
@@ -191,7 +192,6 @@ export const CrosswordVisualPreview = ({
             {instruction}
           </div>
         )}
-
         {showGrid && puzzle && (
           <div 
             className="flex flex-col items-center justify-center relative"
@@ -199,30 +199,30 @@ export const CrosswordVisualPreview = ({
               marginTop: `${getVerticalOffset(gridOffset) * previewScaleFactor}px`,
             }}
           >
-            <CrosswordGridDisplay 
-              puzzle={puzzle} 
-              cellSize={cellSize * previewScaleFactor} 
-              letterSize={letterSize * previewScaleFactor}
+            <CrosswordGridDisplay
+              puzzle={puzzle}
+              cellSize={cellSize}
+              letterSize={letterSize}
               previewScaleFactor={previewScaleFactor}
               showSolution={showSolution}
             />
           </div>
         )}
-
         {showWordList && puzzle && (
           <div 
-            className="mt-4 relative"
+            className="relative"
             style={{
               marginTop: `${getVerticalOffset(wordListOffset) * previewScaleFactor}px`,
               fontSize: `${fontSizes.wordListSize * previewScaleFactor * wordListSizeMultiplier}px`,
-              maxHeight: '140px',
-              overflowY: 'auto'
+              maxHeight: '140px', // Increased from 120px
             }}
           >
-            <CrosswordClueList 
-              acrossClues={puzzle.acrossClues} 
-              downClues={puzzle.downClues} 
-              fontSize={fontSizes.wordListSize * previewScaleFactor * wordListSizeMultiplier}
+            <CrosswordClueList
+              puzzle={puzzle}
+              showSolution={showSolution}
+              fontSizes={fontSizes}
+              wordListSizeMultiplier={wordListSizeMultiplier}
+              previewScaleFactor={previewScaleFactor}
             />
           </div>
         )}

@@ -1,3 +1,4 @@
+
 import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { CrosswordGrid } from "@/utils/crosswordUtils";
 
@@ -34,7 +35,6 @@ interface CrosswordPDFPreviewProps {
   imageSpacing?: number;
   showSolution?: boolean;
   includeSolution?: boolean;
-  blackBoxesVisible?: boolean;
 }
 
 export const CrosswordPDFPreview = ({ 
@@ -70,7 +70,6 @@ export const CrosswordPDFPreview = ({
   imageSpacing = 0,
   showSolution = false,
   includeSolution = true,
-  blackBoxesVisible = true,
 }: CrosswordPDFPreviewProps) => {
   if (!puzzle) return null;
   
@@ -245,7 +244,7 @@ export const CrosswordPDFPreview = ({
     blackCell: {
       width: cellSize,
       height: cellSize,
-      backgroundColor: blackBoxesVisible ? 'rgba(0, 0, 0, 1)' : 'rgba(255, 255, 255, 0.6)',
+      backgroundColor: 'rgba(0, 0, 0, 1)',
       borderWidth: 0.5,
       borderColor: '#d1d5db',
     },
@@ -301,8 +300,10 @@ export const CrosswordPDFPreview = ({
           <View style={[styles.titleContainer, {marginTop: getVerticalOffset(titleOffset)}]}>
             <Text style={styles.title}>
               {showSolution 
-                ? `${title.toUpperCase()} - SOLUTION`
-                : title.toUpperCase()}
+                ? `${title.toUpperCase()} - PAGE ${index + 1} SOLUTION` 
+                : puzzlesToRender.length > 1 
+                  ? `${title.toUpperCase()} - PAGE ${index + 1}` 
+                  : title.toUpperCase()}
             </Text>
           </View>
         )}
@@ -378,27 +379,15 @@ export const CrosswordPDFPreview = ({
   // Create all pages
   const pages = [];
   
-  // Add all questions first, then all answers (if includeSolution is true)
-  const questionPages = [];
-  const answerPages = [];
-
-  // Create question and answer pages
+  // Add all puzzles
   for (let i = 0; i < puzzlesToRender.length; i++) {
-    const currentPuzzle = puzzlesToRender[i];
-    const isPuzzleASolution = (currentPuzzle as any).showSolution === true;
+    pages.push(createPuzzlePage(puzzlesToRender[i], i, false));
     
-    // If it's a solution and we're including solutions, add to answer pages
-    if (isPuzzleASolution && includeSolution) {
-      answerPages.push(createPuzzlePage(currentPuzzle, i, true));
-    } 
-    // Otherwise it's a question page
-    else if (!isPuzzleASolution) {
-      questionPages.push(createPuzzlePage(currentPuzzle, i, false));
+    // Add solution pages if requested
+    if (includeSolution) {
+      pages.push(createPuzzlePage(puzzlesToRender[i], i, true));
     }
   }
-
-  // Combine all pages
-  pages.push(...questionPages, ...answerPages);
   
   return <Document>{pages}</Document>;
 
