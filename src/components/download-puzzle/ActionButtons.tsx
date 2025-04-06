@@ -1,45 +1,52 @@
 
-import { Download, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CombinedPuzzleGrid } from "./DownloadPuzzleDialog";
+import { Spinner } from "lucide-react";
 
 interface ActionButtonsProps {
   handleSaveLayout: () => Promise<void>;
   handleDownload: () => Promise<void>;
   isGenerating: boolean;
   isPDFReady: boolean;
-  puzzle: any;
+  puzzle: CombinedPuzzleGrid | null;
   pdfBlob: Blob | null;
+  downloadButtonText?: string;
 }
 
-export const ActionButtons = ({
+export function ActionButtons({
   handleSaveLayout,
   handleDownload,
   isGenerating,
   isPDFReady,
   puzzle,
   pdfBlob,
-}: ActionButtonsProps) => {
+  downloadButtonText = "Download"
+}: ActionButtonsProps) {
   return (
-    <div className="flex gap-4 mt-4">
+    <div className="flex space-x-2 mt-4">
       <Button
-        type="button"
-        className="flex items-center gap-2 flex-1"
         onClick={handleSaveLayout}
         disabled={isGenerating || !puzzle}
+        variant="outline"
+        className="flex-1"
       >
-        <Save className="h-4 w-4" />
-        {isGenerating ? "Generating..." : "Save Layout"}
+        {isGenerating ? (
+          <>
+            <Spinner className="mr-2 h-4 w-4 animate-spin" />
+            Generating...
+          </>
+        ) : (
+          "Save Layout"
+        )}
       </Button>
+
       <Button
-        type="button"
-        variant={isPDFReady ? "default" : "outline"}
-        className="flex items-center gap-2 flex-1"
         onClick={handleDownload}
         disabled={!isPDFReady || !pdfBlob}
+        className="flex-1"
       >
-        <Download className="h-4 w-4" />
-        Download PDF with Solution
+        {downloadButtonText}
       </Button>
     </div>
   );
-};
+}

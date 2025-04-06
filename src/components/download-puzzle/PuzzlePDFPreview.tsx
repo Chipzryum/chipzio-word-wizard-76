@@ -1,4 +1,3 @@
-
 import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { CombinedPuzzleGrid } from "./DownloadPuzzleDialog";
@@ -165,10 +164,8 @@ export const PuzzlePDFPreview = ({
           <View style={[pdfStyles.titleContainer, {marginTop: getVerticalOffset(titleOffset)}]}>
             <Text style={pdfStyles.title}>
               {showSolution 
-                ? `${title.toUpperCase()} - PAGE ${index + 1} SOLUTION` 
-                : puzzlesToRender.length > 1 
-                  ? `${title.toUpperCase()} - PAGE ${index + 1}` 
-                  : title.toUpperCase()}
+                ? `${title.toUpperCase()} - SOLUTION`
+                : title.toUpperCase()}
             </Text>
           </View>
         )}
@@ -219,15 +216,27 @@ export const PuzzlePDFPreview = ({
   // Create all pages
   const pages = [];
   
-  // Add all puzzles
+  // Add all questions first, then all answers (if includeSolution is true)
+  const questionPages = [];
+  const answerPages = [];
+
+  // Create question and answer pages
   for (let i = 0; i < puzzlesToRender.length; i++) {
-    pages.push(createPuzzlePage(puzzlesToRender[i], i, false));
+    const currentPuzzle = puzzlesToRender[i];
+    const isPuzzleASolution = (currentPuzzle as any).showSolution === true;
     
-    // Add solution pages if requested
-    if (includeSolution) {
-      pages.push(createPuzzlePage(puzzlesToRender[i], i, true));
+    // If it's a solution page and we're including solutions, add to answer pages
+    if (isPuzzleASolution && includeSolution) {
+      answerPages.push(createPuzzlePage(currentPuzzle, i, true));
+    } 
+    // Otherwise it's a question page
+    else if (!isPuzzleASolution) {
+      questionPages.push(createPuzzlePage(currentPuzzle, i, false));
     }
   }
+
+  // Combine all pages
+  pages.push(...questionPages, ...answerPages);
   
   return (
     <Document>

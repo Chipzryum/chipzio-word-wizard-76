@@ -20,6 +20,7 @@ import { ActionButtons } from "./ActionButtons";
 import { PuzzlePDFPreview } from "./PuzzlePDFPreview";
 import { CrosswordPDFPreview } from "./CrosswordPDFPreview";
 import { MultiPuzzleGrid } from "./MultiPuzzleGrid";
+import { Switch } from "@/components/ui/switch";
 import { 
   PAGE_SIZES, 
   UNITS, 
@@ -105,6 +106,8 @@ export function DownloadPuzzleDialog({
   const [showInstruction, setShowInstruction] = useState(true);
   const [showWordList, setShowWordList] = useState(true);
   const [showGrid, setShowGrid] = useState(true);
+  const [includeAnswers, setIncludeAnswers] = useState(true);
+  const [blackBoxesVisible, setBlackBoxesVisible] = useState(true);
 
   const [titleOffset, setTitleOffset] = useState(0);
   const [subtitleOffset, setSubtitleOffset] = useState(0);
@@ -275,6 +278,28 @@ export function DownloadPuzzleDialog({
     return (points / UNITS[selectedUnit]).toFixed(2);
   };
 
+  // Function to organize puzzles into correct order for PDF
+  const organizePuzzlesForPDF = (puzzlesToOrganize: CombinedPuzzleGrid[]): CombinedPuzzleGrid[] => {
+    // If answers shouldn't be included or there are no puzzles, return as is
+    if (!includeAnswers || puzzlesToOrganize.length === 0) {
+      return puzzlesToOrganize;
+    }
+    
+    // Create a new array where questions come first, followed by all answers
+    const questionPuzzles = [...puzzlesToOrganize];
+    const answerPuzzles = puzzlesToOrganize.map(p => ({...p})); // Create copies for answer pages
+    
+    // For answer pages, modify them to indicate they're solutions
+    answerPuzzles.forEach(p => {
+      if (p.hasOwnProperty('showSolution')) {
+        // Add showSolution property if it makes sense for this puzzle type
+        (p as any).showSolution = true;
+      }
+    });
+    
+    return [...questionPuzzles, ...answerPuzzles];
+  };
+
   const handleSaveLayout = async () => {
     if (puzzles.length === 0) {
       toast({
@@ -295,6 +320,9 @@ export function DownloadPuzzleDialog({
       const cappedLetterSizeMultiplier = Math.min(letterSizeMultiplier, MAX_LETTER_SIZE);
       console.log("Creating PDF with cappedLetterSizeMultiplier:", cappedLetterSizeMultiplier);
       
+      // Organize puzzles in the correct order
+      const orderedPuzzles = organizePuzzlesForPDF(puzzles);
+      
       let pdfDocument;
       
       if (puzzleType === "crossword") {
@@ -302,7 +330,7 @@ export function DownloadPuzzleDialog({
         pdfDocument = (
           <CrosswordPDFPreview
             puzzle={puzzles[activePuzzleIndex] as CrosswordGrid}
-            allPuzzles={puzzles as CrosswordGrid[]}
+            allPuzzles={orderedPuzzles as CrosswordGrid[]}
             title={title}
             subtitle={subtitle}
             instruction={instruction}
@@ -326,13 +354,14 @@ export function DownloadPuzzleDialog({
             subtitleSizeMultiplier={subtitleSizeMultiplier}
             instructionSizeMultiplier={instructionSizeMultiplier}
             wordListSizeMultiplier={wordListSizeMultiplier}
-            uploadedImages={uploadedImages}
+            uploadedImages={[]} // Removed background images
             imageOpacity={imageOpacity}
             imageGridSize={imageGridSize}
             imageAngle={imageAngle}
             imageSpacing={imageSpacing}
             showSolution={false}
-            includeSolution={true}
+            includeSolution={includeAnswers}
+            blackBoxesVisible={blackBoxesVisible}
           />
         );
       } else {
@@ -340,7 +369,7 @@ export function DownloadPuzzleDialog({
         pdfDocument = (
           <PuzzlePDFPreview
             puzzle={puzzles[activePuzzleIndex] as PuzzleGrid}
-            allPuzzles={puzzles as PuzzleGrid[]}
+            allPuzzles={orderedPuzzles as PuzzleGrid[]}
             title={title}
             subtitle={subtitle}
             instruction={instruction}
@@ -364,12 +393,12 @@ export function DownloadPuzzleDialog({
             subtitleSizeMultiplier={subtitleSizeMultiplier}
             instructionSizeMultiplier={instructionSizeMultiplier}
             wordListSizeMultiplier={wordListSizeMultiplier}
-            uploadedImages={uploadedImages}
+            uploadedImages={[]} // Removed background images
             imageOpacity={imageOpacity}
             imageGridSize={imageGridSize}
             imageAngle={imageAngle}
             imageSpacing={imageSpacing}
-            includeSolution={true}
+            includeSolution={includeAnswers}
           />
         );
       }
@@ -383,7 +412,7 @@ export function DownloadPuzzleDialog({
       
       toast({
         title: "PDF Ready",
-        description: "Your layout has been saved. Click 'Download PDF' to download.",
+        description: "Your layout has been saved. Click 'Download' to download.",
       });
     } catch (error) {
       console.error('Failed to generate PDF:', error);
@@ -493,13 +522,13 @@ export function DownloadPuzzleDialog({
           previewScaleFactor={previewScaleFactor}
           fontSizes={fontSizes}
           getVerticalOffset={getVerticalOffset}
-          uploadedImages={uploadedImages}
+          uploadedImages={uploadedImages.length > 0 ? uploadedImages : []}
           imageOpacity={imageOpacity}
           imageGridSize={imageGridSize}
           imageAngle={imageAngle}
           imageSpacing={imageSpacing}
           showSolution={showSolution}
-          includeSolution={true}
+          includeSolution={includeAnswers}
         />
       );
     } else {
@@ -535,12 +564,12 @@ export function DownloadPuzzleDialog({
           previewScaleFactor={previewScaleFactor}
           fontSizes={fontSizes}
           getVerticalOffset={getVerticalOffset}
-          uploadedImages={uploadedImages}
+          uploadedImages={uploadedImages.length > 0 ? uploadedImages : []}
           imageOpacity={imageOpacity}
           imageGridSize={imageGridSize}
           imageAngle={imageAngle}
           imageSpacing={imageSpacing}
-          includeSolution={true}
+          includeSolution={includeAnswers}
         />
       );
     }
@@ -556,7 +585,7 @@ export function DownloadPuzzleDialog({
     titleOffset, subtitleOffset, instructionOffset, gridOffset, wordListOffset,
     title, subtitle, instruction, selectedSize, customWidth, customHeight,
     uploadedImages, imageOpacity, imageGridSize, imageAngle, imageSpacing,
-    activePuzzleIndex, puzzles
+    activePuzzleIndex, puzzles, blackBoxesVisible, includeAnswers
   ]);
 
   console.log("Word list toggle status:", showWordList);
@@ -594,6 +623,31 @@ export function DownloadPuzzleDialog({
                   </p>
                 </div>
               )}
+
+              <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
+                <h3 className="font-medium mb-3">PDF Options</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="includeAnswers">Include answer pages</Label>
+                    <Switch
+                      id="includeAnswers"
+                      checked={includeAnswers}
+                      onCheckedChange={setIncludeAnswers}
+                    />
+                  </div>
+                  
+                  {puzzleType === "crossword" && (
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="showBlackBoxes">Show black boxes</Label>
+                      <Switch
+                        id="showBlackBoxes"
+                        checked={blackBoxesVisible}
+                        onCheckedChange={setBlackBoxesVisible}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
             
               <ControlPanel 
                 showTitle={showTitle}
@@ -649,7 +703,7 @@ export function DownloadPuzzleDialog({
                 formatSliderValue={formatSliderValue}
                 getPositionValue={getPositionValue}
                 
-                uploadedImages={uploadedImages}
+                uploadedImages={[]} // Removed background images functionality
                 onImagesChange={setUploadedImages}
                 imageOpacity={imageOpacity}
                 setImageOpacity={setImageOpacity}
@@ -659,12 +713,13 @@ export function DownloadPuzzleDialog({
                 setImageAngle={setImageAngle}
                 imageSpacing={imageSpacing}
                 setImageSpacing={setImageSpacing}
+                hideImageUpload={true} // New prop to hide image upload
               />
             </div>
 
             <div className="space-y-4">
               <Label>Preview (Page {activePuzzleIndex + 1} of {puzzles.length})</Label>
-              <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
+              <div className="border rounded-lg p-4 bg-white h-[593px] flex flex-col items-center justify-center overflow-y-auto relative">
                 {renderPreview()}
               </div>
               
@@ -675,6 +730,7 @@ export function DownloadPuzzleDialog({
                 isPDFReady={isPDFReady}
                 puzzle={puzzles[activePuzzleIndex]}
                 pdfBlob={pdfBlob}
+                downloadButtonText="Download" // Changed from Download PDF with solutions
               />
               
               {!isPDFReady && (
