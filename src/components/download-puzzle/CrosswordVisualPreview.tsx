@@ -203,6 +203,7 @@ export const CrosswordVisualPreview = ({
               puzzle={puzzle} 
               cellSize={cellSize * previewScaleFactor} 
               letterSize={letterSize * previewScaleFactor}
+              previewScaleFactor={previewScaleFactor}
               showSolution={showSolution}
             />
           </div>

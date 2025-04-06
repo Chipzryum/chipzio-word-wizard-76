@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { CombinedPuzzleGrid } from "./DownloadPuzzleDialog";
-import { Spinner } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface ActionButtonsProps {
   handleSaveLayout: () => Promise<void>;
@@ -32,7 +32,7 @@ export function ActionButtons({
       >
         {isGenerating ? (
           <>
-            <Spinner className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Generating...
           </>
         ) : (

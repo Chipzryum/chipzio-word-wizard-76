@@ -1,50 +1,35 @@
 
 import React from 'react';
-import { CrosswordGrid } from "@/utils/crosswordUtils";
+import { ClueData } from "@/utils/crosswordUtils";
 
 interface CrosswordClueListProps {
-  puzzle: CrosswordGrid;
-  showSolution: boolean;
-  fontSizes: {
-    wordListSize: number;
-  };
-  wordListSizeMultiplier: number;
-  previewScaleFactor: number;
+  acrossClues: ClueData[];
+  downClues: ClueData[];
+  fontSize: number;
 }
 
 export const CrosswordClueList = ({
-  puzzle,
-  showSolution,
-  fontSizes,
-  wordListSizeMultiplier,
-  previewScaleFactor,
+  acrossClues,
+  downClues,
+  fontSize,
 }: CrosswordClueListProps) => {
-  // Categorize word placements by direction for clues
-  const acrossClues = puzzle.wordPlacements
-    .filter(placement => placement.direction === 'across')
-    .sort((a, b) => (a.number || 0) - (b.number || 0));
-    
-  const downClues = puzzle.wordPlacements
-    .filter(placement => placement.direction === 'down')
-    .sort((a, b) => (a.number || 0) - (b.number || 0));
-
   return (
     <div className="grid grid-cols-2 gap-2 mt-4 px-2 relative overflow-auto">
       <div>
-        <div className="font-bold mb-1">ACROSS</div>
-        {acrossClues.map((placement) => (
-          <div key={`across-${placement.number}`} className="text-xs mb-1">
-            {placement.number}. {placement.clue}
-            {showSolution ? ` (${placement.word})` : ''}
+        <div className="font-bold mb-1" style={{ fontSize: `${fontSize}px` }}>ACROSS</div>
+        {acrossClues.map((clue) => (
+          <div key={`across-${clue.number}`} className="mb-1" style={{ fontSize: `${fontSize}px` }}>
+            {clue.number}. {clue.clue}
+            {clue.answer ? ` (${clue.answer})` : ''}
           </div>
         ))}
       </div>
       <div>
-        <div className="font-bold mb-1">DOWN</div>
-        {downClues.map((placement) => (
-          <div key={`down-${placement.number}`} className="text-xs mb-1">
-            {placement.number}. {placement.clue}
-            {showSolution ? ` (${placement.word})` : ''}
+        <div className="font-bold mb-1" style={{ fontSize: `${fontSize}px` }}>DOWN</div>
+        {downClues.map((clue) => (
+          <div key={`down-${clue.number}`} className="mb-1" style={{ fontSize: `${fontSize}px` }}>
+            {clue.number}. {clue.clue}
+            {clue.answer ? ` (${clue.answer})` : ''}
           </div>
         ))}
       </div>
