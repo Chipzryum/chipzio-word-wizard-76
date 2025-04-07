@@ -1,54 +1,62 @@
 
-import React from "react";
-import { CombinedPuzzleGrid } from "./DownloadPuzzleDialog";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Button } from "../ui/button";
 
 interface MultiPuzzleGridProps {
-  puzzles: CombinedPuzzleGrid[];
+  puzzles: any[];
   activePuzzleIndex: number;
   onSelectPuzzle: (index: number) => void;
 }
 
-export const MultiPuzzleGrid: React.FC<MultiPuzzleGridProps> = ({
+export const MultiPuzzleGrid = ({
   puzzles,
   activePuzzleIndex,
-  onSelectPuzzle,
-}) => {
-  if (puzzles.length === 0) return null;
+  onSelectPuzzle
+}: MultiPuzzleGridProps) => {
+  // A4 aspect ratio is approximately 1:1.4142 (1/√2)
+  const a4AspectRatio = 1 / Math.sqrt(2); // approximately 0.7071
 
+  if (!puzzles || puzzles.length === 0) return null;
+  
   return (
-    <div className="grid grid-cols-2 gap-2 max-h-[400px] overflow-y-auto p-2">
+    <div className="grid grid-cols-2 gap-3 w-full">
       {puzzles.map((puzzle, index) => (
-        <div
+        <Button
           key={index}
+          variant="outline"
+          className={`p-0 overflow-hidden ${
+            index === activePuzzleIndex ? 'ring-2 ring-primary' : ''
+          }`}
           onClick={() => onSelectPuzzle(index)}
-          className={`relative cursor-pointer border-2 ${
-            activePuzzleIndex === index ? "border-primary" : "border-gray-300"
-          } rounded-md overflow-hidden`}
         >
-          <div className="absolute top-0 left-0 bg-primary text-primary-foreground px-2 py-1 text-xs font-medium rounded-br-md">
-            Page {index + 1}
-          </div>
-          
-          <div className="p-4 bg-white">
-            {/* Simplified grid preview */}
-            <div className="grid place-items-center">
-              <div className="grid grid-cols-5 gap-[2px] scale-75 origin-center">
-                {puzzle.grid.slice(0, 5).map((row, rowIndex) => (
-                  <div key={rowIndex} className="flex">
-                    {row.slice(0, 5).map((cell, cellIndex) => (
-                      <div
-                        key={`${rowIndex}-${cellIndex}`}
-                        className="w-4 h-4 flex items-center justify-center text-[6px] border border-gray-300"
-                      >
-                        {cell && cell !== " " ? cell : ""}
-                      </div>
-                    ))}
-                  </div>
-                ))}
+          <div className="w-full h-full">
+            <AspectRatio ratio={a4AspectRatio} className="bg-white">
+              <div className="p-1 w-full h-full flex flex-col">
+                <div className="bg-black text-white text-xs p-1 font-medium">
+                  Page {index + 1}
+                </div>
+                <div className="flex-1 flex items-center justify-center">
+                  {puzzle.grid && (
+                    <div className="grid grid-flow-row gap-0 scale-[0.5]">
+                      {puzzle.grid.slice(0, 5).map((row: any[], i: number) => (
+                        <div key={i} className="flex">
+                          {row.slice(0, Math.min(15, row.length)).map((letter, j) => (
+                            <div
+                              key={`${i}-${j}`}
+                              className="w-4 h-4 flex items-center justify-center border border-gray-300 text-[6px]"
+                            >
+                              {letter}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            </AspectRatio>
           </div>
-        </div>
+        </Button>
       ))}
     </div>
   );
