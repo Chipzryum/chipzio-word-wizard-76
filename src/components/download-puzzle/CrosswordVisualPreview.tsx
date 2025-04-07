@@ -134,19 +134,14 @@ export const CrosswordVisualPreview = ({
     );
   }
 
-  // Calculate proper aspect ratio for preview based on A4 dimensions
-  const a4AspectRatio = 1 / Math.sqrt(2); // A4 aspect ratio (width/height)
-  const previewWidth = `${currentWidth * previewScaleFactor}px`;
-  const previewHeight = `${currentHeight * previewScaleFactor}px`;
-
   return (
     <div 
       className="relative border-2 border-black bg-white p-4 overflow-hidden"
       style={{
-        width: previewWidth,
-        height: previewHeight,
+        width: `${currentWidth * previewScaleFactor}px`,
+        height: `${currentHeight * previewScaleFactor}px`,
         maxWidth: '100%',
-        maxHeight: '420px', 
+        maxHeight: '420px', // Increased from 380px for a larger preview
       }}
     >
       {/* Apply tiled background pattern with individual rotated images */}
@@ -219,7 +214,7 @@ export const CrosswordVisualPreview = ({
             style={{
               marginTop: `${getVerticalOffset(wordListOffset) * previewScaleFactor}px`,
               fontSize: `${fontSizes.wordListSize * previewScaleFactor * wordListSizeMultiplier}px`,
-              maxHeight: '140px',
+              maxHeight: '140px', // Increased from 120px
             }}
           >
             <CrosswordClueList
