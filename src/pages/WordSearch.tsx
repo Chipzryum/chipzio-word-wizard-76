@@ -11,6 +11,8 @@ import {
 } from "@/utils/wordSearchUtils";
 import { DownloadPuzzleDialog } from "@/components/download-puzzle";
 import { MultiPuzzleGrid } from "@/components/download-puzzle/MultiPuzzleGrid";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const WordSearch = () => {
   const [words, setWords] = useState<string[]>([]);
@@ -23,6 +25,9 @@ const WordSearch = () => {
   // Add state for multiple puzzles
   const [savedPuzzles, setSavedPuzzles] = useState<PuzzleGrid[]>([]);
   const [activePuzzleIndex, setActivePuzzleIndex] = useState<number>(-1);
+  
+  // Add state for including answer pages
+  const [includeAnswers, setIncludeAnswers] = useState<"with" | "without">("without");
   
   const { toast } = useToast();
 
@@ -69,12 +74,32 @@ const WordSearch = () => {
       return;
     }
 
-    setSavedPuzzles([...savedPuzzles, puzzle]);
-    setActivePuzzleIndex(savedPuzzles.length);
+    // Add the puzzle to the savedPuzzles array
+    setSavedPuzzles(prev => {
+      const updatedPuzzles = [...prev, puzzle];
+      // If answers are included, we also add the same puzzle but marked as an answer
+      if (includeAnswers === "with") {
+        const answerPuzzle = {
+          ...puzzle,
+          isAnswer: true
+        };
+        return [...updatedPuzzles, answerPuzzle];
+      }
+      return updatedPuzzles;
+    });
+    
+    // Calculate the correct index to set as active
+    const newIndex = includeAnswers === "with" ? 
+      savedPuzzles.length + 1 : // +1 because we're adding 2 pages
+      savedPuzzles.length;
+    
+    setActivePuzzleIndex(newIndex);
     
     toast({
       title: "Added to PDF",
-      description: `Page ${savedPuzzles.length + 1} added to PDF.`,
+      description: includeAnswers === "with" ? 
+        `Question page ${Math.ceil((savedPuzzles.length + 1) / 2)} added with its answer page.` : 
+        `Page ${savedPuzzles.length + 1} added to PDF.`,
     });
   };
 
@@ -204,27 +229,51 @@ PUZZLE"
                   >
                     Generate Puzzle
                   </button>
-                  <button
-                    onClick={addToPdf}
-                    className={`flex items-center justify-center gap-2 ${
-                      puzzle ? "bg-secondary text-secondary-foreground hover:opacity-90" : "bg-secondary/50 text-secondary-foreground/50 cursor-not-allowed"
-                    } transition rounded-lg px-4 py-2`}
-                    disabled={!puzzle}
-                  >
-                    <FilePlus className="h-4 w-4" />
-                    Add to PDF
-                  </button>
-                  <button
-                    onClick={() => setShowDownloadDialog(true)}
-                    className={`flex items-center justify-center gap-2 ${
-                      savedPuzzles.length > 0 ? "bg-secondary text-secondary-foreground hover:opacity-90" : "bg-secondary/50 text-secondary-foreground/50 cursor-not-allowed"
-                    } transition rounded-lg px-4 py-2`}
-                    disabled={savedPuzzles.length === 0}
-                  >
-                    <Download className="h-4 w-4" />
-                    PDF
-                  </button>
                 </div>
+                
+                {puzzle && (
+                  <div className="space-y-4">
+                    <div className="bg-white/50 rounded-lg border p-3">
+                      <div className="mb-2 text-sm font-medium">
+                        Add to PDF with:
+                      </div>
+                      <RadioGroup 
+                        value={includeAnswers} 
+                        onValueChange={(value: "with" | "without") => setIncludeAnswers(value)}
+                        className="flex gap-4"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="without" id="without-answers" />
+                          <Label htmlFor="without-answers">Questions only</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="with" id="with-answers" />
+                          <Label htmlFor="with-answers">Questions & answers</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <button
+                        onClick={addToPdf}
+                        className="flex-1 flex items-center justify-center gap-2 bg-secondary text-secondary-foreground hover:opacity-90 transition rounded-lg px-4 py-2"
+                      >
+                        <FilePlus className="h-4 w-4" />
+                        Add to PDF
+                      </button>
+                      <button
+                        onClick={() => setShowDownloadDialog(true)}
+                        className={`flex items-center justify-center gap-2 ${
+                          savedPuzzles.length > 0 ? "bg-secondary text-secondary-foreground hover:opacity-90" : "bg-secondary/50 text-secondary-foreground/50 cursor-not-allowed"
+                        } transition rounded-lg px-4 py-2`}
+                        disabled={savedPuzzles.length === 0}
+                      >
+                        <Download className="h-4 w-4" />
+                        PDF
+                      </button>
+                    </div>
+                  </div>
+                )}
                 
                 {savedPuzzles.length > 0 && (
                   <div>
