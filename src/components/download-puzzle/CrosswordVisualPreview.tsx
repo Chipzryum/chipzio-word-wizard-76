@@ -3,9 +3,8 @@ import { CrosswordGrid } from "@/utils/crosswordUtils";
 import { PDFViewer } from "@react-pdf/renderer";
 import { CrosswordPDFPreview } from "./CrosswordPDFPreview";
 import { 
-  TiledBackground, 
-  CrosswordGridDisplay, 
-  CrosswordClueList 
+  TiledBackground,
+  CrosswordPreviewContent
 } from "./crossword-components";
 
 interface CrosswordVisualPreviewProps {
@@ -163,75 +162,34 @@ export const CrosswordVisualPreview = ({
         />
       )}
       
-      <div className="flex flex-col h-full relative" style={{ zIndex: 2 }}>
-        {showTitle && (
-          <div 
-            className="text-center font-bold font-serif relative"
-            style={{
-              fontSize: `${fontSizes.titleSize * previewScaleFactor * titleSizeMultiplier}px`,
-              marginTop: `${getVerticalOffset(titleOffset) * previewScaleFactor}px`,
-            }}
-          >
-            {showSolution ? `${title.toUpperCase()} - SOLUTION` : title.toUpperCase()}
-          </div>
-        )}
-        {showSubtitle && (
-          <div 
-            className="text-center italic font-serif relative"
-            style={{
-              fontSize: `${fontSizes.subtitleSize * previewScaleFactor * subtitleSizeMultiplier}px`,
-              marginTop: `${getVerticalOffset(subtitleOffset) * previewScaleFactor}px`,
-            }}
-          >
-            {subtitle.toLowerCase()}
-          </div>
-        )}
-        {showInstruction && !showSolution && (
-          <div 
-            className="text-center mb-4 relative"
-            style={{
-              fontSize: `${fontSizes.instructionSize * previewScaleFactor * instructionSizeMultiplier}px`,
-              marginTop: `${getVerticalOffset(instructionOffset) * previewScaleFactor}px`,
-            }}
-          >
-            {instruction}
-          </div>
-        )}
-        {showGrid && puzzle && (
-          <div 
-            className="flex flex-col items-center justify-center relative"
-            style={{
-              marginTop: `${getVerticalOffset(gridOffset) * previewScaleFactor}px`,
-            }}
-          >
-            <CrosswordGridDisplay
-              puzzle={puzzle}
-              cellSize={cellSize}
-              letterSize={letterSize}
-              previewScaleFactor={previewScaleFactor}
-              showSolution={showSolution}
-            />
-          </div>
-        )}
-        {showWordList && puzzle && (
-          <div 
-            className="relative"
-            style={{
-              marginTop: `${getVerticalOffset(wordListOffset) * previewScaleFactor}px`,
-              fontSize: `${fontSizes.wordListSize * previewScaleFactor * wordListSizeMultiplier}px`,
-              maxHeight: '140px', // Increased from 120px
-            }}
-          >
-            <CrosswordClueList
-              puzzle={puzzle}
-              showSolution={showSolution}
-              fontSizes={fontSizes}
-              wordListSizeMultiplier={wordListSizeMultiplier}
-              previewScaleFactor={previewScaleFactor}
-            />
-          </div>
-        )}
-      </div>
+      {puzzle && (
+        <CrosswordPreviewContent
+          puzzle={puzzle}
+          title={title}
+          subtitle={subtitle}
+          instruction={instruction}
+          showTitle={showTitle}
+          showSubtitle={showSubtitle}
+          showInstruction={showInstruction}
+          showGrid={showGrid}
+          showWordList={showWordList}
+          titleOffset={titleOffset}
+          subtitleOffset={subtitleOffset}
+          instructionOffset={instructionOffset}
+          gridOffset={gridOffset}
+          wordListOffset={wordListOffset}
+          getVerticalOffset={getVerticalOffset}
+          previewScaleFactor={previewScaleFactor}
+          fontSizes={fontSizes}
+          titleSizeMultiplier={titleSizeMultiplier}
+          subtitleSizeMultiplier={subtitleSizeMultiplier}
+          instructionSizeMultiplier={instructionSizeMultiplier}
+          wordListSizeMultiplier={wordListSizeMultiplier}
+          cellSize={cellSize}
+          letterSize={letterSize}
+          showSolution={showSolution}
+        />
+      )}
     </div>
   );
 };
