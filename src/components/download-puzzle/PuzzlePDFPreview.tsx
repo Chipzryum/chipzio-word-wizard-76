@@ -239,12 +239,19 @@ export const PuzzlePDFPreview = ({
   
   // Helper function to check if a cell is part of a word
   function isPartOfWord(x: number, y: number, placement: any): boolean {
-    const { startPos, direction, length } = placement;
-    for (let i = 0; i < length; i++) {
-      const checkX = startPos.x + (direction.x * i);
-      const checkY = startPos.y + (direction.y * i);
-      if (checkX === x && checkY === y) {
-        return true;
+    // Handle different direction types - might be an object with x,y or a string like "across"/"down"
+    if (typeof placement.direction === "string") {
+      // For crossword puzzles with across/down directions
+      return false; // We'll handle crosswords separately
+    } else {
+      // For wordsearch with x,y directions
+      const { startPos, direction, length } = placement;
+      for (let i = 0; i < length; i++) {
+        const checkX = startPos.x + (direction.x * i);
+        const checkY = startPos.y + (direction.y * i);
+        if (checkX === x && checkY === y) {
+          return true;
+        }
       }
     }
     return false;
@@ -256,6 +263,9 @@ export const PuzzlePDFPreview = ({
   const createPuzzlePage = (puzzleToRender: CombinedPuzzleGrid, index: number, showSolution: boolean) => {
     const pageNumber = Math.ceil((index + 1) / 2);
     const pageLabel = showSolution ? `Answer ${pageNumber}` : `Page ${pageNumber}`;
+    
+    // Handle isAnswer property for both PuzzleGrid and CrosswordGrid types
+    const isAnswerPage = 'isAnswer' in puzzleToRender ? puzzleToRender.isAnswer : false;
     
     return (
       <Page 
@@ -291,7 +301,12 @@ export const PuzzlePDFPreview = ({
                   <View key={i} style={pdfStyles.row}>
                     {row.map((cell, j) => {
                       const wordPlacements = showSolution ? 
-                        puzzleToRender.wordPlacements.filter(wp => isPartOfWord(j, i, wp)) : 
+                        puzzleToRender.wordPlacements.filter(wp => {
+                          if (typeof wp.direction === "object" && "x" in wp.direction && "y" in wp.direction) {
+                            return isPartOfWord(j, i, wp);
+                          }
+                          return false;
+                        }) : 
                         [];
 
                       return (
@@ -299,6 +314,13 @@ export const PuzzlePDFPreview = ({
                           <Text style={pdfStyles.letter}>{cell}</Text>
                           
                           {showSolution && wordPlacements.map((placement, index) => {
+                            // Only process placements with x,y direction objects
+                            if (typeof placement.direction !== "object" || 
+                                !("x" in placement.direction) || 
+                                !("y" in placement.direction)) {
+                              return null;
+                            }
+                            
                             const { direction } = placement;
                             let lineStyle;
                             
@@ -347,7 +369,7 @@ export const PuzzlePDFPreview = ({
   
   // Create pages array with questions and answers properly paired
   const pages = [];
-  const questionPuzzles = puzzlesToRender.filter(p => !p.isAnswer);
+  const questionPuzzles = puzzlesToRender.filter(p => !('isAnswer' in p) || !p.isAnswer);
   
   questionPuzzles.forEach((puzzle, index) => {
     // Add question page
