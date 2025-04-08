@@ -1,3 +1,4 @@
+
 import { CrosswordGrid } from "@/utils/crosswordUtils";
 import { PDFDocument } from "./pdf-components";
 
@@ -27,6 +28,11 @@ interface CrosswordPDFPreviewProps {
   subtitleSizeMultiplier: number;
   instructionSizeMultiplier: number;
   wordListSizeMultiplier: number;
+  uploadedImages?: string[];
+  imageOpacity?: number;
+  imageGridSize?: number;
+  imageAngle?: number;
+  imageSpacing?: number;
   showSolution?: boolean;
   includeSolution?: boolean;
 }
@@ -57,6 +63,11 @@ export const CrosswordPDFPreview = ({
   subtitleSizeMultiplier,
   instructionSizeMultiplier,
   wordListSizeMultiplier,
+  uploadedImages = [],
+  imageOpacity = 0.3,
+  imageGridSize = 100,
+  imageAngle = 0,
+  imageSpacing = 0,
   showSolution = false,
   includeSolution = true,
 }: CrosswordPDFPreviewProps) => {
@@ -116,6 +127,11 @@ export const CrosswordPDFPreview = ({
       wordListSizeMultiplier={wordListSizeMultiplier}
       fontSizes={fontSizes}
       getVerticalOffset={getVerticalOffset}
+      uploadedImages={uploadedImages}
+      imageOpacity={imageOpacity}
+      imageGridSize={imageGridSize}
+      imageAngle={imageAngle}
+      imageSpacing={imageSpacing}
       includeSolution={includeSolution}
     />
   );

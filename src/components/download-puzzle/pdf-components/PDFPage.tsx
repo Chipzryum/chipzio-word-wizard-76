@@ -1,5 +1,7 @@
+
 import { Page, View, Text, StyleSheet } from "@react-pdf/renderer";
 import { CrosswordGrid } from "@/utils/crosswordUtils";
+import { PDFTiledBackground } from "./PDFTiledBackground";
 import { PDFCrosswordGrid } from "./PDFCrosswordGrid";
 import { PDFCrosswordClueList } from "./PDFCrosswordClueList";
 import { PDFPageNumber } from "./PDFPageNumber";
@@ -36,6 +38,11 @@ interface PDFPageProps {
     wordListSize: number;
   };
   getVerticalOffset: (offset: number) => number;
+  uploadedImages?: string[];
+  imageOpacity?: number;
+  imageGridSize?: number;
+  imageAngle?: number;
+  imageSpacing?: number;
   showSolution: boolean;
   pageNumber: number;
   totalPuzzles: number;
@@ -68,6 +75,11 @@ export const PDFPage = ({
   wordListSizeMultiplier,
   fontSizes,
   getVerticalOffset,
+  uploadedImages = [],
+  imageOpacity = 0.3,
+  imageGridSize = 100,
+  imageAngle = 0,
+  imageSpacing = 0,
   showSolution,
   pageNumber,
   totalPuzzles,
@@ -89,6 +101,19 @@ export const PDFPage = ({
 
   return (
     <Page size={[currentWidth, currentHeight]} style={styles.page} wrap={false}>
+      {/* Tiled background pattern */}
+      {uploadedImages && uploadedImages.length > 0 && (
+        <PDFTiledBackground
+          uploadedImages={uploadedImages}
+          currentWidth={currentWidth}
+          currentHeight={currentHeight}
+          imageGridSize={imageGridSize}
+          imageSpacing={imageSpacing}
+          imageOpacity={imageOpacity}
+          imageAngle={imageAngle}
+        />
+      )}
+      
       <View style={styles.container}>
         {showTitle && (
           <View style={[styles.titleContainer, {marginTop: getVerticalOffset(titleOffset)}]}>
@@ -137,6 +162,7 @@ export const PDFPage = ({
   );
 };
 
+// Create styles for PDF
 function createPDFStyles(fontSizes: { 
   titleSize: number; 
   subtitleSize: number; 

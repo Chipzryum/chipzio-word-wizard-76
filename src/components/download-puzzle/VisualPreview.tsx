@@ -40,6 +40,11 @@ interface VisualPreviewProps {
     wordListSize: number;
   };
   getVerticalOffset: (offset: number) => number;
+  uploadedImages?: string[];
+  imageOpacity?: number;
+  imageGridSize?: number;
+  imageAngle?: number;
+  imageSpacing?: number;
   includeSolution?: boolean;
 }
 
@@ -73,6 +78,11 @@ export const VisualPreview = (props: VisualPreviewProps) => {
             subtitleSizeMultiplier={props.subtitleSizeMultiplier}
             instructionSizeMultiplier={props.instructionSizeMultiplier}
             wordListSizeMultiplier={props.wordListSizeMultiplier}
+            uploadedImages={props.uploadedImages}
+            imageOpacity={props.imageOpacity}
+            imageGridSize={props.imageGridSize}
+            imageAngle={props.imageAngle}
+            imageSpacing={props.imageSpacing}
             includeSolution={props.includeSolution}
           />
         </PDFViewer>

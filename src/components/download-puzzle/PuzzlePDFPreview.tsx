@@ -1,5 +1,5 @@
-
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
+import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { CombinedPuzzleGrid } from "./DownloadPuzzleDialog";
 
 interface PuzzlePDFPreviewProps {
@@ -28,6 +28,11 @@ interface PuzzlePDFPreviewProps {
   subtitleSizeMultiplier: number;
   instructionSizeMultiplier: number;
   wordListSizeMultiplier: number;
+  uploadedImages?: string[];
+  imageOpacity?: number;
+  imageGridSize?: number;
+  imageAngle?: number;
+  imageSpacing?: number;
   includeSolution?: boolean;
 }
 
@@ -57,6 +62,11 @@ export const PuzzlePDFPreview = ({
   subtitleSizeMultiplier,
   instructionSizeMultiplier,
   wordListSizeMultiplier,
+  uploadedImages = [],
+  imageOpacity = 0.3,
+  imageGridSize = 100,
+  imageAngle = 0,
+  imageSpacing = 0,
   includeSolution = true,
 }: PuzzlePDFPreviewProps) => {
   if (!puzzle) return null;
@@ -98,6 +108,15 @@ export const PuzzlePDFPreview = ({
         padding: 40,
         fontFamily: 'Times-Roman',
         position: 'relative',
+        overflow: 'hidden',
+      },
+      imageBackground: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: currentWidth,
+        height: currentHeight,
+        zIndex: 0,
         overflow: 'hidden',
       },
       container: {
@@ -239,33 +258,79 @@ export const PuzzlePDFPreview = ({
   
   // Helper function to check if a cell is part of a word
   function isPartOfWord(x: number, y: number, placement: any): boolean {
-    // Handle different direction types - might be an object with x,y or a string like "across"/"down"
-    if (typeof placement.direction === "string") {
-      // For crossword puzzles with across/down directions
-      return false; // We'll handle crosswords separately
-    } else {
-      // For wordsearch with x,y directions
-      const { startPos, direction, length } = placement;
-      for (let i = 0; i < length; i++) {
-        const checkX = startPos.x + (direction.x * i);
-        const checkY = startPos.y + (direction.y * i);
-        if (checkX === x && checkY === y) {
-          return true;
-        }
+    const { startPos, direction, length } = placement;
+    for (let i = 0; i < length; i++) {
+      const checkX = startPos.x + (direction.x * i);
+      const checkY = startPos.y + (direction.y * i);
+      if (checkX === x && checkY === y) {
+        return true;
       }
     }
     return false;
   }
 
-  const pdfStyles = createPDFStyles(fontSizes);
-  
+  // Create a tiled background pattern that's confined to a single page
+  const createTiledBackground = () => {
+    if (!uploadedImages || uploadedImages.length === 0) return null;
+    
+    const imageElements = [];
+    
+    // Calculate number of images needed to cover the page completely
+    const horizontalCount = Math.ceil(currentWidth / (imageGridSize + imageSpacing)) + 1;
+    const verticalCount = Math.ceil(currentHeight / (imageGridSize + imageSpacing)) + 1;
+    
+    // Create a grid of images that stays within page boundaries
+    for (let y = 0; y < verticalCount; y++) {
+      for (let x = 0; x < horizontalCount; x++) {
+        // Calculate the actual width and height to avoid overflow
+        const imgWidth = x === horizontalCount - 1 && x * (imageGridSize + imageSpacing) + imageGridSize > currentWidth
+          ? currentWidth - (x * (imageGridSize + imageSpacing))
+          : imageGridSize;
+          
+        const imgHeight = y === verticalCount - 1 && y * (imageGridSize + imageSpacing) + imageGridSize > currentHeight
+          ? currentHeight - (y * (imageGridSize + imageSpacing))
+          : imageGridSize;
+        
+        // Skip images that would be completely off-page
+        if (imgWidth <= 0 || imgHeight <= 0) continue;
+        
+        // Calculate position with spacing included
+        const posX = x * (imageGridSize + imageSpacing);
+        const posY = y * (imageGridSize + imageSpacing);
+        
+        // Skip images that would start beyond page boundaries
+        if (posX >= currentWidth || posY >= currentHeight) continue;
+        
+        imageElements.push(
+          <Image
+            key={`${x}-${y}`}
+            src={uploadedImages[0]}
+            style={{
+              position: 'absolute',
+              left: posX,
+              top: posY,
+              width: imgWidth,
+              height: imgHeight,
+              opacity: imageOpacity,
+              transform: `rotate(${imageAngle}deg)`,
+              transformOrigin: 'center',
+            }}
+          />
+        );
+      }
+    }
+    
+    return (
+      <View style={pdfStyles.imageBackground}>
+        {imageElements}
+      </View>
+    );
+  };
+
   // Create a puzzle page with the given showSolution setting
   const createPuzzlePage = (puzzleToRender: CombinedPuzzleGrid, index: number, showSolution: boolean) => {
     const pageNumber = Math.ceil((index + 1) / 2);
     const pageLabel = showSolution ? `Answer ${pageNumber}` : `Page ${pageNumber}`;
-    
-    // Handle isAnswer property for both PuzzleGrid and CrosswordGrid types
-    const isAnswerPage = 'isAnswer' in puzzleToRender ? puzzleToRender.isAnswer : false;
     
     return (
       <Page 
@@ -273,6 +338,9 @@ export const PuzzlePDFPreview = ({
         size={[currentWidth, currentHeight]} 
         style={pdfStyles.page}
       >
+        {/* Tiled background pattern */}
+        {uploadedImages && uploadedImages.length > 0 && createTiledBackground()}
+        
         <View style={pdfStyles.container}>
           {showTitle && (
             <View style={[pdfStyles.titleContainer, {marginTop: getVerticalOffset(titleOffset)}]}>
@@ -301,12 +369,7 @@ export const PuzzlePDFPreview = ({
                   <View key={i} style={pdfStyles.row}>
                     {row.map((cell, j) => {
                       const wordPlacements = showSolution ? 
-                        puzzleToRender.wordPlacements.filter(wp => {
-                          if (typeof wp.direction === "object" && "x" in wp.direction && "y" in wp.direction) {
-                            return isPartOfWord(j, i, wp);
-                          }
-                          return false;
-                        }) : 
+                        puzzleToRender.wordPlacements.filter(wp => isPartOfWord(j, i, wp)) : 
                         [];
 
                       return (
@@ -314,13 +377,6 @@ export const PuzzlePDFPreview = ({
                           <Text style={pdfStyles.letter}>{cell}</Text>
                           
                           {showSolution && wordPlacements.map((placement, index) => {
-                            // Only process placements with x,y direction objects
-                            if (typeof placement.direction !== "object" || 
-                                !("x" in placement.direction) || 
-                                !("y" in placement.direction)) {
-                              return null;
-                            }
-                            
                             const { direction } = placement;
                             let lineStyle;
                             
@@ -366,10 +422,12 @@ export const PuzzlePDFPreview = ({
       </Page>
     );
   };
+
+  const pdfStyles = createPDFStyles(fontSizes);
   
   // Create pages array with questions and answers properly paired
   const pages = [];
-  const questionPuzzles = puzzlesToRender.filter(p => !('isAnswer' in p) || !p.isAnswer);
+  const questionPuzzles = puzzlesToRender.filter(p => !p.isAnswer);
   
   questionPuzzles.forEach((puzzle, index) => {
     // Add question page
