@@ -1,6 +1,7 @@
-import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
+
+import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
-import { CombinedPuzzleGrid } from "./DownloadPuzzleDialog";
+import { CombinedPuzzleGrid } from "./types";
 
 interface PuzzlePDFPreviewProps {
   puzzle: CombinedPuzzleGrid | null;
@@ -28,11 +29,6 @@ interface PuzzlePDFPreviewProps {
   subtitleSizeMultiplier: number;
   instructionSizeMultiplier: number;
   wordListSizeMultiplier: number;
-  uploadedImages?: string[];
-  imageOpacity?: number;
-  imageGridSize?: number;
-  imageAngle?: number;
-  imageSpacing?: number;
   includeSolution?: boolean;
 }
 
@@ -62,11 +58,6 @@ export const PuzzlePDFPreview = ({
   subtitleSizeMultiplier,
   instructionSizeMultiplier,
   wordListSizeMultiplier,
-  uploadedImages = [],
-  imageOpacity = 0.3,
-  imageGridSize = 100,
-  imageAngle = 0,
-  imageSpacing = 0,
   includeSolution = true,
 }: PuzzlePDFPreviewProps) => {
   if (!puzzle) return null;
@@ -108,15 +99,6 @@ export const PuzzlePDFPreview = ({
         padding: 40,
         fontFamily: 'Times-Roman',
         position: 'relative',
-        overflow: 'hidden',
-      },
-      imageBackground: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: currentWidth,
-        height: currentHeight,
-        zIndex: 0,
         overflow: 'hidden',
       },
       container: {
@@ -259,6 +241,12 @@ export const PuzzlePDFPreview = ({
   // Helper function to check if a cell is part of a word
   function isPartOfWord(x: number, y: number, placement: any): boolean {
     const { startPos, direction, length } = placement;
+    
+    // Type guard for the direction object
+    if (typeof direction === 'string') {
+      return false;
+    }
+    
     for (let i = 0; i < length; i++) {
       const checkX = startPos.x + (direction.x * i);
       const checkY = startPos.y + (direction.y * i);
@@ -269,68 +257,15 @@ export const PuzzlePDFPreview = ({
     return false;
   }
 
-  // Create a tiled background pattern that's confined to a single page
-  const createTiledBackground = () => {
-    if (!uploadedImages || uploadedImages.length === 0) return null;
-    
-    const imageElements = [];
-    
-    // Calculate number of images needed to cover the page completely
-    const horizontalCount = Math.ceil(currentWidth / (imageGridSize + imageSpacing)) + 1;
-    const verticalCount = Math.ceil(currentHeight / (imageGridSize + imageSpacing)) + 1;
-    
-    // Create a grid of images that stays within page boundaries
-    for (let y = 0; y < verticalCount; y++) {
-      for (let x = 0; x < horizontalCount; x++) {
-        // Calculate the actual width and height to avoid overflow
-        const imgWidth = x === horizontalCount - 1 && x * (imageGridSize + imageSpacing) + imageGridSize > currentWidth
-          ? currentWidth - (x * (imageGridSize + imageSpacing))
-          : imageGridSize;
-          
-        const imgHeight = y === verticalCount - 1 && y * (imageGridSize + imageSpacing) + imageGridSize > currentHeight
-          ? currentHeight - (y * (imageGridSize + imageSpacing))
-          : imageGridSize;
-        
-        // Skip images that would be completely off-page
-        if (imgWidth <= 0 || imgHeight <= 0) continue;
-        
-        // Calculate position with spacing included
-        const posX = x * (imageGridSize + imageSpacing);
-        const posY = y * (imageGridSize + imageSpacing);
-        
-        // Skip images that would start beyond page boundaries
-        if (posX >= currentWidth || posY >= currentHeight) continue;
-        
-        imageElements.push(
-          <Image
-            key={`${x}-${y}`}
-            src={uploadedImages[0]}
-            style={{
-              position: 'absolute',
-              left: posX,
-              top: posY,
-              width: imgWidth,
-              height: imgHeight,
-              opacity: imageOpacity,
-              transform: `rotate(${imageAngle}deg)`,
-              transformOrigin: 'center',
-            }}
-          />
-        );
-      }
-    }
-    
-    return (
-      <View style={pdfStyles.imageBackground}>
-        {imageElements}
-      </View>
-    );
-  };
-
+  const pdfStyles = createPDFStyles(fontSizes);
+  
   // Create a puzzle page with the given showSolution setting
   const createPuzzlePage = (puzzleToRender: CombinedPuzzleGrid, index: number, showSolution: boolean) => {
     const pageNumber = Math.ceil((index + 1) / 2);
     const pageLabel = showSolution ? `Answer ${pageNumber}` : `Page ${pageNumber}`;
+    
+    // Type guard for isAnswer property
+    const isAnswer = 'isAnswer' in puzzleToRender ? puzzleToRender.isAnswer : false;
     
     return (
       <Page 
@@ -338,9 +273,6 @@ export const PuzzlePDFPreview = ({
         size={[currentWidth, currentHeight]} 
         style={pdfStyles.page}
       >
-        {/* Tiled background pattern */}
-        {uploadedImages && uploadedImages.length > 0 && createTiledBackground()}
-        
         <View style={pdfStyles.container}>
           {showTitle && (
             <View style={[pdfStyles.titleContainer, {marginTop: getVerticalOffset(titleOffset)}]}>
@@ -377,6 +309,11 @@ export const PuzzlePDFPreview = ({
                           <Text style={pdfStyles.letter}>{cell}</Text>
                           
                           {showSolution && wordPlacements.map((placement, index) => {
+                            // Type guard for the direction object
+                            if (typeof placement.direction === 'string') {
+                              return null;
+                            }
+                            
                             const { direction } = placement;
                             let lineStyle;
                             
@@ -423,11 +360,9 @@ export const PuzzlePDFPreview = ({
     );
   };
 
-  const pdfStyles = createPDFStyles(fontSizes);
-  
   // Create pages array with questions and answers properly paired
   const pages = [];
-  const questionPuzzles = puzzlesToRender.filter(p => !p.isAnswer);
+  const questionPuzzles = puzzlesToRender.filter(p => !('isAnswer' in p) || !p.isAnswer);
   
   questionPuzzles.forEach((puzzle, index) => {
     // Add question page
