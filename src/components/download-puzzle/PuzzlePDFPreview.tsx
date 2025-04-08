@@ -1,4 +1,3 @@
-
 import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { CombinedPuzzleGrid } from "./DownloadPuzzleDialog";
@@ -92,149 +91,6 @@ export const PuzzlePDFPreview = ({
 
   const fontSizes = calculateFontSizes();
   
-  // Use the exact font sizes from our calculations
-  const pdfStyles = createPDFStyles(fontSizes);
-
-  // Create a tiled background pattern that's confined to a single page
-  const createTiledBackground = () => {
-    if (!uploadedImages || uploadedImages.length === 0) return null;
-    
-    const imageElements = [];
-    
-    // Calculate number of images needed to cover the page completely
-    // Make sure not to exceed the page boundaries
-    const horizontalCount = Math.ceil(currentWidth / (imageGridSize + imageSpacing)) + 1;
-    const verticalCount = Math.ceil(currentHeight / (imageGridSize + imageSpacing)) + 1;
-    
-    // Create a grid of images that stays within page boundaries
-    for (let y = 0; y < verticalCount; y++) {
-      for (let x = 0; x < horizontalCount; x++) {
-        // Calculate the actual width and height to avoid overflow
-        const imgWidth = x === horizontalCount - 1 && x * (imageGridSize + imageSpacing) + imageGridSize > currentWidth
-          ? currentWidth - (x * (imageGridSize + imageSpacing))
-          : imageGridSize;
-          
-        const imgHeight = y === verticalCount - 1 && y * (imageGridSize + imageSpacing) + imageGridSize > currentHeight
-          ? currentHeight - (y * (imageGridSize + imageSpacing))
-          : imageGridSize;
-        
-        // Skip images that would be completely off-page
-        if (imgWidth <= 0 || imgHeight <= 0) continue;
-        
-        // Calculate position with spacing included
-        const posX = x * (imageGridSize + imageSpacing);
-        const posY = y * (imageGridSize + imageSpacing);
-        
-        // Skip images that would start beyond page boundaries
-        if (posX >= currentWidth || posY >= currentHeight) continue;
-        
-        imageElements.push(
-          <Image
-            key={`${x}-${y}`}
-            src={uploadedImages[0]}
-            style={{
-              position: 'absolute',
-              left: posX,
-              top: posY,
-              width: imgWidth,
-              height: imgHeight,
-              opacity: imageOpacity,
-              transform: `rotate(${imageAngle}deg)`,
-              transformOrigin: 'center',
-            }}
-          />
-        );
-      }
-    }
-    
-    return (
-      <View style={pdfStyles.imageBackground}>
-        {imageElements}
-      </View>
-    );
-  };
-  
-  // Create a puzzle page with the given showSolution setting and puzzle
-  const createPuzzlePage = (puzzleToRender: CombinedPuzzleGrid, index: number, showSolution: boolean) => (
-    <Page key={`${index}-${showSolution ? 'solution' : 'puzzle'}`} size={[currentWidth, currentHeight]} style={pdfStyles.page} wrap={false}>
-      {/* Tiled background pattern */}
-      {uploadedImages && uploadedImages.length > 0 && createTiledBackground()}
-      
-      <View style={pdfStyles.container}>
-        {showTitle && (
-          <View style={[pdfStyles.titleContainer, {marginTop: getVerticalOffset(titleOffset)}]}>
-            <Text style={pdfStyles.title}>
-              {showSolution 
-                ? `${title.toUpperCase()} - PAGE ${index + 1} SOLUTION` 
-                : puzzlesToRender.length > 1 
-                  ? `${title.toUpperCase()} - PAGE ${index + 1}` 
-                  : title.toUpperCase()}
-            </Text>
-          </View>
-        )}
-        
-        {showSubtitle && (
-          <View style={[pdfStyles.subtitleContainer, {marginTop: getVerticalOffset(subtitleOffset)}]}>
-            <Text style={pdfStyles.subtitle}>{subtitle.toLowerCase()}</Text>
-          </View>
-        )}
-        
-        {showInstruction && !showSolution && (
-          <View style={[pdfStyles.instructionContainer, {marginTop: getVerticalOffset(instructionOffset)}]}>
-            <Text style={pdfStyles.instruction}>{instruction}</Text>
-          </View>
-        )}
-        
-        {showGrid && (
-          <View style={[pdfStyles.gridContainer, {marginTop: getVerticalOffset(gridOffset)}]}>
-            <View style={pdfStyles.grid}>
-              {puzzleToRender.grid.map((row, i) => (
-                <View key={i} style={pdfStyles.row}>
-                  {row.map((cell, j) => (
-                    <View key={`${i}-${j}`} style={pdfStyles.cell}>
-                      <Text style={pdfStyles.letter}>
-                        {showSolution ? cell : (cell && cell !== ' ' ? cell : '')}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-        
-        {showWordList && (
-          <View style={[pdfStyles.wordListContainer, {marginTop: getVerticalOffset(wordListOffset)}]}>
-            <View style={pdfStyles.wordList}>
-              {puzzleToRender.wordPlacements.map(({ word }, index) => (
-                <Text key={index} style={pdfStyles.wordItem}>{word.toLowerCase()}</Text>
-              ))}
-            </View>
-          </View>
-        )}
-      </View>
-    </Page>
-  );
-  
-  // Create all pages
-  const pages = [];
-  
-  // Add all puzzles
-  for (let i = 0; i < puzzlesToRender.length; i++) {
-    pages.push(createPuzzlePage(puzzlesToRender[i], i, false));
-    
-    // Add solution pages if requested
-    if (includeSolution) {
-      pages.push(createPuzzlePage(puzzlesToRender[i], i, true));
-    }
-  }
-  
-  return (
-    <Document>
-      {pages}
-    </Document>
-  );
-
   // Create styles for PDF that match the preview exactly
   function createPDFStyles(fontSizes: { 
     titleSize: number; 
@@ -252,7 +108,7 @@ export const PuzzlePDFPreview = ({
         padding: 40,
         fontFamily: 'Times-Roman',
         position: 'relative',
-        overflow: 'hidden', // Prevent content from overflowing to next page
+        overflow: 'hidden',
       },
       imageBackground: {
         position: 'absolute',
@@ -261,7 +117,7 @@ export const PuzzlePDFPreview = ({
         width: currentWidth,
         height: currentHeight,
         zIndex: 0,
-        overflow: 'hidden', // Ensure background stays within page
+        overflow: 'hidden',
       },
       container: {
         flex: 1,
@@ -330,11 +186,13 @@ export const PuzzlePDFPreview = ({
         backgroundColor: 'rgba(255, 255, 255, 0.6)',
         borderWidth: 0.5,
         borderColor: '#d1d5db',
+        position: 'relative',
       },
       letter: {
         textAlign: 'center',
         alignSelf: 'center',
         fontSize: letterSize,
+        zIndex: 3,
       },
       wordList: {
         display: 'flex',
@@ -350,13 +208,236 @@ export const PuzzlePDFPreview = ({
         padding: 4,
         borderRadius: 4,
       },
+      solutionLine: {
+        position: 'absolute',
+        backgroundColor: 'rgb(239, 68, 68)',
+        opacity: 0.7,
+        zIndex: 2,
+      },
+      horizontalLine: {
+        height: 2,
+        left: 0,
+        right: 0,
+        top: '50%',
+      },
+      verticalLine: {
+        width: 2,
+        top: 0,
+        bottom: 0,
+        left: '50%',
+      },
+      diagonalLineDown: {
+        height: 2,
+        width: '140%',
+        left: '-20%',
+        top: '50%',
+        transform: 'rotate(45deg)',
+      },
+      diagonalLineUp: {
+        height: 2,
+        width: '140%',
+        left: '-20%',
+        top: '50%',
+        transform: 'rotate(-45deg)',
+      },
+      pageNumber: {
+        position: 'absolute',
+        bottom: 30,
+        right: 40,
+        fontSize: 10,
+        color: '#666',
+      },
     });
   }
 
   // Calculate vertical position offset
   function getVerticalOffset(offset: number) {
-    // Each unit is 10 points, limit to prevent going off page
     const maxAllowedOffset = Math.min(5, (contentHeight / 6) / 10);
     return Math.max(-maxAllowedOffset, Math.min(offset * 10, maxAllowedOffset * 10));
   }
+  
+  // Helper function to check if a cell is part of a word
+  function isPartOfWord(x: number, y: number, placement: any): boolean {
+    const { startPos, direction, length } = placement;
+    for (let i = 0; i < length; i++) {
+      const checkX = startPos.x + (direction.x * i);
+      const checkY = startPos.y + (direction.y * i);
+      if (checkX === x && checkY === y) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Create a tiled background pattern that's confined to a single page
+  const createTiledBackground = () => {
+    if (!uploadedImages || uploadedImages.length === 0) return null;
+    
+    const imageElements = [];
+    
+    // Calculate number of images needed to cover the page completely
+    const horizontalCount = Math.ceil(currentWidth / (imageGridSize + imageSpacing)) + 1;
+    const verticalCount = Math.ceil(currentHeight / (imageGridSize + imageSpacing)) + 1;
+    
+    // Create a grid of images that stays within page boundaries
+    for (let y = 0; y < verticalCount; y++) {
+      for (let x = 0; x < horizontalCount; x++) {
+        // Calculate the actual width and height to avoid overflow
+        const imgWidth = x === horizontalCount - 1 && x * (imageGridSize + imageSpacing) + imageGridSize > currentWidth
+          ? currentWidth - (x * (imageGridSize + imageSpacing))
+          : imageGridSize;
+          
+        const imgHeight = y === verticalCount - 1 && y * (imageGridSize + imageSpacing) + imageGridSize > currentHeight
+          ? currentHeight - (y * (imageGridSize + imageSpacing))
+          : imageGridSize;
+        
+        // Skip images that would be completely off-page
+        if (imgWidth <= 0 || imgHeight <= 0) continue;
+        
+        // Calculate position with spacing included
+        const posX = x * (imageGridSize + imageSpacing);
+        const posY = y * (imageGridSize + imageSpacing);
+        
+        // Skip images that would start beyond page boundaries
+        if (posX >= currentWidth || posY >= currentHeight) continue;
+        
+        imageElements.push(
+          <Image
+            key={`${x}-${y}`}
+            src={uploadedImages[0]}
+            style={{
+              position: 'absolute',
+              left: posX,
+              top: posY,
+              width: imgWidth,
+              height: imgHeight,
+              opacity: imageOpacity,
+              transform: `rotate(${imageAngle}deg)`,
+              transformOrigin: 'center',
+            }}
+          />
+        );
+      }
+    }
+    
+    return (
+      <View style={pdfStyles.imageBackground}>
+        {imageElements}
+      </View>
+    );
+  };
+
+  // Create a puzzle page with the given showSolution setting
+  const createPuzzlePage = (puzzleToRender: CombinedPuzzleGrid, index: number, showSolution: boolean) => {
+    const pageNumber = Math.ceil((index + 1) / 2);
+    const pageLabel = showSolution ? `Answer ${pageNumber}` : `Page ${pageNumber}`;
+    
+    return (
+      <Page 
+        key={`${index}-${showSolution ? 'solution' : 'puzzle'}`} 
+        size={[currentWidth, currentHeight]} 
+        style={pdfStyles.page}
+      >
+        {/* Tiled background pattern */}
+        {uploadedImages && uploadedImages.length > 0 && createTiledBackground()}
+        
+        <View style={pdfStyles.container}>
+          {showTitle && (
+            <View style={[pdfStyles.titleContainer, {marginTop: getVerticalOffset(titleOffset)}]}>
+              <Text style={pdfStyles.title}>
+                {showSolution ? `${title.toUpperCase()} - SOLUTION` : title.toUpperCase()}
+              </Text>
+            </View>
+          )}
+          
+          {showSubtitle && (
+            <View style={[pdfStyles.subtitleContainer, {marginTop: getVerticalOffset(subtitleOffset)}]}>
+              <Text style={pdfStyles.subtitle}>{subtitle.toLowerCase()}</Text>
+            </View>
+          )}
+          
+          {showInstruction && !showSolution && (
+            <View style={[pdfStyles.instructionContainer, {marginTop: getVerticalOffset(instructionOffset)}]}>
+              <Text style={pdfStyles.instruction}>{instruction}</Text>
+            </View>
+          )}
+          
+          {showGrid && (
+            <View style={[pdfStyles.gridContainer, {marginTop: getVerticalOffset(gridOffset)}]}>
+              <View style={pdfStyles.grid}>
+                {puzzleToRender.grid.map((row, i) => (
+                  <View key={i} style={pdfStyles.row}>
+                    {row.map((cell, j) => {
+                      const wordPlacements = showSolution ? 
+                        puzzleToRender.wordPlacements.filter(wp => isPartOfWord(j, i, wp)) : 
+                        [];
+
+                      return (
+                        <View key={`${i}-${j}`} style={pdfStyles.cell}>
+                          <Text style={pdfStyles.letter}>{cell}</Text>
+                          
+                          {showSolution && wordPlacements.map((placement, index) => {
+                            const { direction } = placement;
+                            let lineStyle;
+                            
+                            if (direction.x === 1 && direction.y === 0) {
+                              lineStyle = pdfStyles.horizontalLine;
+                            } else if (direction.x === 0 && direction.y === 1) {
+                              lineStyle = pdfStyles.verticalLine;
+                            } else if (direction.x === 1 && direction.y === 1) {
+                              lineStyle = pdfStyles.diagonalLineDown;
+                            } else if (direction.x === 1 && direction.y === -1) {
+                              lineStyle = pdfStyles.diagonalLineUp;
+                            }
+                            
+                            return lineStyle && (
+                              <View 
+                                key={`line-${index}`} 
+                                style={[pdfStyles.solutionLine, lineStyle]} 
+                              />
+                            );
+                          })}
+                        </View>
+                      );
+                    })}
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+          
+          {showWordList && (
+            <View style={[pdfStyles.wordListContainer, {marginTop: getVerticalOffset(wordListOffset)}]}>
+              <View style={pdfStyles.wordList}>
+                {puzzleToRender.wordPlacements.map(({ word }, index) => (
+                  <Text key={index} style={pdfStyles.wordItem}>{word.toLowerCase()}</Text>
+                ))}
+              </View>
+            </View>
+          )}
+        </View>
+        
+        {/* Page number */}
+        <Text style={pdfStyles.pageNumber}>{pageLabel}</Text>
+      </Page>
+    );
+  };
+
+  const pdfStyles = createPDFStyles(fontSizes);
+  
+  // Create pages array with questions and answers properly paired
+  const pages = [];
+  const questionPuzzles = puzzlesToRender.filter(p => !p.isAnswer);
+  
+  questionPuzzles.forEach((puzzle, index) => {
+    // Add question page
+    pages.push(createPuzzlePage(puzzle, index * 2, false));
+    
+    // Add answer page if includeSolution is true
+    if (includeSolution) {
+      pages.push(createPuzzlePage(puzzle, index * 2 + 1, true));
+    }
+  });
+  
+  return <Document>{pages}</Document>;
 };
