@@ -1,5 +1,4 @@
-
-import { CombinedPuzzleGrid } from "../DownloadPuzzleDialog";
+import { CombinedPuzzleGrid } from "../types";
 
 interface PreviewGridProps {
   puzzle: CombinedPuzzleGrid;

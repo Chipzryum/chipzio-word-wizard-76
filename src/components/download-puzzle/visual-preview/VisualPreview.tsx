@@ -1,5 +1,5 @@
 
-import { CombinedPuzzleGrid } from "../DownloadPuzzleDialog";
+import { CombinedPuzzleGrid } from "../types";
 import { PreviewImageBackground } from "./PreviewImageBackground";
 import { PreviewContent } from "./PreviewContent";
 

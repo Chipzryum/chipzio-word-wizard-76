@@ -3,7 +3,6 @@ import { CrosswordGrid } from "@/utils/crosswordUtils";
 import { PDFViewer } from "@react-pdf/renderer";
 import { CrosswordPDFPreview } from "./CrosswordPDFPreview";
 import { 
-  TiledBackground,
   CrosswordPreviewContent
 } from "./crossword-components";
 
@@ -43,11 +42,6 @@ interface CrosswordVisualPreviewProps {
     wordListSize: number;
   };
   getVerticalOffset: (offset: number) => number;
-  uploadedImages?: string[];
-  imageOpacity?: number;
-  imageGridSize?: number;
-  imageAngle?: number;
-  imageSpacing?: number;
   showSolution?: boolean;
   includeSolution?: boolean;
 }
@@ -83,11 +77,6 @@ export const CrosswordVisualPreview = ({
   previewScaleFactor,
   fontSizes,
   getVerticalOffset,
-  uploadedImages = [],
-  imageOpacity = 0.3,
-  imageGridSize = 100,
-  imageAngle = 0,
-  imageSpacing = 0,
   showSolution = false,
   includeSolution = true,
 }: CrosswordVisualPreviewProps) => {
@@ -120,11 +109,6 @@ export const CrosswordVisualPreview = ({
             subtitleSizeMultiplier={subtitleSizeMultiplier}
             instructionSizeMultiplier={instructionSizeMultiplier}
             wordListSizeMultiplier={wordListSizeMultiplier}
-            uploadedImages={uploadedImages}
-            imageOpacity={imageOpacity}
-            imageGridSize={imageGridSize}
-            imageAngle={imageAngle}
-            imageSpacing={imageSpacing}
             showSolution={showSolution}
             includeSolution={includeSolution}
           />
@@ -148,20 +132,6 @@ export const CrosswordVisualPreview = ({
         maxHeight: '420px',
       }}
     >
-      {/* Apply tiled background pattern with individual rotated images */}
-      {uploadedImages && uploadedImages.length > 0 && (
-        <TiledBackground
-          uploadedImages={uploadedImages}
-          currentWidth={currentWidth}
-          currentHeight={currentHeight}
-          imageGridSize={imageGridSize}
-          imageSpacing={imageSpacing}
-          imageOpacity={imageOpacity}
-          imageAngle={imageAngle}
-          previewScaleFactor={previewScaleFactor}
-        />
-      )}
-      
       {puzzle && (
         <CrosswordPreviewContent
           puzzle={puzzle}

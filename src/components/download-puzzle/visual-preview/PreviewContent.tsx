@@ -1,5 +1,5 @@
 
-import { CombinedPuzzleGrid } from "../DownloadPuzzleDialog";
+import { CombinedPuzzleGrid } from "../types";
 import { PreviewGrid } from "./PreviewGrid";
 import { PreviewWordList } from "./PreviewWordList";
 
