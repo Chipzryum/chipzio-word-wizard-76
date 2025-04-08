@@ -1,5 +1,5 @@
-import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
-import { PuzzleGrid } from "@/utils/wordSearchUtils";
+
+import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { CombinedPuzzleGrid } from "./DownloadPuzzleDialog";
 
 interface PuzzlePDFPreviewProps {
@@ -28,11 +28,6 @@ interface PuzzlePDFPreviewProps {
   subtitleSizeMultiplier: number;
   instructionSizeMultiplier: number;
   wordListSizeMultiplier: number;
-  uploadedImages?: string[];
-  imageOpacity?: number;
-  imageGridSize?: number;
-  imageAngle?: number;
-  imageSpacing?: number;
   includeSolution?: boolean;
 }
 
@@ -62,11 +57,6 @@ export const PuzzlePDFPreview = ({
   subtitleSizeMultiplier,
   instructionSizeMultiplier,
   wordListSizeMultiplier,
-  uploadedImages = [],
-  imageOpacity = 0.3,
-  imageGridSize = 100,
-  imageAngle = 0,
-  imageSpacing = 0,
   includeSolution = true,
 }: PuzzlePDFPreviewProps) => {
   if (!puzzle) return null;
@@ -108,15 +98,6 @@ export const PuzzlePDFPreview = ({
         padding: 40,
         fontFamily: 'Times-Roman',
         position: 'relative',
-        overflow: 'hidden',
-      },
-      imageBackground: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: currentWidth,
-        height: currentHeight,
-        zIndex: 0,
         overflow: 'hidden',
       },
       container: {
@@ -269,64 +250,8 @@ export const PuzzlePDFPreview = ({
     return false;
   }
 
-  // Create a tiled background pattern that's confined to a single page
-  const createTiledBackground = () => {
-    if (!uploadedImages || uploadedImages.length === 0) return null;
-    
-    const imageElements = [];
-    
-    // Calculate number of images needed to cover the page completely
-    const horizontalCount = Math.ceil(currentWidth / (imageGridSize + imageSpacing)) + 1;
-    const verticalCount = Math.ceil(currentHeight / (imageGridSize + imageSpacing)) + 1;
-    
-    // Create a grid of images that stays within page boundaries
-    for (let y = 0; y < verticalCount; y++) {
-      for (let x = 0; x < horizontalCount; x++) {
-        // Calculate the actual width and height to avoid overflow
-        const imgWidth = x === horizontalCount - 1 && x * (imageGridSize + imageSpacing) + imageGridSize > currentWidth
-          ? currentWidth - (x * (imageGridSize + imageSpacing))
-          : imageGridSize;
-          
-        const imgHeight = y === verticalCount - 1 && y * (imageGridSize + imageSpacing) + imageGridSize > currentHeight
-          ? currentHeight - (y * (imageGridSize + imageSpacing))
-          : imageGridSize;
-        
-        // Skip images that would be completely off-page
-        if (imgWidth <= 0 || imgHeight <= 0) continue;
-        
-        // Calculate position with spacing included
-        const posX = x * (imageGridSize + imageSpacing);
-        const posY = y * (imageGridSize + imageSpacing);
-        
-        // Skip images that would start beyond page boundaries
-        if (posX >= currentWidth || posY >= currentHeight) continue;
-        
-        imageElements.push(
-          <Image
-            key={`${x}-${y}`}
-            src={uploadedImages[0]}
-            style={{
-              position: 'absolute',
-              left: posX,
-              top: posY,
-              width: imgWidth,
-              height: imgHeight,
-              opacity: imageOpacity,
-              transform: `rotate(${imageAngle}deg)`,
-              transformOrigin: 'center',
-            }}
-          />
-        );
-      }
-    }
-    
-    return (
-      <View style={pdfStyles.imageBackground}>
-        {imageElements}
-      </View>
-    );
-  };
-
+  const pdfStyles = createPDFStyles(fontSizes);
+  
   // Create a puzzle page with the given showSolution setting
   const createPuzzlePage = (puzzleToRender: CombinedPuzzleGrid, index: number, showSolution: boolean) => {
     const pageNumber = Math.ceil((index + 1) / 2);
@@ -338,9 +263,6 @@ export const PuzzlePDFPreview = ({
         size={[currentWidth, currentHeight]} 
         style={pdfStyles.page}
       >
-        {/* Tiled background pattern */}
-        {uploadedImages && uploadedImages.length > 0 && createTiledBackground()}
-        
         <View style={pdfStyles.container}>
           {showTitle && (
             <View style={[pdfStyles.titleContainer, {marginTop: getVerticalOffset(titleOffset)}]}>
@@ -422,8 +344,6 @@ export const PuzzlePDFPreview = ({
       </Page>
     );
   };
-
-  const pdfStyles = createPDFStyles(fontSizes);
   
   // Create pages array with questions and answers properly paired
   const pages = [];

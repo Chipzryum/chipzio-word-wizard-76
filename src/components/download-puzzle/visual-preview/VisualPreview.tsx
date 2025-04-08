@@ -1,6 +1,6 @@
 
+import { ReactNode } from "react";
 import { CombinedPuzzleGrid } from "../DownloadPuzzleDialog";
-import { PreviewImageBackground } from "./PreviewImageBackground";
 import { PreviewContent } from "./PreviewContent";
 
 interface VisualPreviewProps {
@@ -39,11 +39,6 @@ interface VisualPreviewProps {
     wordListSize: number;
   };
   getVerticalOffset: (offset: number) => number;
-  uploadedImages?: string[];
-  imageOpacity?: number;
-  imageGridSize?: number;
-  imageAngle?: number;
-  imageSpacing?: number;
   includeSolution?: boolean;
 }
 
@@ -63,11 +58,6 @@ export const VisualPreview = ({
   previewScaleFactor,
   fontSizes,
   getVerticalOffset,
-  uploadedImages = [],
-  imageOpacity = 0.3,
-  imageGridSize = 100,
-  imageAngle = 0,
-  imageSpacing = 0,
   ...props
 }: VisualPreviewProps) => {
   // Set dimensions to maintain A4 aspect ratio
@@ -86,42 +76,31 @@ export const VisualPreview = ({
       }}
     >
       {puzzle && (
-        <PreviewImageBackground
-          uploadedImages={uploadedImages}
-          currentWidth={currentWidth}
-          currentHeight={currentHeight}
-          imageGridSize={imageGridSize}
-          imageSpacing={imageSpacing}
-          imageOpacity={imageOpacity}
-          imageAngle={imageAngle}
+        <PreviewContent
+          puzzle={puzzle}
+          title={props.title}
+          subtitle={props.subtitle}
+          instruction={props.instruction}
+          showTitle={props.showTitle}
+          showSubtitle={props.showSubtitle}
+          showInstruction={props.showInstruction}
+          showGrid={props.showGrid}
+          showWordList={props.showWordList}
+          titleOffset={props.titleOffset}
+          subtitleOffset={props.subtitleOffset}
+          instructionOffset={props.instructionOffset}
+          gridOffset={props.gridOffset}
+          wordListOffset={props.wordListOffset}
+          getVerticalOffset={getVerticalOffset}
           previewScaleFactor={previewScaleFactor}
-        >
-          <PreviewContent
-            puzzle={puzzle}
-            title={props.title}
-            subtitle={props.subtitle}
-            instruction={props.instruction}
-            showTitle={props.showTitle}
-            showSubtitle={props.showSubtitle}
-            showInstruction={props.showInstruction}
-            showGrid={props.showGrid}
-            showWordList={props.showWordList}
-            titleOffset={props.titleOffset}
-            subtitleOffset={props.subtitleOffset}
-            instructionOffset={props.instructionOffset}
-            gridOffset={props.gridOffset}
-            wordListOffset={props.wordListOffset}
-            getVerticalOffset={getVerticalOffset}
-            previewScaleFactor={previewScaleFactor}
-            fontSizes={fontSizes}
-            titleSizeMultiplier={titleSizeMultiplier}
-            subtitleSizeMultiplier={subtitleSizeMultiplier}
-            instructionSizeMultiplier={instructionSizeMultiplier}
-            wordListSizeMultiplier={wordListSizeMultiplier}
-            cellSize={cellSize}
-            showSolution={false} // Default value
-          />
-        </PreviewImageBackground>
+          fontSizes={fontSizes}
+          titleSizeMultiplier={titleSizeMultiplier}
+          subtitleSizeMultiplier={subtitleSizeMultiplier}
+          instructionSizeMultiplier={instructionSizeMultiplier}
+          wordListSizeMultiplier={wordListSizeMultiplier}
+          cellSize={cellSize}
+          showSolution={false} // Default value
+        />
       )}
     </div>
   );

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
@@ -5,7 +6,6 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Trash2, Upload, Info } from "lucide-react";
 import { 
   Select, 
   SelectContent, 
@@ -29,11 +29,7 @@ import {
   PAGE_SIZE_OPTIONS, 
   DEFAULT_VALUES, 
   MAX_MULTIPLIERS, 
-  Unit,
-  MIN_PATTERN_ANGLE,
-  MAX_PATTERN_ANGLE,
-  MIN_IMAGE_SPACING,
-  MAX_IMAGE_SPACING
+  Unit
 } from "./constants";
 
 interface ControlPanelProps {
@@ -103,17 +99,6 @@ interface ControlPanelProps {
   
   formatSliderValue: (value: number) => string;
   getPositionValue: (offset: number) => string;
-
-  uploadedImages: string[];
-  onImagesChange: (images: string[]) => void;
-  imageOpacity: number;
-  setImageOpacity: (value: number) => void;
-  imageGridSize: number;
-  setImageGridSize: (value: number) => void;
-  imageAngle: number;
-  setImageAngle: (value: number) => void;
-  imageSpacing: number;
-  setImageSpacing: (value: number) => void;
 }
 
 export const ControlPanel = ({
@@ -162,73 +147,8 @@ export const ControlPanel = ({
   getPositionValue,
   positioningElement,
   togglePositioning,
-  moveElement,
-  uploadedImages,
-  onImagesChange,
-  imageOpacity,
-  setImageOpacity,
-  imageGridSize,
-  setImageGridSize,
-  imageAngle,
-  setImageAngle,
-  imageSpacing,
-  setImageSpacing
+  moveElement
 }: ControlPanelProps) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
-
-    const newImages: string[] = [];
-    const maxFileSize = 5 * 1024 * 1024; // 5MB
-    const supportedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      
-      if (!supportedTypes.includes(file.type)) {
-        continue;
-      }
-
-      if (file.size > maxFileSize) {
-        continue;
-      }
-
-      const reader = new FileReader();
-      try {
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-        newImages.push(dataUrl);
-      } catch (error) {
-        console.error('Error reading file:', error);
-      }
-    }
-
-    if (newImages.length > 0) {
-      onImagesChange([...uploadedImages, ...newImages]);
-    }
-    
-    // Reset the file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const removeImage = (index: number) => {
-    const newImages = uploadedImages.filter((_, i) => i !== index);
-    onImagesChange(newImages);
-  };
-
-  const triggerFileInput = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
   return (
     <div className="p-4 overflow-y-auto max-h-[60vh]">
       <div className="space-y-4">
