@@ -291,7 +291,7 @@ export const usePuzzlePreview = ({
         title: "Error",
         description: "No puzzles to download. Please generate puzzles first.",
       });
-      return;
+      return false;
     }
     
     if (!isPDFReady || !pdfBlob) {
@@ -300,7 +300,7 @@ export const usePuzzlePreview = ({
         title: "Error",
         description: "Please save the layout first by clicking 'Save Layout'.",
       });
-      return;
+      return false;
     }
     
     try {
