@@ -1,3 +1,4 @@
+
 import { CombinedPuzzleGrid } from "../types";
 
 interface PreviewGridProps {
@@ -55,7 +56,7 @@ export const PreviewGrid = ({
                 width: `${cellSize * previewScaleFactor}px`,
                 height: `${cellSize * previewScaleFactor}px`,
                 fontSize: `${cellSize * 0.6 * previewScaleFactor}px`,
-                backgroundColor: 'rgba(255,255,255,0.6)', // Reduced opacity to show watermark through
+                backgroundColor: 'white',
               }}
             >
               {letter}
