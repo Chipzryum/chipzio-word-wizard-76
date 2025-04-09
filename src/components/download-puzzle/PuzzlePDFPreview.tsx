@@ -1,4 +1,3 @@
-
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { CombinedPuzzleGrid } from "./types";
@@ -30,6 +29,7 @@ interface PuzzlePDFPreviewProps {
   instructionSizeMultiplier: number;
   wordListSizeMultiplier: number;
   includeSolution?: boolean;
+  showSolution?: boolean;
 }
 
 export const PuzzlePDFPreview = ({
@@ -59,6 +59,7 @@ export const PuzzlePDFPreview = ({
   instructionSizeMultiplier,
   wordListSizeMultiplier,
   includeSolution = true,
+  showSolution = false,
 }: PuzzlePDFPreviewProps) => {
   if (!puzzle) return null;
   

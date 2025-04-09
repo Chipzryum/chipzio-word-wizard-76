@@ -44,6 +44,8 @@ interface CrosswordVisualPreviewProps {
   getVerticalOffset: (offset: number) => number;
   showSolution?: boolean;
   includeSolution?: boolean;
+  isAnswer?: boolean;
+  pageNumber?: number;
 }
 
 export const CrosswordVisualPreview = ({
@@ -79,6 +81,8 @@ export const CrosswordVisualPreview = ({
   getVerticalOffset,
   showSolution = false,
   includeSolution = true,
+  isAnswer = false,
+  pageNumber = 1,
 }: CrosswordVisualPreviewProps) => {
   if (showLivePreview && isPDFReady) {
     return (
@@ -109,7 +113,7 @@ export const CrosswordVisualPreview = ({
             subtitleSizeMultiplier={subtitleSizeMultiplier}
             instructionSizeMultiplier={instructionSizeMultiplier}
             wordListSizeMultiplier={wordListSizeMultiplier}
-            showSolution={showSolution}
+            showSolution={showSolution || isAnswer}
             includeSolution={includeSolution}
           />
         </PDFViewer>
@@ -133,32 +137,39 @@ export const CrosswordVisualPreview = ({
       }}
     >
       {puzzle && (
-        <CrosswordPreviewContent
-          puzzle={puzzle}
-          title={title}
-          subtitle={subtitle}
-          instruction={instruction}
-          showTitle={showTitle}
-          showSubtitle={showSubtitle}
-          showInstruction={showInstruction}
-          showGrid={showGrid}
-          showWordList={showWordList}
-          titleOffset={titleOffset}
-          subtitleOffset={subtitleOffset}
-          instructionOffset={instructionOffset}
-          gridOffset={gridOffset}
-          wordListOffset={wordListOffset}
-          getVerticalOffset={getVerticalOffset}
-          previewScaleFactor={previewScaleFactor}
-          fontSizes={fontSizes}
-          titleSizeMultiplier={titleSizeMultiplier}
-          subtitleSizeMultiplier={subtitleSizeMultiplier}
-          instructionSizeMultiplier={instructionSizeMultiplier}
-          wordListSizeMultiplier={wordListSizeMultiplier}
-          cellSize={cellSize}
-          letterSize={letterSize}
-          showSolution={showSolution}
-        />
+        <>
+          {/* Page indicator */}
+          <div className="absolute top-2 right-2 bg-gray-100 text-xs font-medium px-2 py-1 rounded-md z-10">
+            {isAnswer ? `Answer ${pageNumber}` : `Question ${pageNumber}`}
+          </div>
+          
+          <CrosswordPreviewContent
+            puzzle={puzzle}
+            title={title}
+            subtitle={subtitle}
+            instruction={instruction}
+            showTitle={showTitle}
+            showSubtitle={showSubtitle}
+            showInstruction={showInstruction}
+            showGrid={showGrid}
+            showWordList={showWordList}
+            titleOffset={titleOffset}
+            subtitleOffset={subtitleOffset}
+            instructionOffset={instructionOffset}
+            gridOffset={gridOffset}
+            wordListOffset={wordListOffset}
+            getVerticalOffset={getVerticalOffset}
+            previewScaleFactor={previewScaleFactor}
+            fontSizes={fontSizes}
+            titleSizeMultiplier={titleSizeMultiplier}
+            subtitleSizeMultiplier={subtitleSizeMultiplier}
+            instructionSizeMultiplier={instructionSizeMultiplier}
+            wordListSizeMultiplier={wordListSizeMultiplier}
+            cellSize={cellSize}
+            letterSize={letterSize}
+            showSolution={showSolution || isAnswer}
+          />
+        </>
       )}
     </div>
   );
