@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
@@ -108,24 +109,34 @@ export function DownloadPuzzleDialog({
 
   useEffect(() => {
     if (open) {
+      // Initialize with provided puzzles when dialog opens
       const puzzlesArray = allPuzzles.length ? allPuzzles : [puzzle];
       setPuzzles(puzzlesArray);
-      createDisplayPages(puzzlesArray, includeSolution);
+      createDisplayPages(puzzlesArray);
       setActivePuzzleIndex(0);
     }
-  }, [open, puzzle, allPuzzles, includeSolution]);
+  }, [open, puzzle, allPuzzles]);
 
-  const createDisplayPages = (puzzlesArray: CombinedPuzzleGrid[], includeSol: boolean) => {
-    const pages = puzzlesArray.flatMap((puzzle, index) => [
-      { puzzle, isAnswer: false, pageNumber: index + 1 },
-      ...(includeSol ? [{ puzzle, isAnswer: true, pageNumber: index + 1 }] : [])
-    ]);
+  // Modified function to properly create display pages
+  const createDisplayPages = (puzzlesArray: CombinedPuzzleGrid[]) => {
+    // Filter and organize puzzles by type
+    const pages = puzzlesArray.map((puzzle, index) => {
+      const isAnswerPage = 'isAnswer' in puzzle && puzzle.isAnswer === true;
+      return {
+        puzzle,
+        isAnswer: isAnswerPage,
+        // Calculate page number based on actual position
+        pageNumber: index + 1
+      };
+    });
+    
     setDisplayPages(pages);
   };
 
+  // Update display pages when includeSolution changes
   useEffect(() => {
     if (puzzles.length > 0) {
-      createDisplayPages(puzzles, includeSolution);
+      createDisplayPages(puzzles);
       setActivePuzzleIndex(0);
     }
   }, [includeSolution]);
@@ -262,7 +273,7 @@ export function DownloadPuzzleDialog({
           instructionSizeMultiplier={instructionSizeMultiplier}
           wordListSizeMultiplier={wordListSizeMultiplier}
           showSolution={false}
-          includeSolution={true}
+          includeSolution={false} // Don't add additional answer pages in the PDF component
         />
       ) : (
         <PuzzlePDFPreview
@@ -291,7 +302,7 @@ export function DownloadPuzzleDialog({
           subtitleSizeMultiplier={subtitleSizeMultiplier}
           instructionSizeMultiplier={instructionSizeMultiplier}
           wordListSizeMultiplier={wordListSizeMultiplier}
-          includeSolution={true}
+          includeSolution={false} // Don't add additional answer pages in the PDF component
         />
       );
 
@@ -411,7 +422,7 @@ export function DownloadPuzzleDialog({
           <DialogTitle>Download Puzzle</DialogTitle>
           <DialogDescription>
             Customize your {puzzles.length > 1 ?
-              `puzzles (${puzzles.length} ${includeSolution ? 'with answers' : 'puzzles'})` :
+              `puzzles (${puzzles.length} pages)` :
               "puzzle"} before downloading
           </DialogDescription>
         </DialogHeader>

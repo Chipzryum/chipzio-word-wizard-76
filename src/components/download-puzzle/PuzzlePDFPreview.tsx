@@ -1,3 +1,4 @@
+
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { CombinedPuzzleGrid } from "./types";
@@ -260,17 +261,26 @@ export const PuzzlePDFPreview = ({
 
   const pdfStyles = createPDFStyles(fontSizes);
   
-  // Create a puzzle page with the given showSolution setting
-  const createPuzzlePage = (puzzleToRender: CombinedPuzzleGrid, index: number, showSolution: boolean) => {
-    const pageNumber = Math.ceil((index + 1) / 2);
-    const pageLabel = showSolution ? `Answer ${pageNumber}` : `Page ${pageNumber}`;
+  // Create pages array based on existing puzzle properties
+  const pages = [];
+  let pageCounter = 1;
+  
+  puzzlesToRender.forEach((puzzleItem, index) => {
+    // Check if the puzzle is an answer page
+    const isAnswer = 'isAnswer' in puzzleItem && puzzleItem.isAnswer === true;
     
-    // Type guard for isAnswer property
-    const isAnswer = 'isAnswer' in puzzleToRender ? puzzleToRender.isAnswer : false;
+    // Create the page with the appropriate display settings
+    pages.push(createPuzzlePage(puzzleItem, index, isAnswer, pageCounter));
+    pageCounter++;
+  });
+  
+  // Function to create a puzzle page with the given showSolution setting
+  function createPuzzlePage(puzzleToRender: CombinedPuzzleGrid, index: number, isAnswer: boolean, pageNum: number) {
+    const pageLabel = isAnswer ? `Answer ${Math.ceil(pageNum/2)}` : `Page ${Math.ceil(pageNum/2)}`;
     
     return (
       <Page 
-        key={`${index}-${showSolution ? 'solution' : 'puzzle'}`} 
+        key={`${index}-${isAnswer ? 'solution' : 'puzzle'}`} 
         size={[currentWidth, currentHeight]} 
         style={pdfStyles.page}
       >
@@ -278,7 +288,7 @@ export const PuzzlePDFPreview = ({
           {showTitle && (
             <View style={[pdfStyles.titleContainer, {marginTop: getVerticalOffset(titleOffset)}]}>
               <Text style={pdfStyles.title}>
-                {showSolution ? `${title.toUpperCase()} - SOLUTION` : title.toUpperCase()}
+                {isAnswer ? `${title.toUpperCase()} - SOLUTION` : title.toUpperCase()}
               </Text>
             </View>
           )}
@@ -289,7 +299,7 @@ export const PuzzlePDFPreview = ({
             </View>
           )}
           
-          {showInstruction && !showSolution && (
+          {showInstruction && !isAnswer && (
             <View style={[pdfStyles.instructionContainer, {marginTop: getVerticalOffset(instructionOffset)}]}>
               <Text style={pdfStyles.instruction}>{instruction}</Text>
             </View>
@@ -301,7 +311,7 @@ export const PuzzlePDFPreview = ({
                 {puzzleToRender.grid.map((row, i) => (
                   <View key={i} style={pdfStyles.row}>
                     {row.map((cell, j) => {
-                      const wordPlacements = showSolution ? 
+                      const wordPlacements = isAnswer ? 
                         puzzleToRender.wordPlacements.filter(wp => isPartOfWord(j, i, wp)) : 
                         [];
 
@@ -309,7 +319,7 @@ export const PuzzlePDFPreview = ({
                         <View key={`${i}-${j}`} style={pdfStyles.cell}>
                           <Text style={pdfStyles.letter}>{cell}</Text>
                           
-                          {showSolution && wordPlacements.map((placement, index) => {
+                          {isAnswer && wordPlacements.map((placement, index) => {
                             // Type guard for the direction object
                             if (typeof placement.direction === 'string') {
                               return null;
@@ -359,21 +369,7 @@ export const PuzzlePDFPreview = ({
         <Text style={pdfStyles.pageNumber}>{pageLabel}</Text>
       </Page>
     );
-  };
+  }
 
-  // Create pages array with questions and answers properly paired
-  const pages = [];
-  const questionPuzzles = puzzlesToRender.filter(p => !('isAnswer' in p) || !p.isAnswer);
-  
-  questionPuzzles.forEach((puzzle, index) => {
-    // Add question page
-    pages.push(createPuzzlePage(puzzle, index * 2, false));
-    
-    // Add answer page if includeSolution is true
-    if (includeSolution) {
-      pages.push(createPuzzlePage(puzzle, index * 2 + 1, true));
-    }
-  });
-  
   return <Document>{pages}</Document>;
 };

@@ -75,31 +75,34 @@ const WordSearch = () => {
       return;
     }
 
-    // Add the puzzle to the savedPuzzles array
-    setSavedPuzzles(prev => {
-      const updatedPuzzles = [...prev, puzzle];
-      // If answers are included, we also add the same puzzle but marked as an answer
-      if (includeAnswers === "with") {
-        const answerPuzzle = {
-          ...puzzle,
-          isAnswer: true
-        };
-        return [...updatedPuzzles, answerPuzzle];
-      }
-      return updatedPuzzles;
-    });
+    // Add the puzzle to the savedPuzzles array - the key fix is here
+    // We tag the main puzzle as a question
+    const newPuzzle = { ...puzzle, isQuestion: true };
     
-    // Calculate the correct index to set as active
-    const newIndex = includeAnswers === "with" ? 
-      savedPuzzles.length + 1 : // +1 because we're adding 2 pages
-      savedPuzzles.length;
-    
-    setActivePuzzleIndex(newIndex);
+    if (includeAnswers === "with") {
+      // Create an answer puzzle (marked as such)
+      const answerPuzzle = {
+        ...puzzle,
+        isAnswer: true
+      };
+      
+      // Add both puzzles
+      setSavedPuzzles(prev => [...prev, newPuzzle, answerPuzzle]);
+      
+      // Set active index to the question puzzle we just added
+      setActivePuzzleIndex(savedPuzzles.length);
+    } else {
+      // Only add the question puzzle
+      setSavedPuzzles(prev => [...prev, newPuzzle]);
+      
+      // Set active index to the puzzle we just added
+      setActivePuzzleIndex(savedPuzzles.length);
+    }
     
     toast({
       title: "Added to PDF",
       description: includeAnswers === "with" ? 
-        `Question page ${Math.ceil((savedPuzzles.length + 1) / 2)} added with its answer page.` : 
+        `Page ${Math.ceil((savedPuzzles.length + 1) / 2)} added with its answer page.` : 
         `Page ${savedPuzzles.length + 1} added to PDF.`,
     });
   };
