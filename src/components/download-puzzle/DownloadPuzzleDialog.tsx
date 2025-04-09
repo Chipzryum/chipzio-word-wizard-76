@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,19 +10,18 @@ import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { CrosswordGrid } from "@/utils/crosswordUtils";
 import { pdf } from "@react-pdf/renderer";
 import { useToast } from "@/hooks/use-toast";
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { VisualPreview } from "./VisualPreview";
 import { CrosswordVisualPreview } from "./CrosswordVisualPreview";
 import { PuzzlePDFPreview } from "./PuzzlePDFPreview";
 import { CrosswordPDFPreview } from "./CrosswordPDFPreview";
 import { CombinedPuzzleGrid, PageSize, Unit } from "./types";
 import { DialogContent as PuzzleDialogContent } from "./DialogContent";
-import { 
-  PAGE_SIZES, 
-  UNITS, 
-  PDF_MARGIN, 
-  BORDER_WIDTH, 
-  BASE_PADDING, 
+import {
+  PAGE_SIZES,
+  UNITS,
+  PDF_MARGIN,
+  BORDER_WIDTH,
+  BASE_PADDING,
   MAX_OFFSET,
   DEFAULT_TITLE_MULTIPLIER,
   DEFAULT_SUBTITLE_MULTIPLIER,
@@ -62,7 +61,7 @@ export function DownloadPuzzleDialog({
   visualPreviewComponent = "wordsearch",
   allPuzzles = []
 }: DownloadPuzzleDialogProps) {
-  
+
   const [title, setTitle] = useState(defaultValues.title);
   const [subtitle, setSubtitle] = useState(defaultValues.subtitle);
   const [instruction, setInstruction] = useState(defaultValues.instruction);
@@ -70,7 +69,7 @@ export function DownloadPuzzleDialog({
   const [selectedUnit, setSelectedUnit] = useState<Unit>("Points");
   const [customWidth, setCustomWidth] = useState(PAGE_SIZES.A4.width);
   const [customHeight, setCustomHeight] = useState(PAGE_SIZES.A4.height);
-  
+
   const [titleSizeMultiplier, setTitleSizeMultiplier] = useState(DEFAULT_TITLE_MULTIPLIER);
   const [subtitleSizeMultiplier, setSubtitleSizeMultiplier] = useState(DEFAULT_SUBTITLE_MULTIPLIER);
   const [instructionSizeMultiplier, setInstructionSizeMultiplier] = useState(DEFAULT_INSTRUCTION_MULTIPLIER);
@@ -92,57 +91,38 @@ export function DownloadPuzzleDialog({
   const [wordListOffset, setWordListOffset] = useState(0);
 
   const [positioningElement, setPositioningElement] = useState<string | null>(null);
-  
+
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPDFReady, setIsPDFReady] = useState(false);
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
-  
+
   const [showLivePreview, setShowLivePreview] = useState(false);
-  
+
   const [activePuzzleIndex, setActivePuzzleIndex] = useState(0);
   const [puzzles, setPuzzles] = useState<CombinedPuzzleGrid[]>([]);
   const [displayPages, setDisplayPages] = useState<any[]>([]);
-  
+
   const { toast } = useToast();
-  
+
   const previewScaleFactor = 0.3;
 
   useEffect(() => {
     if (open) {
-      if (allPuzzles && allPuzzles.length > 0) {
-        setPuzzles(allPuzzles);
-        createDisplayPages(allPuzzles, includeSolution);
-        setActivePuzzleIndex(0);
-      } else if (puzzle) {
-        setPuzzles([puzzle]);
-        createDisplayPages([puzzle], includeSolution);
-        setActivePuzzleIndex(0);
-      }
+      const puzzlesArray = allPuzzles.length ? allPuzzles : [puzzle];
+      setPuzzles(puzzlesArray);
+      createDisplayPages(puzzlesArray, includeSolution);
+      setActivePuzzleIndex(0);
     }
   }, [open, puzzle, allPuzzles, includeSolution]);
-  
+
   const createDisplayPages = (puzzlesArray: CombinedPuzzleGrid[], includeSol: boolean) => {
-    const pages = [];
-    
-    for (let i = 0; i < puzzlesArray.length; i++) {
-      pages.push({
-        puzzle: puzzlesArray[i],
-        isAnswer: false,
-        pageNumber: i + 1
-      });
-      
-      if (includeSol) {
-        pages.push({
-          puzzle: puzzlesArray[i],
-          isAnswer: true,
-          pageNumber: i + 1
-        });
-      }
-    }
-    
+    const pages = puzzlesArray.flatMap((puzzle, index) => [
+      { puzzle, isAnswer: false, pageNumber: index + 1 },
+      ...(includeSol ? [{ puzzle, isAnswer: true, pageNumber: index + 1 }] : [])
+    ]);
     setDisplayPages(pages);
   };
-  
+
   useEffect(() => {
     if (puzzles.length > 0) {
       createDisplayPages(puzzles, includeSolution);
@@ -150,50 +130,30 @@ export function DownloadPuzzleDialog({
     }
   }, [includeSolution]);
 
-  const handleUnitChange = (unit: Unit) => {
-    setSelectedUnit(unit);
-  };
+  const handleUnitChange = (unit: Unit) => setSelectedUnit(unit);
 
-  const togglePositioning = (element: string | null) => {
-    setPositioningElement(element);
-  };
+  const togglePositioning = (element: string | null) => setPositioningElement(element);
 
   const moveElement = (element: string, direction: 'up' | 'down') => {
-    const amount = 1;
-    const change = direction === 'up' ? -amount : amount;
-    
-    switch (element) {
-      case 'title':
-        setTitleOffset(prev => prev + change);
-        break;
-      case 'subtitle':
-        setSubtitleOffset(prev => prev + change);
-        break;
-      case 'instruction':
-        setInstructionOffset(prev => prev + change);
-        break;
-      case 'grid':
-        setGridOffset(prev => prev + change);
-        break;
-      case 'wordList':
-        setWordListOffset(prev => prev + change);
-        break;
-      default:
-        break;
-    }
+    const change = direction === 'up' ? -1 : 1;
+    const stateSetters = {
+      title: setTitleOffset,
+      subtitle: setSubtitleOffset,
+      instruction: setInstructionOffset,
+      grid: setGridOffset,
+      wordList: setWordListOffset
+    };
+    stateSetters[element]?.(prev => prev + change);
   };
 
   const currentWidth = selectedSize === "Custom" ? customWidth : PAGE_SIZES[selectedSize].width;
   const currentHeight = selectedSize === "Custom" ? customHeight : PAGE_SIZES[selectedSize].height;
 
-  const contentWidth = currentWidth - (2 * PDF_MARGIN) - (2 * BASE_PADDING) - (2 * BORDER_WIDTH);
-  const contentHeight = currentHeight - (2 * PDF_MARGIN) - (2 * BASE_PADDING) - (2 * BORDER_WIDTH);
+  const contentWidth = currentWidth - 2 * (PDF_MARGIN + BASE_PADDING + BORDER_WIDTH);
+  const contentHeight = currentHeight - 2 * (PDF_MARGIN + BASE_PADDING + BORDER_WIDTH);
 
   const calculateFontSizes = () => {
-    const a4Width = PAGE_SIZES.A4.width;
-    const a4Height = PAGE_SIZES.A4.height;
-    const sizeRatio = Math.sqrt((currentWidth * currentHeight) / (a4Width * a4Height));
-    
+    const sizeRatio = Math.sqrt((currentWidth * currentHeight) / (PAGE_SIZES.A4.width * PAGE_SIZES.A4.height));
     return {
       titleSize: Math.max(20, Math.min(48, Math.floor(36 * sizeRatio * titleSizeMultiplier))),
       subtitleSize: Math.max(14, Math.min(36, Math.floor(24 * sizeRatio * subtitleSizeMultiplier))),
@@ -202,48 +162,42 @@ export function DownloadPuzzleDialog({
     };
   };
 
-  const fontSizes = calculateFontSizes();
-  
+  const fontSizes = useMemo(calculateFontSizes, [
+    currentWidth, currentHeight, titleSizeMultiplier, subtitleSizeMultiplier,
+    instructionSizeMultiplier, wordListSizeMultiplier
+  ]);
+
   const calculateSpaceNeeded = () => {
-    let space = 0;
-    if (showTitle) space += fontSizes.titleSize * titleSizeMultiplier + 10;
-    if (showSubtitle) space += fontSizes.subtitleSize * subtitleSizeMultiplier + 10;
-    if (showInstruction) space += fontSizes.instructionSize * instructionSizeMultiplier + 20;
-    if (showWordList) space += fontSizes.wordListSize * wordListSizeMultiplier * 3;
-    return space;
+    return [
+      showTitle ? fontSizes.titleSize * titleSizeMultiplier + 10 : 0,
+      showSubtitle ? fontSizes.subtitleSize * subtitleSizeMultiplier + 10 : 0,
+      showInstruction ? fontSizes.instructionSize * instructionSizeMultiplier + 20 : 0,
+      showWordList ? fontSizes.wordListSize * wordListSizeMultiplier * 3 : 0
+    ].reduce((acc, val) => acc + val, 0);
   };
 
   const calculateGridCellSize = () => {
     if (!puzzles[activePuzzleIndex]) return 20;
-    
-    const currentPuzzle = puzzles[activePuzzleIndex];
-    const gridWidth = currentPuzzle.grid[0].length;
-    const gridHeight = currentPuzzle.grid.length;
-    
+    const { grid } = puzzles[activePuzzleIndex];
+    const gridWidth = grid[0].length;
+    const gridHeight = grid.length;
     const reservedSpace = calculateSpaceNeeded() + 40;
-    
     const availableHeight = contentHeight - reservedSpace;
-    const availableWidth = contentWidth;
-    
-    const cellSizeByWidth = availableWidth / gridWidth;
-    const cellSizeByHeight = availableHeight / gridHeight;
-    
-    const baseSize = Math.min(cellSizeByWidth, cellSizeByHeight);
-    
+    const baseSize = Math.min(contentWidth / gridWidth, availableHeight / gridHeight);
     return baseSize * cellSizeMultiplier;
   };
 
-  const cellSize = calculateGridCellSize();
-  
+  const cellSize = useMemo(calculateGridCellSize, [
+    puzzles, activePuzzleIndex, contentWidth, contentHeight,
+    cellSizeMultiplier, showTitle, showSubtitle, showInstruction, showWordList
+  ]);
+
   const calculateLetterSize = () => {
     const baseLetterSize = cellSize * 0.6;
-    
-    const cappedMultiplier = Math.min(letterSizeMultiplier, MAX_LETTER_SIZE);
-    
-    return baseLetterSize * cappedMultiplier;
+    return baseLetterSize * Math.min(letterSizeMultiplier, MAX_LETTER_SIZE);
   };
-  
-  const letterSize = calculateLetterSize();
+
+  const letterSize = useMemo(calculateLetterSize, [cellSize, letterSizeMultiplier]);
 
   const getVerticalOffset = (offset: number) => {
     const maxAllowedOffset = Math.min(MAX_OFFSET, (contentHeight / 6) / 10);
@@ -261,127 +215,95 @@ export function DownloadPuzzleDialog({
 
   const handleDimensionChange = (dimension: "width" | "height", value: string) => {
     const numValue = parseFloat(value);
-    if (isNaN(numValue)) return;
-
-    const pointValue = numValue * UNITS[selectedUnit];
-    if (dimension === "width") {
-      setCustomWidth(pointValue);
-    } else {
-      setCustomHeight(pointValue);
+    if (!isNaN(numValue)) {
+      const pointValue = numValue * UNITS[selectedUnit];
+      dimension === "width" ? setCustomWidth(pointValue) : setCustomHeight(pointValue);
+      setSelectedSize("Custom");
+      setIsPDFReady(false);
     }
-    setSelectedSize("Custom");
-    setIsPDFReady(false);
   };
 
-  const convertFromPoints = (points: number) => {
-    return (points / UNITS[selectedUnit]).toFixed(2);
-  };
+  const convertFromPoints = (points: number) => (points / UNITS[selectedUnit]).toFixed(2);
 
   const handleSaveLayout = async () => {
     if (puzzles.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No puzzles to save. Please generate puzzles first.",
-      });
+      toast({ variant: "destructive", title: "Error", description: "No puzzles to save. Please generate puzzles first." });
       return;
     }
-    
+
     setIsGenerating(true);
-    
+
     try {
-      console.log("Creating PDF with letterSizeMultiplier:", letterSizeMultiplier);
-      console.log("Creating PDF with cellSize:", cellSize);
-      console.log("Word list visibility:", showWordList);
-      
-      const cappedLetterSizeMultiplier = Math.min(letterSizeMultiplier, MAX_LETTER_SIZE);
-      console.log("Creating PDF with cappedLetterSizeMultiplier:", cappedLetterSizeMultiplier);
-      
-      let pdfDocument;
-      
-      if (puzzleType === "crossword") {
-        pdfDocument = (
-          <CrosswordPDFPreview
-            puzzle={puzzles[activePuzzleIndex] as CrosswordGrid}
-            allPuzzles={puzzles as CrosswordGrid[]}
-            title={title}
-            subtitle={subtitle}
-            instruction={instruction}
-            showTitle={showTitle}
-            showSubtitle={showSubtitle}
-            showInstruction={showInstruction}
-            showGrid={showGrid}
-            showWordList={showWordList}
-            titleOffset={titleOffset}
-            subtitleOffset={subtitleOffset}
-            instructionOffset={instructionOffset}
-            gridOffset={gridOffset}
-            wordListOffset={wordListOffset}
-            currentWidth={currentWidth}
-            currentHeight={currentHeight}
-            contentWidth={contentWidth}
-            contentHeight={contentHeight}
-            cellSize={cellSize}
-            letterSizeMultiplier={letterSizeMultiplier}
-            titleSizeMultiplier={titleSizeMultiplier}
-            subtitleSizeMultiplier={subtitleSizeMultiplier}
-            instructionSizeMultiplier={instructionSizeMultiplier}
-            wordListSizeMultiplier={wordListSizeMultiplier}
-            showSolution={false}
-            includeSolution={true}
-          />
-        );
-      } else {
-        pdfDocument = (
-          <PuzzlePDFPreview
-            puzzle={puzzles[activePuzzleIndex] as PuzzleGrid}
-            allPuzzles={puzzles as PuzzleGrid[]}
-            title={title}
-            subtitle={subtitle}
-            instruction={instruction}
-            showTitle={showTitle}
-            showSubtitle={showSubtitle}
-            showInstruction={showInstruction}
-            showGrid={showGrid}
-            showWordList={showWordList}
-            titleOffset={titleOffset}
-            subtitleOffset={subtitleOffset}
-            instructionOffset={instructionOffset}
-            gridOffset={gridOffset}
-            wordListOffset={wordListOffset}
-            currentWidth={currentWidth}
-            currentHeight={currentHeight}
-            contentWidth={contentWidth}
-            contentHeight={contentHeight}
-            cellSize={cellSize}
-            letterSizeMultiplier={letterSizeMultiplier}
-            titleSizeMultiplier={titleSizeMultiplier}
-            subtitleSizeMultiplier={subtitleSizeMultiplier}
-            instructionSizeMultiplier={instructionSizeMultiplier}
-            wordListSizeMultiplier={wordListSizeMultiplier}
-            includeSolution={true}
-          />
-        );
-      }
-      
+      const pdfDocument = puzzleType === "crossword" ? (
+        <CrosswordPDFPreview
+          puzzle={puzzles[activePuzzleIndex] as CrosswordGrid}
+          allPuzzles={puzzles as CrosswordGrid[]}
+          title={title}
+          subtitle={subtitle}
+          instruction={instruction}
+          showTitle={showTitle}
+          showSubtitle={showSubtitle}
+          showInstruction={showInstruction}
+          showGrid={showGrid}
+          showWordList={showWordList}
+          titleOffset={titleOffset}
+          subtitleOffset={subtitleOffset}
+          instructionOffset={instructionOffset}
+          gridOffset={gridOffset}
+          wordListOffset={wordListOffset}
+          currentWidth={currentWidth}
+          currentHeight={currentHeight}
+          contentWidth={contentWidth}
+          contentHeight={contentHeight}
+          cellSize={cellSize}
+          letterSizeMultiplier={letterSizeMultiplier}
+          titleSizeMultiplier={titleSizeMultiplier}
+          subtitleSizeMultiplier={subtitleSizeMultiplier}
+          instructionSizeMultiplier={instructionSizeMultiplier}
+          wordListSizeMultiplier={wordListSizeMultiplier}
+          showSolution={false}
+          includeSolution={true}
+        />
+      ) : (
+        <PuzzlePDFPreview
+          puzzle={puzzles[activePuzzleIndex] as PuzzleGrid}
+          allPuzzles={puzzles as PuzzleGrid[]}
+          title={title}
+          subtitle={subtitle}
+          instruction={instruction}
+          showTitle={showTitle}
+          showSubtitle={showSubtitle}
+          showInstruction={showInstruction}
+          showGrid={showGrid}
+          showWordList={showWordList}
+          titleOffset={titleOffset}
+          subtitleOffset={subtitleOffset}
+          instructionOffset={instructionOffset}
+          gridOffset={gridOffset}
+          wordListOffset={wordListOffset}
+          currentWidth={currentWidth}
+          currentHeight={currentHeight}
+          contentWidth={contentWidth}
+          contentHeight={contentHeight}
+          cellSize={cellSize}
+          letterSizeMultiplier={letterSizeMultiplier}
+          titleSizeMultiplier={titleSizeMultiplier}
+          subtitleSizeMultiplier={subtitleSizeMultiplier}
+          instructionSizeMultiplier={instructionSizeMultiplier}
+          wordListSizeMultiplier={wordListSizeMultiplier}
+          includeSolution={true}
+        />
+      );
+
       const blob = await pdf(pdfDocument).toBlob();
-      
-      console.log("PDF blob generated successfully:", blob);
       setPdfBlob(blob);
       setIsPDFReady(true);
       setShowLivePreview(true);
-      
-      toast({
-        title: "PDF Ready",
-        description: "Your layout has been saved. Click 'Download PDF' to download.",
-      });
+
+      toast({ title: "PDF Ready", description: "Your layout has been saved. Click 'Download PDF' to download." });
     } catch (error) {
       console.error('Failed to generate PDF:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: `Failed to generate PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
-      });
+      toast({ variant: "destructive", title: "Error", description: `Failed to generate PDF: ${error instanceof Error ? error.message : "Unknown error"}` });
     } finally {
       setIsGenerating(false);
     }
@@ -389,23 +311,15 @@ export function DownloadPuzzleDialog({
 
   const handleDownload = async () => {
     if (puzzles.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No puzzles to download. Please generate puzzles first.",
-      });
+      toast({ variant: "destructive", title: "Error", description: "No puzzles to download. Please generate puzzles first." });
       return;
     }
-    
+
     if (!isPDFReady || !pdfBlob) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please save the layout first by clicking 'Save Layout'.",
-      });
+      toast({ variant: "destructive", title: "Error", description: "Please save the layout first by clicking 'Save Layout'." });
       return;
     }
-    
+
     try {
       const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
@@ -413,32 +327,19 @@ export function DownloadPuzzleDialog({
       link.download = `${title.toLowerCase().replace(/\s+/g, '-')}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
-      
-      toast({
-        title: "Success",
-        description: "PDF downloaded successfully!",
-      });
-      
+
+      toast({ title: "Success", description: "PDF downloaded successfully!" });
       onOpenChange(false);
     } catch (error) {
       console.error('Failed to download PDF:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: `Failed to download PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
-      });
+      toast({ variant: "destructive", title: "Error", description: `Failed to download PDF: ${error instanceof Error ? error.message : "Unknown error"}` });
     }
   };
 
-  const formatSliderValue = (value: number) => {
-    return `${(value * 100).toFixed(0)}%`;
-  };
+  const formatSliderValue = (value: number) => `${(value * 100).toFixed(0)}%`;
 
-  const getPositionValue = (offset: number) => {
-    if (offset === 0) return '0';
-    return offset > 0 ? `+${offset}` : `${offset}`;
-  };
-  
+  const getPositionValue = (offset: number) => offset === 0 ? '0' : (offset > 0 ? `+${offset}` : `${offset}`);
+
   const handleSelectPuzzle = (index: number) => {
     if (index >= 0 && index < displayPages.length) {
       setActivePuzzleIndex(index);
@@ -447,90 +348,48 @@ export function DownloadPuzzleDialog({
 
   const renderPreview = () => {
     if (displayPages.length === 0) return null;
-    
-    const currentPage = displayPages[activePuzzleIndex];
-    const currentPuzzle = currentPage.puzzle;
-    const isAnswerPage = currentPage.isAnswer;
-    const pageNumber = currentPage.pageNumber;
-    
-    if (visualPreviewComponent === "crossword") {
-      return (
-        <CrosswordVisualPreview 
-          puzzle={currentPuzzle as CrosswordGrid}
-          showLivePreview={showLivePreview}
-          isPDFReady={isPDFReady}
-          title={title}
-          subtitle={subtitle}
-          instruction={instruction}
-          showTitle={showTitle}
-          showSubtitle={showSubtitle}
-          showInstruction={isAnswerPage ? false : showInstruction}
-          showGrid={showGrid}
-          showWordList={showWordList}
-          titleOffset={titleOffset}
-          subtitleOffset={subtitleOffset}
-          instructionOffset={instructionOffset}
-          gridOffset={gridOffset}
-          wordListOffset={wordListOffset}
-          currentWidth={currentWidth}
-          currentHeight={currentHeight}
-          contentWidth={contentWidth}
-          contentHeight={contentHeight}
-          cellSize={cellSize}
-          letterSize={letterSize}
-          letterSizeMultiplier={letterSizeMultiplier}
-          titleSizeMultiplier={titleSizeMultiplier}
-          subtitleSizeMultiplier={subtitleSizeMultiplier}
-          instructionSizeMultiplier={instructionSizeMultiplier}
-          wordListSizeMultiplier={wordListSizeMultiplier}
-          previewScaleFactor={previewScaleFactor}
-          fontSizes={fontSizes}
-          getVerticalOffset={getVerticalOffset}
-          showSolution={isAnswerPage}
-          includeSolution={includeSolution}
-          isAnswer={isAnswerPage}
-          pageNumber={pageNumber}
-        />
-      );
-    } else {
-      return (
-        <VisualPreview 
-          puzzle={currentPuzzle as PuzzleGrid}
-          showLivePreview={showLivePreview}
-          isPDFReady={isPDFReady}
-          title={title}
-          subtitle={subtitle}
-          instruction={instruction}
-          showTitle={showTitle}
-          showSubtitle={showSubtitle}
-          showInstruction={isAnswerPage ? false : showInstruction}
-          showGrid={showGrid}
-          showWordList={showWordList}
-          titleOffset={titleOffset}
-          subtitleOffset={subtitleOffset}
-          instructionOffset={instructionOffset}
-          gridOffset={gridOffset}
-          wordListOffset={wordListOffset}
-          currentWidth={currentWidth}
-          currentHeight={currentHeight}
-          contentWidth={contentWidth}
-          contentHeight={contentHeight}
-          cellSize={cellSize}
-          letterSize={letterSize}
-          letterSizeMultiplier={letterSizeMultiplier}
-          titleSizeMultiplier={titleSizeMultiplier}
-          subtitleSizeMultiplier={subtitleSizeMultiplier}
-          instructionSizeMultiplier={instructionSizeMultiplier}
-          wordListSizeMultiplier={wordListSizeMultiplier}
-          previewScaleFactor={previewScaleFactor}
-          fontSizes={fontSizes}
-          getVerticalOffset={getVerticalOffset}
-          includeSolution={includeSolution}
-          isAnswer={isAnswerPage}
-          pageNumber={pageNumber}
-        />
-      );
-    }
+
+    const { puzzle, isAnswer, pageNumber } = displayPages[activePuzzleIndex];
+    const PreviewComponent = visualPreviewComponent === "crossword" ? CrosswordVisualPreview : VisualPreview;
+
+    return (
+      <PreviewComponent
+        puzzle={puzzle}
+        showLivePreview={showLivePreview}
+        isPDFReady={isPDFReady}
+        title={title}
+        subtitle={subtitle}
+        instruction={instruction}
+        showTitle={showTitle}
+        showSubtitle={showSubtitle}
+        showInstruction={!isAnswer && showInstruction}
+        showGrid={showGrid}
+        showWordList={showWordList}
+        titleOffset={titleOffset}
+        subtitleOffset={subtitleOffset}
+        instructionOffset={instructionOffset}
+        gridOffset={gridOffset}
+        wordListOffset={wordListOffset}
+        currentWidth={currentWidth}
+        currentHeight={currentHeight}
+        contentWidth={contentWidth}
+        contentHeight={contentHeight}
+        cellSize={cellSize}
+        letterSize={letterSize}
+        letterSizeMultiplier={letterSizeMultiplier}
+        titleSizeMultiplier={titleSizeMultiplier}
+        subtitleSizeMultiplier={subtitleSizeMultiplier}
+        instructionSizeMultiplier={instructionSizeMultiplier}
+        wordListSizeMultiplier={wordListSizeMultiplier}
+        previewScaleFactor={previewScaleFactor}
+        fontSizes={fontSizes}
+        getVerticalOffset={getVerticalOffset}
+        showSolution={isAnswer}
+        includeSolution={includeSolution}
+        isAnswer={isAnswer}
+        pageNumber={pageNumber}
+      />
+    );
   };
 
   useEffect(() => {
@@ -551,8 +410,8 @@ export function DownloadPuzzleDialog({
         <DialogHeader>
           <DialogTitle>Download Puzzle</DialogTitle>
           <DialogDescription>
-            Customize your {puzzles.length > 1 ? 
-              `puzzles (${puzzles.length} ${includeSolution ? 'with answers' : 'puzzles'})` : 
+            Customize your {puzzles.length > 1 ?
+              `puzzles (${puzzles.length} ${includeSolution ? 'with answers' : 'puzzles'})` :
               "puzzle"} before downloading
           </DialogDescription>
         </DialogHeader>
@@ -574,7 +433,7 @@ export function DownloadPuzzleDialog({
           setShowGrid={setShowGrid}
           showWordList={showWordList}
           setShowWordList={setShowWordList}
-          
+
           selectedSize={selectedSize}
           handleSizeChange={handleSizeChange}
           customWidth={customWidth}
@@ -583,7 +442,7 @@ export function DownloadPuzzleDialog({
           handleUnitChange={handleUnitChange}
           handleDimensionChange={handleDimensionChange}
           convertFromPoints={convertFromPoints}
-          
+
           titleOffset={titleOffset}
           setTitleOffset={setTitleOffset}
           subtitleOffset={subtitleOffset}
@@ -594,7 +453,7 @@ export function DownloadPuzzleDialog({
           setGridOffset={setGridOffset}
           wordListOffset={wordListOffset}
           setWordListOffset={setWordListOffset}
-          
+
           letterSizeMultiplier={letterSizeMultiplier}
           setLetterSizeMultiplier={setLetterSizeMultiplier}
           titleSizeMultiplier={titleSizeMultiplier}
@@ -607,16 +466,16 @@ export function DownloadPuzzleDialog({
           setWordListSizeMultiplier={setWordListSizeMultiplier}
           cellSizeMultiplier={cellSizeMultiplier}
           setCellSizeMultiplier={setCellSizeMultiplier}
-          
+
           getPositionValue={getPositionValue}
           formatSliderValue={formatSliderValue}
-          
+
           puzzles={puzzles}
           activePuzzleIndex={activePuzzleIndex}
           handleSelectPuzzle={handleSelectPuzzle}
           includeSolution={includeSolution}
           displayPages={displayPages}
-          
+
           renderPreview={renderPreview}
           handleSaveLayout={handleSaveLayout}
           handleDownload={handleDownload}

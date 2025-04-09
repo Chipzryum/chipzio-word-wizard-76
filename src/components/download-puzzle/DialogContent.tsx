@@ -10,6 +10,23 @@ import { MultiPuzzleGrid } from "./MultiPuzzleGrid";
 import { CombinedPuzzleGrid } from "./types";
 import { PageSize, Unit } from "./types";
 
+const PreviewSection = ({ renderPreview, handleSaveLayout, handleDownload, isGenerating, isPDFReady, puzzles, activePuzzleIndex, includeSolution, pdfBlob }) => (
+  <div className="space-y-4">
+    <Label>Preview</Label>
+    <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
+      {renderPreview()}
+    </div>
+    <ActionButtons 
+      handleSaveLayout={handleSaveLayout}
+      handleDownload={handleDownload}
+      isGenerating={isGenerating}
+      isPDFReady={isPDFReady}
+      puzzle={puzzles[Math.floor(activePuzzleIndex / (includeSolution ? 2 : 1))]}
+      pdfBlob={pdfBlob}
+    />
+  </div>
+);
+
 interface DialogContentProps {
   title: string;
   setTitle: (value: string) => void;
@@ -79,71 +96,15 @@ interface DialogContentProps {
 }
 
 export const DialogContent = ({
-  title,
-  setTitle,
-  subtitle,
-  setSubtitle,
-  instruction,
-  setInstruction,
-  showTitle,
-  setShowTitle,
-  showSubtitle,
-  setShowSubtitle,
-  showInstruction,
-  setShowInstruction,
-  showGrid,
-  setShowGrid,
-  showWordList,
-  setShowWordList,
-  
-  selectedSize,
-  handleSizeChange,
-  customWidth,
-  customHeight,
-  selectedUnit,
-  handleUnitChange,
-  handleDimensionChange,
-  convertFromPoints,
-  
-  titleOffset,
-  setTitleOffset,
-  subtitleOffset,
-  setSubtitleOffset,
-  instructionOffset,
-  setInstructionOffset,
-  gridOffset,
-  setGridOffset,
-  wordListOffset,
-  setWordListOffset,
-  
-  letterSizeMultiplier,
-  setLetterSizeMultiplier,
-  titleSizeMultiplier,
-  setTitleSizeMultiplier,
-  subtitleSizeMultiplier,
-  setSubtitleSizeMultiplier,
-  instructionSizeMultiplier,
-  setInstructionSizeMultiplier,
-  wordListSizeMultiplier,
-  setWordListSizeMultiplier,
-  cellSizeMultiplier,
-  setCellSizeMultiplier,
-  
-  getPositionValue,
-  formatSliderValue,
-  
-  puzzles,
-  activePuzzleIndex,
-  handleSelectPuzzle,
-  includeSolution,
-  displayPages,
-  
-  renderPreview,
-  handleSaveLayout,
-  handleDownload,
-  isGenerating,
-  isPDFReady,
-  pdfBlob
+  title, setTitle, subtitle, setSubtitle, instruction, setInstruction,
+  showTitle, setShowTitle, showSubtitle, setShowSubtitle, showInstruction, setShowInstruction,
+  showGrid, setShowGrid, showWordList, setShowWordList,
+  selectedSize, handleSizeChange, customWidth, customHeight, selectedUnit, handleUnitChange, handleDimensionChange, convertFromPoints,
+  titleOffset, setTitleOffset, subtitleOffset, setSubtitleOffset, instructionOffset, setInstructionOffset, gridOffset, setGridOffset, wordListOffset, setWordListOffset,
+  letterSizeMultiplier, setLetterSizeMultiplier, titleSizeMultiplier, setTitleSizeMultiplier, subtitleSizeMultiplier, setSubtitleSizeMultiplier,
+  instructionSizeMultiplier, setInstructionSizeMultiplier, wordListSizeMultiplier, setWordListSizeMultiplier, cellSizeMultiplier, setCellSizeMultiplier,
+  getPositionValue, formatSliderValue, puzzles, activePuzzleIndex, handleSelectPuzzle, includeSolution, displayPages,
+  renderPreview, handleSaveLayout, handleDownload, isGenerating, isPDFReady, pdfBlob
 }: DialogContentProps) => {
   const currentPage = displayPages && displayPages[activePuzzleIndex];
   const isAnswerPage = currentPage?.isAnswer || false;
@@ -254,21 +215,17 @@ export const DialogContent = ({
           getPositionValue={getPositionValue}
         />
 
-        <div className="space-y-4">
-          <Label>Preview</Label>
-          <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-            {renderPreview()}
-          </div>
-          
-          <ActionButtons 
-            handleSaveLayout={handleSaveLayout}
-            handleDownload={handleDownload}
-            isGenerating={isGenerating}
-            isPDFReady={isPDFReady}
-            puzzle={puzzles[Math.floor(activePuzzleIndex / (includeSolution ? 2 : 1))]}
-            pdfBlob={pdfBlob}
-          />
-        </div>
+        <PreviewSection 
+          renderPreview={renderPreview}
+          handleSaveLayout={handleSaveLayout}
+          handleDownload={handleDownload}
+          isGenerating={isGenerating}
+          isPDFReady={isPDFReady}
+          puzzles={puzzles}
+          activePuzzleIndex={activePuzzleIndex}
+          includeSolution={includeSolution}
+          pdfBlob={pdfBlob}
+        />
       </TabsContent>
       
       <TabsContent value="sizes" className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -292,41 +249,33 @@ export const DialogContent = ({
           showGrid={showGrid}
         />
 
-        <div className="space-y-4">
-          <Label>Preview</Label>
-          <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-            {renderPreview()}
-          </div>
-          
-          <ActionButtons 
-            handleSaveLayout={handleSaveLayout}
-            handleDownload={handleDownload}
-            isGenerating={isGenerating}
-            isPDFReady={isPDFReady}
-            puzzle={puzzles[Math.floor(activePuzzleIndex / (includeSolution ? 2 : 1))]}
-            pdfBlob={pdfBlob}
-          />
-        </div>
+        <PreviewSection 
+          renderPreview={renderPreview}
+          handleSaveLayout={handleSaveLayout}
+          handleDownload={handleDownload}
+          isGenerating={isGenerating}
+          isPDFReady={isPDFReady}
+          puzzles={puzzles}
+          activePuzzleIndex={activePuzzleIndex}
+          includeSolution={includeSolution}
+          pdfBlob={pdfBlob}
+        />
       </TabsContent>
       
       <TabsContent value="aesthetics" className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <AestheticsTab />
         
-        <div className="space-y-4">
-          <Label>Preview</Label>
-          <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
-            {renderPreview()}
-          </div>
-          
-          <ActionButtons 
-            handleSaveLayout={handleSaveLayout}
-            handleDownload={handleDownload}
-            isGenerating={isGenerating}
-            isPDFReady={isPDFReady}
-            puzzle={puzzles[Math.floor(activePuzzleIndex / (includeSolution ? 2 : 1))]}
-            pdfBlob={pdfBlob}
-          />
-        </div>
+        <PreviewSection 
+          renderPreview={renderPreview}
+          handleSaveLayout={handleSaveLayout}
+          handleDownload={handleDownload}
+          isGenerating={isGenerating}
+          isPDFReady={isPDFReady}
+          puzzles={puzzles}
+          activePuzzleIndex={activePuzzleIndex}
+          includeSolution={includeSolution}
+          pdfBlob={pdfBlob}
+        />
       </TabsContent>
     </Tabs>
   );
