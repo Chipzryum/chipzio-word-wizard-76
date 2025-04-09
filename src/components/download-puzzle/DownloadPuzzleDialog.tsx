@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -78,6 +77,7 @@ export function DownloadPuzzleDialog({
   const [cellSizeMultiplier, setCellSizeMultiplier] = useState(DEFAULT_CELL_MULTIPLIER);
   const [letterSizeMultiplier, setLetterSizeMultiplier] = useState(DEFAULT_LETTER_SIZE_MULTIPLIER);
   const [wordListSizeMultiplier, setWordListSizeMultiplier] = useState(DEFAULT_WORDLIST_MULTIPLIER);
+  const [includeSolution, setIncludeSolution] = useState(true);
 
   const [showTitle, setShowTitle] = useState(true);
   const [showSubtitle, setShowSubtitle] = useState(true);
@@ -99,26 +99,56 @@ export function DownloadPuzzleDialog({
   
   const [showLivePreview, setShowLivePreview] = useState(false);
   
-  // Add state for managing multiple puzzles
   const [activePuzzleIndex, setActivePuzzleIndex] = useState(0);
   const [puzzles, setPuzzles] = useState<CombinedPuzzleGrid[]>([]);
+  const [displayPages, setDisplayPages] = useState<any[]>([]);
   
   const { toast } = useToast();
   
   const previewScaleFactor = 0.3;
 
-  // Initialize puzzles from props when dialog opens
   useEffect(() => {
     if (open) {
       if (allPuzzles && allPuzzles.length > 0) {
         setPuzzles(allPuzzles);
+        createDisplayPages(allPuzzles, includeSolution);
         setActivePuzzleIndex(0);
       } else if (puzzle) {
         setPuzzles([puzzle]);
+        createDisplayPages([puzzle], includeSolution);
         setActivePuzzleIndex(0);
       }
     }
-  }, [open, puzzle, allPuzzles]);
+  }, [open, puzzle, allPuzzles, includeSolution]);
+  
+  const createDisplayPages = (puzzlesArray: CombinedPuzzleGrid[], includeSol: boolean) => {
+    const pages = [];
+    
+    for (let i = 0; i < puzzlesArray.length; i++) {
+      pages.push({
+        puzzle: puzzlesArray[i],
+        isAnswer: false,
+        pageNumber: i + 1
+      });
+      
+      if (includeSol) {
+        pages.push({
+          puzzle: puzzlesArray[i],
+          isAnswer: true,
+          pageNumber: i + 1
+        });
+      }
+    }
+    
+    setDisplayPages(pages);
+  };
+  
+  useEffect(() => {
+    if (puzzles.length > 0) {
+      createDisplayPages(puzzles, includeSolution);
+      setActivePuzzleIndex(0);
+    }
+  }, [includeSolution]);
 
   const handleUnitChange = (unit: Unit) => {
     setSelectedUnit(unit);
@@ -270,7 +300,6 @@ export function DownloadPuzzleDialog({
       let pdfDocument;
       
       if (puzzleType === "crossword") {
-        // For crossword puzzles
         pdfDocument = (
           <CrosswordPDFPreview
             puzzle={puzzles[activePuzzleIndex] as CrosswordGrid}
@@ -303,7 +332,6 @@ export function DownloadPuzzleDialog({
           />
         );
       } else {
-        // For word search puzzles
         pdfDocument = (
           <PuzzlePDFPreview
             puzzle={puzzles[activePuzzleIndex] as PuzzleGrid}
@@ -412,15 +440,18 @@ export function DownloadPuzzleDialog({
   };
   
   const handleSelectPuzzle = (index: number) => {
-    if (index >= 0 && index < puzzles.length) {
+    if (index >= 0 && index < displayPages.length) {
       setActivePuzzleIndex(index);
     }
   };
 
   const renderPreview = () => {
-    if (puzzles.length === 0) return null;
+    if (displayPages.length === 0) return null;
     
-    const currentPuzzle = puzzles[activePuzzleIndex];
+    const currentPage = displayPages[activePuzzleIndex];
+    const currentPuzzle = currentPage.puzzle;
+    const isAnswerPage = currentPage.isAnswer;
+    const pageNumber = currentPage.pageNumber;
     
     if (visualPreviewComponent === "crossword") {
       return (
@@ -433,7 +464,7 @@ export function DownloadPuzzleDialog({
           instruction={instruction}
           showTitle={showTitle}
           showSubtitle={showSubtitle}
-          showInstruction={showInstruction}
+          showInstruction={isAnswerPage ? false : showInstruction}
           showGrid={showGrid}
           showWordList={showWordList}
           titleOffset={titleOffset}
@@ -455,8 +486,10 @@ export function DownloadPuzzleDialog({
           previewScaleFactor={previewScaleFactor}
           fontSizes={fontSizes}
           getVerticalOffset={getVerticalOffset}
-          showSolution={showSolution}
-          includeSolution={true}
+          showSolution={isAnswerPage}
+          includeSolution={includeSolution}
+          isAnswer={isAnswerPage}
+          pageNumber={pageNumber}
         />
       );
     } else {
@@ -470,7 +503,7 @@ export function DownloadPuzzleDialog({
           instruction={instruction}
           showTitle={showTitle}
           showSubtitle={showSubtitle}
-          showInstruction={showInstruction}
+          showInstruction={isAnswerPage ? false : showInstruction}
           showGrid={showGrid}
           showWordList={showWordList}
           titleOffset={titleOffset}
@@ -492,7 +525,9 @@ export function DownloadPuzzleDialog({
           previewScaleFactor={previewScaleFactor}
           fontSizes={fontSizes}
           getVerticalOffset={getVerticalOffset}
-          includeSolution={true}
+          includeSolution={includeSolution}
+          isAnswer={isAnswerPage}
+          pageNumber={pageNumber}
         />
       );
     }
@@ -516,7 +551,9 @@ export function DownloadPuzzleDialog({
         <DialogHeader>
           <DialogTitle>Download Puzzle</DialogTitle>
           <DialogDescription>
-            Customize your {puzzles.length > 1 ? `puzzles (${puzzles.length} pages)` : "puzzle"} before downloading
+            Customize your {puzzles.length > 1 ? 
+              `puzzles (${puzzles.length} ${includeSolution ? 'with answers' : 'puzzles'})` : 
+              "puzzle"} before downloading
           </DialogDescription>
         </DialogHeader>
 
@@ -577,6 +614,8 @@ export function DownloadPuzzleDialog({
           puzzles={puzzles}
           activePuzzleIndex={activePuzzleIndex}
           handleSelectPuzzle={handleSelectPuzzle}
+          includeSolution={includeSolution}
+          displayPages={displayPages}
           
           renderPreview={renderPreview}
           handleSaveLayout={handleSaveLayout}

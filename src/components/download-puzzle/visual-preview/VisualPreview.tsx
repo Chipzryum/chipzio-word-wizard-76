@@ -39,6 +39,8 @@ interface VisualPreviewProps {
   };
   getVerticalOffset: (offset: number) => number;
   includeSolution?: boolean;
+  isAnswer?: boolean;
+  pageNumber?: number;
 }
 
 export const VisualPreview = ({
@@ -57,6 +59,8 @@ export const VisualPreview = ({
   previewScaleFactor,
   fontSizes,
   getVerticalOffset,
+  isAnswer = false,
+  pageNumber = 1,
   ...props
 }: VisualPreviewProps) => {
   // Set dimensions to maintain A4 aspect ratio
@@ -75,31 +79,38 @@ export const VisualPreview = ({
       }}
     >
       {puzzle && (
-        <PreviewContent
-          puzzle={puzzle}
-          title={props.title}
-          subtitle={props.subtitle}
-          instruction={props.instruction}
-          showTitle={props.showTitle}
-          showSubtitle={props.showSubtitle}
-          showInstruction={props.showInstruction}
-          showGrid={props.showGrid}
-          showWordList={props.showWordList}
-          titleOffset={props.titleOffset}
-          subtitleOffset={props.subtitleOffset}
-          instructionOffset={props.instructionOffset}
-          gridOffset={props.gridOffset}
-          wordListOffset={props.wordListOffset}
-          getVerticalOffset={getVerticalOffset}
-          previewScaleFactor={previewScaleFactor}
-          fontSizes={fontSizes}
-          titleSizeMultiplier={titleSizeMultiplier}
-          subtitleSizeMultiplier={subtitleSizeMultiplier}
-          instructionSizeMultiplier={instructionSizeMultiplier}
-          wordListSizeMultiplier={wordListSizeMultiplier}
-          cellSize={cellSize}
-          showSolution={false} // Default value
-        />
+        <>
+          {/* Page indicator */}
+          <div className="absolute top-2 right-2 bg-gray-100 text-xs font-medium px-2 py-1 rounded-md z-10">
+            {isAnswer ? `Answer ${pageNumber}` : `Question ${pageNumber}`}
+          </div>
+          
+          <PreviewContent
+            puzzle={puzzle}
+            title={props.title}
+            subtitle={props.subtitle}
+            instruction={props.instruction}
+            showTitle={props.showTitle}
+            showSubtitle={props.showSubtitle}
+            showInstruction={isAnswer ? false : props.showInstruction}
+            showGrid={props.showGrid}
+            showWordList={props.showWordList}
+            titleOffset={props.titleOffset}
+            subtitleOffset={props.subtitleOffset}
+            instructionOffset={props.instructionOffset}
+            gridOffset={props.gridOffset}
+            wordListOffset={props.wordListOffset}
+            getVerticalOffset={getVerticalOffset}
+            previewScaleFactor={previewScaleFactor}
+            fontSizes={fontSizes}
+            titleSizeMultiplier={titleSizeMultiplier}
+            subtitleSizeMultiplier={subtitleSizeMultiplier}
+            instructionSizeMultiplier={instructionSizeMultiplier}
+            wordListSizeMultiplier={wordListSizeMultiplier}
+            cellSize={cellSize}
+            showSolution={isAnswer} // Show solution if this is an answer page
+          />
+        </>
       )}
     </div>
   );

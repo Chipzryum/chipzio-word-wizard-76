@@ -41,6 +41,8 @@ interface VisualPreviewProps {
   };
   getVerticalOffset: (offset: number) => number;
   includeSolution?: boolean;
+  isAnswer?: boolean;
+  pageNumber?: number;
 }
 
 export const VisualPreview = (props: VisualPreviewProps) => {
@@ -55,7 +57,7 @@ export const VisualPreview = (props: VisualPreviewProps) => {
             instruction={props.instruction}
             showTitle={props.showTitle}
             showSubtitle={props.showSubtitle}
-            showInstruction={props.showInstruction}
+            showInstruction={props.isAnswer ? false : props.showInstruction}
             showGrid={props.showGrid}
             showWordList={props.showWordList}
             titleOffset={props.titleOffset}
@@ -73,6 +75,7 @@ export const VisualPreview = (props: VisualPreviewProps) => {
             subtitleSizeMultiplier={props.subtitleSizeMultiplier}
             instructionSizeMultiplier={props.instructionSizeMultiplier}
             wordListSizeMultiplier={props.wordListSizeMultiplier}
+            showSolution={props.isAnswer || false}
             includeSolution={props.includeSolution}
           />
         </PDFViewer>

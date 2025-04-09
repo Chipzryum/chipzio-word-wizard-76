@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
@@ -68,6 +67,8 @@ interface DialogContentProps {
   puzzles: CombinedPuzzleGrid[];
   activePuzzleIndex: number;
   handleSelectPuzzle: (index: number) => void;
+  includeSolution: boolean;
+  displayPages: any[];
   
   renderPreview: () => JSX.Element | null;
   handleSaveLayout: () => Promise<void>;
@@ -134,6 +135,8 @@ export const DialogContent = ({
   puzzles,
   activePuzzleIndex,
   handleSelectPuzzle,
+  includeSolution,
+  displayPages,
   
   renderPreview,
   handleSaveLayout,
@@ -142,6 +145,15 @@ export const DialogContent = ({
   isPDFReady,
   pdfBlob
 }: DialogContentProps) => {
+  const currentPage = displayPages && displayPages[activePuzzleIndex];
+  const isAnswerPage = currentPage?.isAnswer || false;
+  const pageNumber = currentPage?.pageNumber || 1;
+  const totalPuzzlePages = Math.ceil(displayPages?.length / (includeSolution ? 2 : 1)) || 0;
+  
+  const pageLabel = isAnswerPage 
+    ? `Answer ${pageNumber} of ${totalPuzzlePages}`
+    : `Question ${pageNumber} of ${totalPuzzlePages}`;
+
   return (
     <Tabs defaultValue="content">
       <TabsList className="grid grid-cols-4 mb-4 w-full">
@@ -153,13 +165,14 @@ export const DialogContent = ({
       
       <TabsContent value="content" className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
-          {puzzles.length > 1 && (
+          {displayPages && displayPages.length > 0 && (
             <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
-              <h3 className="font-medium mb-3">Pages ({puzzles.length})</h3>
+              <h3 className="font-medium mb-3">Pages ({displayPages.length})</h3>
               <MultiPuzzleGrid 
                 puzzles={puzzles}
                 activePuzzleIndex={activePuzzleIndex}
                 onSelectPuzzle={handleSelectPuzzle}
+                includeSolution={includeSolution}
               />
               <p className="text-xs text-muted-foreground mt-2">
                 Click on a page to select and edit it
@@ -188,7 +201,7 @@ export const DialogContent = ({
         </div>
 
         <div className="space-y-4">
-          <Label>Preview (Page {activePuzzleIndex + 1} of {puzzles.length})</Label>
+          <Label>Preview ({pageLabel})</Label>
           <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
             {renderPreview()}
           </div>
@@ -198,7 +211,7 @@ export const DialogContent = ({
             handleDownload={handleDownload}
             isGenerating={isGenerating}
             isPDFReady={isPDFReady}
-            puzzle={puzzles[activePuzzleIndex]}
+            puzzle={puzzles[Math.floor(activePuzzleIndex / (includeSolution ? 2 : 1))]}
             pdfBlob={pdfBlob}
           />
           
@@ -252,7 +265,7 @@ export const DialogContent = ({
             handleDownload={handleDownload}
             isGenerating={isGenerating}
             isPDFReady={isPDFReady}
-            puzzle={puzzles[activePuzzleIndex]}
+            puzzle={puzzles[Math.floor(activePuzzleIndex / (includeSolution ? 2 : 1))]}
             pdfBlob={pdfBlob}
           />
         </div>
@@ -290,7 +303,7 @@ export const DialogContent = ({
             handleDownload={handleDownload}
             isGenerating={isGenerating}
             isPDFReady={isPDFReady}
-            puzzle={puzzles[activePuzzleIndex]}
+            puzzle={puzzles[Math.floor(activePuzzleIndex / (includeSolution ? 2 : 1))]}
             pdfBlob={pdfBlob}
           />
         </div>
@@ -310,7 +323,7 @@ export const DialogContent = ({
             handleDownload={handleDownload}
             isGenerating={isGenerating}
             isPDFReady={isPDFReady}
-            puzzle={puzzles[activePuzzleIndex]}
+            puzzle={puzzles[Math.floor(activePuzzleIndex / (includeSolution ? 2 : 1))]}
             pdfBlob={pdfBlob}
           />
         </div>
