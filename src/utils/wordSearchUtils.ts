@@ -15,6 +15,8 @@ export interface WordPlacement {
 export interface PuzzleGrid {
   grid: string[][];
   wordPlacements: WordPlacement[];
+  isAnswer?: boolean;
+  isQuestion?: boolean;
 }
 
 // Core validation function
