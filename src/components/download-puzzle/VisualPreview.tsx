@@ -43,6 +43,7 @@ interface VisualPreviewProps {
   includeSolution?: boolean;
   isAnswer?: boolean;
   pageNumber?: number;
+  showSolution?: boolean; // Added this missing property
 }
 
 export const VisualPreview = (props: VisualPreviewProps) => {
@@ -75,7 +76,7 @@ export const VisualPreview = (props: VisualPreviewProps) => {
             subtitleSizeMultiplier={props.subtitleSizeMultiplier}
             instructionSizeMultiplier={props.instructionSizeMultiplier}
             wordListSizeMultiplier={props.wordListSizeMultiplier}
-            showSolution={props.isAnswer || false}
+            showSolution={props.isAnswer || props.showSolution || false}
             includeSolution={props.includeSolution}
           />
         </PDFViewer>

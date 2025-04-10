@@ -41,6 +41,7 @@ interface VisualPreviewProps {
   includeSolution?: boolean;
   isAnswer?: boolean;
   pageNumber?: number;
+  showSolution?: boolean; // Added this missing property
 }
 
 export const VisualPreview = ({
@@ -61,6 +62,7 @@ export const VisualPreview = ({
   getVerticalOffset,
   isAnswer = false,
   pageNumber = 1,
+  showSolution = false, // Added with default value
   ...props
 }: VisualPreviewProps) => {
   // Set dimensions to maintain A4 aspect ratio
@@ -108,7 +110,7 @@ export const VisualPreview = ({
             instructionSizeMultiplier={instructionSizeMultiplier}
             wordListSizeMultiplier={wordListSizeMultiplier}
             cellSize={cellSize}
-            showSolution={isAnswer} // Show solution if this is an answer page
+            showSolution={isAnswer || showSolution} // Use either isAnswer or showSolution
           />
         </>
       )}
