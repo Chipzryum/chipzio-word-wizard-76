@@ -87,10 +87,10 @@ export const PDFPage = ({
   // Create PDF styles
   const styles = createPDFStyles(fontSizes, cellSize, letterSizeMultiplier);
   
-  // Format page numbers (Page X for puzzles, Answer X for solutions)
+  // Format page numbers with proper numbering
   const pageLabel = showSolution ? 
-    `Answer ${Math.ceil(pageNumber/2)}` : 
-    `Page ${Math.ceil(pageNumber/2)}`;
+    `Answer ${pageNumber}` : 
+    `Page ${pageNumber}`;
   
   // Determine title text with solution indicator if needed
   const titleText = showSolution 

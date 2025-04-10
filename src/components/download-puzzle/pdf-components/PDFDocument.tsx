@@ -79,12 +79,18 @@ export const PDFDocument = ({
 }: PDFDocumentProps) => {
   // Create all pages
   const pages = [];
-  let pageCounter = 1;
+  
+  // Separate counters for questions and answers
+  const questionCounter = { count: 1 };
+  const answerCounter = { count: 1 };
   
   // Process puzzles based on their properties
   for (let i = 0; i < puzzlesToRender.length; i++) {
     const currentPuzzle = puzzlesToRender[i];
     const isAnswer = 'isAnswer' in currentPuzzle && currentPuzzle.isAnswer === true;
+    
+    // Get the appropriate page number based on puzzle type
+    const pageNumber = isAnswer ? answerCounter.count++ : questionCounter.count++;
     
     // Add the page with the correct showSolution flag based on whether it's an answer
     pages.push(
@@ -122,11 +128,10 @@ export const PDFDocument = ({
         imageAngle={imageAngle}
         imageSpacing={imageSpacing}
         showSolution={isAnswer} // Show solution if this is an answer page
-        pageNumber={pageCounter}
+        pageNumber={pageNumber}
         totalPuzzles={puzzlesToRender.length}
       />
     );
-    pageCounter++;
   }
   
   return <Document>{pages}</Document>;

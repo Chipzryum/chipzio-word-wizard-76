@@ -67,8 +67,9 @@ export const PreviewGrid = ({
                     <div className="absolute bg-red-500 opacity-30 w-full h-[2px] top-1/2 transform -translate-y-1/2" />
                   )}
                   
-                  {/* Vertical solution line */}
-                  {puzzle.wordPlacements.some(wp => isPartOfWordInDirection(j, i, wp, { x: 0, y: 1 })) && (
+                  {/* Vertical solution line (both directions) */}
+                  {(puzzle.wordPlacements.some(wp => isPartOfWordInDirection(j, i, wp, { x: 0, y: 1 })) ||
+                    puzzle.wordPlacements.some(wp => isPartOfWordInDirection(j, i, wp, { x: 0, y: -1 }))) && (
                     <div className="absolute bg-red-500 opacity-30 h-full w-[2px] left-1/2 transform -translate-x-1/2" />
                   )}
                   

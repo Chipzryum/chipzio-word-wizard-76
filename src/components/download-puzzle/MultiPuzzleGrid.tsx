@@ -1,3 +1,4 @@
+
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "../ui/button";
 
@@ -19,12 +20,33 @@ export const MultiPuzzleGrid = ({
 
   if (!puzzles || puzzles.length === 0) return null;
   
+  // Create a tracking map for page numbers
+  const questionCounter = { count: 1 };
+  const answerCounter = { count: 1 };
+  
+  // Helper function to determine page number and type
+  const getPageInfo = (puzzle: any) => {
+    const isAnswer = puzzle.isAnswer || false;
+    let pageNumber;
+    
+    if (isAnswer) {
+      pageNumber = answerCounter.count++;
+    } else {
+      pageNumber = questionCounter.count++;
+    }
+    
+    return { isAnswer, pageNumber };
+  };
+  
   // Create display pages array based on actual puzzle pages
-  const displayPages = puzzles.map((puzzle, index) => ({
-    puzzle,
-    isAnswer: puzzle.isAnswer || false,
-    pageNumber: Math.ceil((index + 1) / (includeSolution ? 2 : 1))
-  }));
+  const displayPages = puzzles.map((puzzle, index) => {
+    const { isAnswer, pageNumber } = getPageInfo(puzzle);
+    return {
+      puzzle,
+      isAnswer,
+      pageNumber
+    };
+  });
   
   return (
     <div className="grid grid-cols-2 gap-3 w-full">

@@ -224,6 +224,12 @@ export const PuzzlePDFPreview = ({
         top: '50%',
         transform: 'rotate(-45deg)',
       },
+      verticalLineUp: {
+        width: 2,
+        top: 0,
+        bottom: 0,
+        left: '50%',
+      },
       pageNumber: {
         position: 'absolute',
         bottom: 30,
@@ -265,18 +271,28 @@ export const PuzzlePDFPreview = ({
   const pages = [];
   let pageCounter = 1;
   
+  // Track actual page numbers for questions and answers separately
+  let questionPageCounter = 1;
+  let answerPageCounter = 1;
+  
   puzzlesToRender.forEach((puzzleItem, index) => {
     // Check if the puzzle is an answer page
     const isAnswer = 'isAnswer' in puzzleItem && puzzleItem.isAnswer === true;
     
     // Create the page with the appropriate display settings
-    pages.push(createPuzzlePage(puzzleItem, index, isAnswer, pageCounter));
+    pages.push(createPuzzlePage(
+      puzzleItem, 
+      index, 
+      isAnswer, 
+      isAnswer ? answerPageCounter++ : questionPageCounter++
+    ));
+    
     pageCounter++;
   });
   
   // Function to create a puzzle page with the given showSolution setting
   function createPuzzlePage(puzzleToRender: CombinedPuzzleGrid, index: number, isAnswer: boolean, pageNum: number) {
-    const pageLabel = isAnswer ? `Answer ${Math.ceil(pageNum/2)}` : `Page ${Math.ceil(pageNum/2)}`;
+    const pageLabel = isAnswer ? `Answer ${pageNum}` : `Page ${pageNum}`;
     
     return (
       <Page 
@@ -332,9 +348,13 @@ export const PuzzlePDFPreview = ({
                               lineStyle = pdfStyles.horizontalLine;
                             } else if (direction.x === 0 && direction.y === 1) {
                               lineStyle = pdfStyles.verticalLine;
+                            } else if (direction.x === 0 && direction.y === -1) {
+                              // This is for bottom-to-top words (0, -1)
+                              lineStyle = pdfStyles.verticalLine;
                             } else if (direction.x === 1 && direction.y === 1) {
                               lineStyle = pdfStyles.diagonalLineDown;
-                            } else if (direction.x === 1 && direction.y === -1) {
+                            } else if (direction.x === 1 && direction.y === -1 || 
+                                      (direction.x === -1 && direction.y === 1)) {
                               lineStyle = pdfStyles.diagonalLineUp;
                             }
                             
