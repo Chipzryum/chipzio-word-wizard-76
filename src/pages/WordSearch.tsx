@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Book } from "lucide-react";
@@ -25,7 +24,7 @@ const WordSearch = () => {
   
   // Add state for multiple puzzles
   const [savedPuzzles, setSavedPuzzles] = useState<PuzzleGrid[]>([]);
-  const [activePuzzleIndex, setActivePuzzleIndex] = useState<number>(-1);
+  const [activePuzzleIndex, setActivePuzzleIndex] = useState<number>(0);
   
   // Add state for including answer pages
   const [includeAnswers, setIncludeAnswers] = useState<"with" | "without">("without");
@@ -75,41 +74,43 @@ const WordSearch = () => {
       return;
     }
 
-    // Add the puzzle to the savedPuzzles array - the key fix is here
-    // We tag the main puzzle as a question
-    const newPuzzle = { ...puzzle, isQuestion: true };
+    // Create the question puzzle
+    const questionPuzzle = { ...puzzle, isQuestion: true };
     
     if (includeAnswers === "with") {
-      // Create an answer puzzle (marked as such)
-      const answerPuzzle = {
-        ...puzzle,
-        isAnswer: true
-      };
+      // Create the answer puzzle
+      const answerPuzzle = { ...puzzle, isAnswer: true };
       
       // Add both puzzles
-      setSavedPuzzles(prev => [...prev, newPuzzle, answerPuzzle]);
+      setSavedPuzzles(prev => [...prev, questionPuzzle, answerPuzzle]);
       
       // Set active index to the question puzzle we just added
       setActivePuzzleIndex(savedPuzzles.length);
+      
+      toast({
+        title: "Added to PDF",
+        description: `Added puzzle ${Math.ceil((savedPuzzles.length + 2) / 2)} with its answer page.`,
+      });
     } else {
       // Only add the question puzzle
-      setSavedPuzzles(prev => [...prev, newPuzzle]);
+      setSavedPuzzles(prev => [...prev, questionPuzzle]);
       
       // Set active index to the puzzle we just added
       setActivePuzzleIndex(savedPuzzles.length);
+      
+      toast({
+        title: "Added to PDF",
+        description: `Added puzzle ${savedPuzzles.length + 1} to PDF.`,
+      });
     }
-    
-    toast({
-      title: "Added to PDF",
-      description: includeAnswers === "with" ? 
-        `Page ${Math.ceil((savedPuzzles.length + 1) / 2)} added with its answer page.` : 
-        `Page ${savedPuzzles.length + 1} added to PDF.`,
-    });
   };
 
   const handleSelectPuzzle = (index: number) => {
-    setActivePuzzleIndex(index);
-    setPuzzle(savedPuzzles[index]);
+    if (index >= 0 && index < savedPuzzles.length) {
+      setActivePuzzleIndex(index);
+      setPuzzle(savedPuzzles[index]);
+      setShowAnswers(savedPuzzles[index].isAnswer || false);
+    }
   };
 
   return (
@@ -191,7 +192,7 @@ const WordSearch = () => {
       <DownloadPuzzleDialog
         open={showDownloadDialog}
         onOpenChange={setShowDownloadDialog}
-        puzzle={savedPuzzles.length > 0 ? savedPuzzles[activePuzzleIndex >= 0 ? activePuzzleIndex : 0] : puzzle}
+        puzzle={savedPuzzles.length > 0 ? savedPuzzles[activePuzzleIndex] : puzzle}
         puzzleType="wordsearch"
         allPuzzles={savedPuzzles.length > 0 ? savedPuzzles : puzzle ? [puzzle] : []}
       />

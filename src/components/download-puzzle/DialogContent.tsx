@@ -16,14 +16,22 @@ const PreviewSection = ({ renderPreview, handleSaveLayout, handleDownload, isGen
     <div className="border rounded-lg p-4 bg-white h-[430px] flex flex-col items-center justify-center overflow-y-auto relative">
       {renderPreview()}
     </div>
-    <ActionButtons 
-      handleSaveLayout={handleSaveLayout}
-      handleDownload={handleDownload}
-      isGenerating={isGenerating}
-      isPDFReady={isPDFReady}
-      puzzle={puzzles[Math.floor(activePuzzleIndex / (includeSolution ? 2 : 1))]}
-      pdfBlob={pdfBlob}
-    />
+    <div className="flex gap-4">
+      <button
+        onClick={handleSaveLayout}
+        className="flex-1 flex items-center justify-center gap-2 bg-secondary text-secondary-foreground hover:opacity-90 transition rounded-lg px-4 py-2"
+        disabled={isGenerating || !puzzles[Math.floor(activePuzzleIndex / (includeSolution ? 2 : 1))]}
+      >
+        Save Layout
+      </button>
+      <button
+        onClick={handleDownload}
+        className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:opacity-90 transition rounded-lg px-4 py-2"
+        disabled={!isPDFReady || !pdfBlob}
+      >
+        Download Full PDF
+      </button>
+    </div>
   </div>
 );
 

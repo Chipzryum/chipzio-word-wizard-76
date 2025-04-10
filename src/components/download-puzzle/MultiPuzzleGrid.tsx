@@ -1,4 +1,3 @@
-
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "../ui/button";
 
@@ -20,26 +19,12 @@ export const MultiPuzzleGrid = ({
 
   if (!puzzles || puzzles.length === 0) return null;
   
-  // Create combined array of puzzles and solutions if includeSolution is true
-  const displayPages = [];
-  
-  for (let i = 0; i < puzzles.length; i++) {
-    // Add question page
-    displayPages.push({
-      puzzle: puzzles[i],
-      isAnswer: false,
-      pageNumber: i + 1
-    });
-    
-    // Add answer page if includeSolution is true
-    if (includeSolution) {
-      displayPages.push({
-        puzzle: puzzles[i],
-        isAnswer: true,
-        pageNumber: i + 1
-      });
-    }
-  }
+  // Create display pages array based on actual puzzle pages
+  const displayPages = puzzles.map((puzzle, index) => ({
+    puzzle,
+    isAnswer: puzzle.isAnswer || false,
+    pageNumber: Math.ceil((index + 1) / (includeSolution ? 2 : 1))
+  }));
   
   return (
     <div className="grid grid-cols-2 gap-3 w-full">
