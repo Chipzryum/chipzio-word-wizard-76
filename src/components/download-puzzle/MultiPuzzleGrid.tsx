@@ -1,8 +1,10 @@
+
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "../ui/button";
+import { CombinedPuzzleGrid } from "./types";
 
 interface MultiPuzzleGridProps {
-  puzzles: any[];
+  puzzles: CombinedPuzzleGrid[];
   activePuzzleIndex: number;
   onSelectPuzzle: (index: number) => void;
   includeSolution?: boolean;
@@ -19,11 +21,11 @@ export const MultiPuzzleGrid = ({
 
   if (!puzzles || puzzles.length === 0) return null;
   
-  // Create display pages array based on actual puzzle pages
+  // Create display pages array
   const displayPages = puzzles.map((puzzle, index) => ({
     puzzle,
     isAnswer: puzzle.isAnswer || false,
-    pageNumber: Math.ceil((index + 1) / (includeSolution ? 2 : 1))
+    pageNumber: index + 1
   }));
   
   return (
@@ -41,7 +43,7 @@ export const MultiPuzzleGrid = ({
             <AspectRatio ratio={a4AspectRatio} className="bg-white">
               <div className="p-1 w-full h-full flex flex-col">
                 <div className="bg-black text-white text-xs p-1 font-medium">
-                  {page.isAnswer ? `Answer ${page.pageNumber}` : `Question ${page.pageNumber}`}
+                  {page.isAnswer ? `Answer ${Math.ceil((index + 1) / 2)}` : `Question ${Math.ceil((index + 1) / 2)}`}
                 </div>
                 <div className="flex-1 flex items-center justify-center">
                   {page.puzzle.grid && (
