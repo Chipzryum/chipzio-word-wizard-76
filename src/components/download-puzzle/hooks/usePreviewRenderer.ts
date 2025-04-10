@@ -133,8 +133,7 @@ export const usePreviewRenderer = ({
     };
   }, [
     displayPages,
-    activePuzzleIndex, 
-    puzzle => puzzle?.grid,
+    activePuzzleIndex,
     showLivePreview,
     isPDFReady,
     title,
