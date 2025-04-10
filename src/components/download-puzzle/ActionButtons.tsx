@@ -1,14 +1,12 @@
-
 import { Download, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CombinedPuzzleGrid } from "./types";
 
 interface ActionButtonsProps {
   handleSaveLayout: () => Promise<void>;
   handleDownload: () => Promise<void>;
   isGenerating: boolean;
   isPDFReady: boolean;
-  puzzle: CombinedPuzzleGrid | null;
+  puzzle: any;
   pdfBlob: Blob | null;
 }
 
