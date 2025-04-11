@@ -7,6 +7,8 @@ export interface CrosswordGrid {
   gridData: CellData[][];
   acrossClues: ClueData[];
   downClues: ClueData[];
+  isAnswer?: boolean;
+  isQuestion?: boolean;
 }
 
 export interface CellData {

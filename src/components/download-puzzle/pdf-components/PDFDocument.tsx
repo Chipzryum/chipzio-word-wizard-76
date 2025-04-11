@@ -81,8 +81,8 @@ export const PDFDocument = ({
   const pages = [];
   
   // Separate questions and answers
-  const questionPuzzles = puzzlesToRender.filter(p => !p.isAnswer);
-  const answerPuzzles = puzzlesToRender.filter(p => p.isAnswer);
+  const questionPuzzles = puzzlesToRender.filter(p => p.isAnswer !== true);
+  const answerPuzzles = puzzlesToRender.filter(p => p.isAnswer === true);
   
   // Process question puzzles first
   questionPuzzles.forEach((currentPuzzle, i) => {
