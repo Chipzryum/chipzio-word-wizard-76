@@ -80,29 +80,22 @@ export const PDFDocument = ({
   // Create all pages
   const pages = [];
   
-  // Separate counters for questions and answers
-  const questionCounter = { count: 1 };
-  const answerCounter = { count: 1 };
+  // Separate questions and answers
+  const questionPuzzles = puzzlesToRender.filter(p => !p.isAnswer);
+  const answerPuzzles = puzzlesToRender.filter(p => p.isAnswer);
   
-  // Process puzzles based on their properties
-  for (let i = 0; i < puzzlesToRender.length; i++) {
-    const currentPuzzle = puzzlesToRender[i];
-    const isAnswer = 'isAnswer' in currentPuzzle && currentPuzzle.isAnswer === true;
-    
-    // Get the appropriate page number based on puzzle type
-    const pageNumber = isAnswer ? answerCounter.count++ : questionCounter.count++;
-    
-    // Add the page with the correct showSolution flag based on whether it's an answer
+  // Process question puzzles first
+  questionPuzzles.forEach((currentPuzzle, i) => {
     pages.push(
       <PDFPage
-        key={`puzzle-${i}`}
+        key={`question-${i}`}
         puzzle={currentPuzzle}
         title={title}
         subtitle={subtitle}
         instruction={instruction}
         showTitle={showTitle}
         showSubtitle={showSubtitle}
-        showInstruction={isAnswer ? false : showInstruction} // Don't show instructions on answer pages
+        showInstruction={showInstruction}
         showGrid={showGrid}
         showWordList={showWordList}
         titleOffset={titleOffset}
@@ -127,12 +120,55 @@ export const PDFDocument = ({
         imageGridSize={imageGridSize}
         imageAngle={imageAngle}
         imageSpacing={imageSpacing}
-        showSolution={isAnswer} // Show solution if this is an answer page
-        pageNumber={pageNumber}
-        totalPuzzles={puzzlesToRender.length}
+        showSolution={false}
+        pageNumber={i + 1}
+        totalPuzzles={questionPuzzles.length}
       />
     );
-  }
+  });
+  
+  // Then process answer puzzles
+  answerPuzzles.forEach((currentPuzzle, i) => {
+    pages.push(
+      <PDFPage
+        key={`answer-${i}`}
+        puzzle={currentPuzzle}
+        title={title}
+        subtitle={subtitle}
+        instruction={instruction}
+        showTitle={showTitle}
+        showSubtitle={showSubtitle}
+        showInstruction={false} // Don't show instructions on answer pages
+        showGrid={showGrid}
+        showWordList={showWordList}
+        titleOffset={titleOffset}
+        subtitleOffset={subtitleOffset}
+        instructionOffset={instructionOffset}
+        gridOffset={gridOffset}
+        wordListOffset={wordListOffset}
+        currentWidth={currentWidth}
+        currentHeight={currentHeight}
+        contentWidth={contentWidth}
+        contentHeight={contentHeight}
+        cellSize={cellSize}
+        letterSizeMultiplier={letterSizeMultiplier}
+        titleSizeMultiplier={titleSizeMultiplier}
+        subtitleSizeMultiplier={subtitleSizeMultiplier}
+        instructionSizeMultiplier={instructionSizeMultiplier}
+        wordListSizeMultiplier={wordListSizeMultiplier}
+        fontSizes={fontSizes}
+        getVerticalOffset={getVerticalOffset}
+        uploadedImages={uploadedImages}
+        imageOpacity={imageOpacity}
+        imageGridSize={imageGridSize}
+        imageAngle={imageAngle}
+        imageSpacing={imageSpacing}
+        showSolution={true}
+        pageNumber={i + 1}
+        totalPuzzles={answerPuzzles.length}
+      />
+    );
+  });
   
   return <Document>{pages}</Document>;
 };

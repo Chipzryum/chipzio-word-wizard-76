@@ -111,24 +111,39 @@ export function DownloadPuzzleDialog({
     if (open) {
       // Initialize with provided puzzles when dialog opens
       const puzzlesArray = allPuzzles.length ? allPuzzles : [puzzle];
-      setPuzzles(puzzlesArray);
-      createDisplayPages(puzzlesArray);
+      
+      // Sort puzzles to have questions first, then answers
+      const questionPuzzles = puzzlesArray.filter(p => !p.isAnswer);
+      const answerPuzzles = puzzlesArray.filter(p => p.isAnswer);
+      const orderedPuzzles = [...questionPuzzles, ...answerPuzzles];
+      
+      setPuzzles(orderedPuzzles);
+      createDisplayPages(orderedPuzzles);
       setActivePuzzleIndex(0);
     }
   }, [open, puzzle, allPuzzles]);
 
   // Modified function to properly create display pages
   const createDisplayPages = (puzzlesArray: CombinedPuzzleGrid[]) => {
-    // Filter and organize puzzles by type
-    const pages = puzzlesArray.map((puzzle, index) => {
-      const isAnswerPage = 'isAnswer' in puzzle && puzzle.isAnswer === true;
-      return {
-        puzzle,
-        isAnswer: isAnswerPage,
-        // Calculate page number based on actual position
-        pageNumber: index + 1
-      };
-    });
+    // Filter puzzles by type
+    const questionPuzzles = puzzlesArray.filter(p => !p.isAnswer);
+    const answerPuzzles = puzzlesArray.filter(p => p.isAnswer);
+    
+    // Create separate page numbering for questions and answers
+    const questionPages = questionPuzzles.map((puzzle, index) => ({
+      puzzle,
+      isAnswer: false,
+      pageNumber: index + 1
+    }));
+    
+    const answerPages = answerPuzzles.map((puzzle, index) => ({
+      puzzle,
+      isAnswer: true,
+      pageNumber: index + 1
+    }));
+    
+    // Combine with questions first, then answers
+    const pages = [...questionPages, ...answerPages];
     
     setDisplayPages(pages);
   };

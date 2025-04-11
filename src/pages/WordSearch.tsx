@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Book } from "lucide-react";
@@ -28,6 +29,8 @@ const WordSearch = () => {
   
   // Add state for including answer pages
   const [includeAnswers, setIncludeAnswers] = useState<"with" | "without">("without");
+  // Add state to track if the answer option is locked
+  const [isAnswerOptionLocked, setIsAnswerOptionLocked] = useState<boolean>(false);
   
   const { toast } = useToast();
 
@@ -77,30 +80,41 @@ const WordSearch = () => {
     // Create the question puzzle
     const questionPuzzle = { ...puzzle, isQuestion: true };
     
+    // Lock the answer option after first puzzle is added
+    if (!isAnswerOptionLocked) {
+      setIsAnswerOptionLocked(true);
+    }
+    
     if (includeAnswers === "with") {
       // Create the answer puzzle
       const answerPuzzle = { ...puzzle, isAnswer: true };
       
-      // Add both puzzles
-      setSavedPuzzles(prev => [...prev, questionPuzzle, answerPuzzle]);
+      // Separate questions and answers
+      const newQuestionPuzzles = [...savedPuzzles.filter(p => !p.isAnswer), questionPuzzle];
+      const newAnswerPuzzles = [...savedPuzzles.filter(p => p.isAnswer), answerPuzzle];
+      
+      // Combine with questions first, then answers
+      const orderedPuzzles = [...newQuestionPuzzles, ...newAnswerPuzzles];
+      setSavedPuzzles(orderedPuzzles);
       
       // Set active index to the question puzzle we just added
-      setActivePuzzleIndex(savedPuzzles.length);
+      setActivePuzzleIndex(newQuestionPuzzles.length - 1);
       
       toast({
         title: "Added to PDF",
-        description: `Added puzzle ${Math.ceil((savedPuzzles.length + 2) / 2)} with its answer page.`,
+        description: `Added puzzle ${newQuestionPuzzles.length} with its answer page.`,
       });
     } else {
       // Only add the question puzzle
-      setSavedPuzzles(prev => [...prev, questionPuzzle]);
+      const newPuzzles = [...savedPuzzles, questionPuzzle];
+      setSavedPuzzles(newPuzzles);
       
       // Set active index to the puzzle we just added
-      setActivePuzzleIndex(savedPuzzles.length);
+      setActivePuzzleIndex(newPuzzles.length - 1);
       
       toast({
         title: "Added to PDF",
-        description: `Added puzzle ${savedPuzzles.length + 1} to PDF.`,
+        description: `Added puzzle ${newPuzzles.length} to PDF.`,
       });
     }
   };
@@ -160,6 +174,7 @@ const WordSearch = () => {
                   addToPdf={addToPdf}
                   setShowDownloadDialog={setShowDownloadDialog}
                   savedPuzzles={savedPuzzles}
+                  isAnswerOptionLocked={isAnswerOptionLocked}
                 />
               )}
             </section>

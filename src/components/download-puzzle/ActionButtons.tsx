@@ -1,3 +1,4 @@
+
 import { Download, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -27,7 +28,7 @@ export const ActionButtons = ({
         disabled={isGenerating || !puzzle}
       >
         <Save className="h-4 w-4" />
-        {isGenerating ? "Generating..." : "Save Layout"}
+        {isGenerating ? "Generating..." : "Preview Page"}
       </Button>
       <Button
         type="button"
@@ -37,7 +38,7 @@ export const ActionButtons = ({
         disabled={!isPDFReady || !pdfBlob}
       >
         <Download className="h-4 w-4" />
-        Download Full PDF
+        Download All Pages
       </Button>
     </div>
   );

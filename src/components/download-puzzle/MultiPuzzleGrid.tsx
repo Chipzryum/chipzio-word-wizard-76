@@ -20,33 +20,23 @@ export const MultiPuzzleGrid = ({
 
   if (!puzzles || puzzles.length === 0) return null;
   
-  // Create a tracking map for page numbers
-  const questionCounter = { count: 1 };
-  const answerCounter = { count: 1 };
+  // First, separate questions and answers
+  const questionPuzzles = puzzles.filter(puzzle => !puzzle.isAnswer);
+  const answerPuzzles = puzzles.filter(puzzle => puzzle.isAnswer);
   
-  // Helper function to determine page number and type
-  const getPageInfo = (puzzle: any) => {
-    const isAnswer = puzzle.isAnswer || false;
-    let pageNumber;
-    
-    if (isAnswer) {
-      pageNumber = answerCounter.count++;
-    } else {
-      pageNumber = questionCounter.count++;
-    }
-    
-    return { isAnswer, pageNumber };
-  };
-  
-  // Create display pages array based on actual puzzle pages
-  const displayPages = puzzles.map((puzzle, index) => {
-    const { isAnswer, pageNumber } = getPageInfo(puzzle);
-    return {
+  // Create display pages array with questions first, then answers
+  const displayPages = [
+    ...questionPuzzles.map((puzzle, index) => ({
       puzzle,
-      isAnswer,
-      pageNumber
-    };
-  });
+      isAnswer: false,
+      pageNumber: index + 1
+    })),
+    ...answerPuzzles.map((puzzle, index) => ({
+      puzzle,
+      isAnswer: true,
+      pageNumber: index + 1
+    }))
+  ];
   
   return (
     <div className="grid grid-cols-2 gap-3 w-full">

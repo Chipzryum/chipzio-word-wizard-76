@@ -11,6 +11,7 @@ interface SettingsSectionProps {
   addToPdf: () => void;
   setShowDownloadDialog: (show: boolean) => void;
   savedPuzzles: any[];
+  isAnswerOptionLocked?: boolean;
 }
 
 export const SettingsSection: React.FC<SettingsSectionProps> = ({
@@ -20,6 +21,7 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
   addToPdf,
   setShowDownloadDialog,
   savedPuzzles,
+  isAnswerOptionLocked = false,
 }) => {
   if (!puzzle) return null;
   
@@ -33,16 +35,22 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
           value={includeAnswers} 
           onValueChange={(value: "with" | "without") => setIncludeAnswers(value)}
           className="flex gap-4"
+          disabled={isAnswerOptionLocked}
         >
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="without" id="without-answers" />
-            <Label htmlFor="without-answers">Questions only</Label>
+            <RadioGroupItem value="without" id="without-answers" disabled={isAnswerOptionLocked} />
+            <Label htmlFor="without-answers" className={isAnswerOptionLocked ? "opacity-50" : ""}>Questions only</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="with" id="with-answers" />
-            <Label htmlFor="with-answers">Questions & answers</Label>
+            <RadioGroupItem value="with" id="with-answers" disabled={isAnswerOptionLocked} />
+            <Label htmlFor="with-answers" className={isAnswerOptionLocked ? "opacity-50" : ""}>Questions & answers</Label>
           </div>
         </RadioGroup>
+        {isAnswerOptionLocked && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Answer option is locked after first puzzle is added
+          </p>
+        )}
       </div>
       
       <div className="flex gap-2">
