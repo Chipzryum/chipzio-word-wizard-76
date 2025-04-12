@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
@@ -33,7 +32,6 @@ import {
   MAX_LETTER_SIZE
 } from "./constants";
 
-// Define the structure for page-specific settings
 interface PageSettings {
   title: string;
   subtitle: string;
@@ -127,7 +125,6 @@ export function DownloadPuzzleDialog({
   const [puzzles, setPuzzles] = useState<CombinedPuzzleGrid[]>([]);
   const [displayPages, setDisplayPages] = useState<any[]>([]);
   
-  // New state for per-page settings
   const [pageSettings, setPageSettings] = useState<PageSettings[]>([]);
   const [editAllPages, setEditAllPages] = useState(true);
 
@@ -135,13 +132,10 @@ export function DownloadPuzzleDialog({
 
   const previewScaleFactor = 0.3;
 
-  // Initialize puzzle pages and settings
   useEffect(() => {
     if (open) {
-      // Initialize with provided puzzles when dialog opens
       const puzzlesArray = allPuzzles.length ? allPuzzles : [puzzle];
       
-      // Sort puzzles to have questions first, then answers
       const questionPuzzles = puzzlesArray.filter(p => !p.isAnswer);
       const answerPuzzles = puzzlesArray.filter(p => p.isAnswer);
       const orderedPuzzles = [...questionPuzzles, ...answerPuzzles];
@@ -150,12 +144,10 @@ export function DownloadPuzzleDialog({
       createDisplayPages(orderedPuzzles);
       setActivePuzzleIndex(0);
       
-      // Initialize page settings for each page
       initializePageSettings(orderedPuzzles.length);
     }
   }, [open, puzzle, allPuzzles]);
 
-  // Initialize page settings with default values
   const initializePageSettings = (numPages: number) => {
     const initialSettings: PageSettings[] = [];
     
@@ -186,13 +178,10 @@ export function DownloadPuzzleDialog({
     setPageSettings(initialSettings);
   };
 
-  // Modified function to properly create display pages
   const createDisplayPages = (puzzlesArray: CombinedPuzzleGrid[]) => {
-    // Filter puzzles by type
     const questionPuzzles = puzzlesArray.filter(p => !p.isAnswer);
     const answerPuzzles = puzzlesArray.filter(p => p.isAnswer);
     
-    // Create separate page numbering for questions and answers
     const questionPages = questionPuzzles.map((puzzle, index) => ({
       puzzle,
       isAnswer: false,
@@ -205,13 +194,11 @@ export function DownloadPuzzleDialog({
       pageNumber: index + 1
     }));
     
-    // Combine with questions first, then answers
     const pages = [...questionPages, ...answerPages];
     
     setDisplayPages(pages);
   };
 
-  // Update display pages when includeSolution changes
   useEffect(() => {
     if (puzzles.length > 0) {
       createDisplayPages(puzzles);
@@ -219,7 +206,6 @@ export function DownloadPuzzleDialog({
     }
   }, [includeSolution]);
 
-  // Apply global settings to all pages
   useEffect(() => {
     if (editAllPages && pageSettings.length > 0) {
       const updatedSettings = pageSettings.map(setting => ({
@@ -256,7 +242,6 @@ export function DownloadPuzzleDialog({
     instructionSizeMultiplier, wordListSizeMultiplier, cellSizeMultiplier
   ]);
 
-  // Save the current page's settings
   const savePageSettings = () => {
     if (pageSettings.length > activePuzzleIndex) {
       const newSettings = [...pageSettings];
@@ -287,12 +272,10 @@ export function DownloadPuzzleDialog({
     }
   };
 
-  // Load settings for the selected page
   useEffect(() => {
     if (!editAllPages && pageSettings.length > activePuzzleIndex) {
       const currentPageSettings = pageSettings[activePuzzleIndex];
       
-      // Only update if we have settings for this page
       if (currentPageSettings) {
         setTitle(currentPageSettings.title);
         setSubtitle(currentPageSettings.subtitle);
@@ -418,7 +401,6 @@ export function DownloadPuzzleDialog({
       return;
     }
 
-    // Save current page settings if in single page mode
     if (!editAllPages) {
       savePageSettings();
     }
@@ -426,7 +408,6 @@ export function DownloadPuzzleDialog({
     setIsGenerating(true);
 
     try {
-      // Create a new array of puzzles with their respective settings
       const puzzlesWithSettings = puzzles.map((puzzleItem, index) => {
         const settings = pageSettings[index] || pageSettings[0];
         return {
@@ -463,7 +444,7 @@ export function DownloadPuzzleDialog({
           instructionSizeMultiplier={instructionSizeMultiplier}
           wordListSizeMultiplier={wordListSizeMultiplier}
           showSolution={false}
-          includeSolution={false} // Don't add additional answer pages in the PDF component
+          includeSolution={false}
         />
       ) : (
         <PuzzlePDFPreview
@@ -492,7 +473,7 @@ export function DownloadPuzzleDialog({
           subtitleSizeMultiplier={subtitleSizeMultiplier}
           instructionSizeMultiplier={instructionSizeMultiplier}
           wordListSizeMultiplier={wordListSizeMultiplier}
-          includeSolution={false} // Don't add additional answer pages in the PDF component
+          includeSolution={false}
         />
       );
 
@@ -543,7 +524,6 @@ export function DownloadPuzzleDialog({
 
   const handleSelectPuzzle = (index: number) => {
     if (index >= 0 && index < displayPages.length) {
-      // If not in "edit all pages" mode, save the current page settings
       if (!editAllPages) {
         savePageSettings();
       }
@@ -558,7 +538,6 @@ export function DownloadPuzzleDialog({
     const { puzzle, isAnswer, pageNumber } = displayPages[activePuzzleIndex];
     const PreviewComponent = visualPreviewComponent === "crossword" ? CrosswordVisualPreview : VisualPreview;
 
-    // Get settings for the current page
     const currentSettings = !editAllPages && pageSettings[activePuzzleIndex] 
       ? pageSettings[activePuzzleIndex] 
       : {
@@ -713,7 +692,6 @@ export function DownloadPuzzleDialog({
           isPDFReady={isPDFReady}
           pdfBlob={pdfBlob}
           
-          // New props for page editing mode
           editAllPages={editAllPages}
           setEditAllPages={setEditAllPages}
           savePageSettings={savePageSettings}

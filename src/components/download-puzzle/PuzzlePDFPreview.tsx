@@ -15,6 +15,7 @@ interface PuzzlePDFPreviewProps {
   showWordList: boolean;
   titleOffset: number;
   subtitleOffset: number;
+  instructionOffset: number;
   gridOffset: number;
   wordListOffset: number;
   currentWidth: number;
