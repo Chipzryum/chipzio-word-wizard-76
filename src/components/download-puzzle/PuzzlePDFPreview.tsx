@@ -1,6 +1,6 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
-import { CombinedPuzzleGrid } from "./types";
+import { CombinedPuzzleGrid, PageSettings } from "./types";
 
 interface PageSettings {
   title: string;
@@ -85,17 +85,14 @@ export const PuzzlePDFPreview = ({
 }: PuzzlePDFPreviewProps) => {
   if (!puzzle) return null;
   
-  // Determine which puzzles to render
   const puzzlesToRender = allPuzzles && allPuzzles.length > 0 ? allPuzzles : [puzzle];
   
-  // Calculate font sizes based on page dimensions and multipliers
   const calculateFontSizes = (multipliers: {
     titleSizeMultiplier: number;
     subtitleSizeMultiplier: number;
     instructionSizeMultiplier: number;
     wordListSizeMultiplier: number;
   }) => {
-    // Base sizes for A4
     const a4Width = 595.28;
     const a4Height = 841.89;
     const sizeRatio = Math.sqrt((currentWidth * currentHeight) / (a4Width * a4Height));
@@ -108,7 +105,6 @@ export const PuzzlePDFPreview = ({
     };
   };
 
-  // Default font sizes if we don't have per-page settings
   const defaultFontSizes = calculateFontSizes({
     titleSizeMultiplier,
     subtitleSizeMultiplier,
@@ -116,15 +112,12 @@ export const PuzzlePDFPreview = ({
     wordListSizeMultiplier
   });
   
-  // Create styles for PDF that match the preview exactly
   function createPDFStyles(fontSizes: { 
     titleSize: number; 
     subtitleSize: number; 
     instructionSize: number; 
     wordListSize: number;
   }, letterSizeMultiplier: number) {
-    // Apply the exact multipliers as in the preview
-    // The letter size calculation remains based on cell size
     const cappedLetterSizeMultiplier = Math.min(letterSizeMultiplier, 1.3);
     const letterSize = cellSize * 0.6 * cappedLetterSizeMultiplier;
     
@@ -272,17 +265,14 @@ export const PuzzlePDFPreview = ({
     });
   }
 
-  // Calculate vertical position offset
   function getVerticalOffset(offset: number) {
     const maxAllowedOffset = Math.min(5, (contentHeight / 6) / 10);
     return Math.max(-maxAllowedOffset, Math.min(offset * 10, maxAllowedOffset * 10));
   }
   
-  // Helper function to check if a cell is part of a word
   function isPartOfWord(x: number, y: number, placement: any): boolean {
     const { startPos, direction, length } = placement;
     
-    // Type guard for the direction object
     if (typeof direction === 'string') {
       return false;
     }
@@ -297,22 +287,17 @@ export const PuzzlePDFPreview = ({
     return false;
   }
 
-  // Default PDF styles
   const defaultPdfStyles = createPDFStyles(defaultFontSizes, letterSizeMultiplier);
   
-  // Create pages array based on existing puzzle properties
   const pages = [];
   let pageCounter = 1;
   
-  // Track actual page numbers for questions and answers separately
   let questionPageCounter = 1;
   let answerPageCounter = 1;
   
   puzzlesToRender.forEach((puzzleItem, index) => {
-    // Check if the puzzle is an answer page
     const isAnswer = 'isAnswer' in puzzleItem && puzzleItem.isAnswer === true;
     
-    // Get page-specific settings if available
     const pageSettings = puzzleItem.pageSettings || {
       title,
       subtitle,
@@ -332,10 +317,9 @@ export const PuzzlePDFPreview = ({
       subtitleSizeMultiplier,
       instructionSizeMultiplier,
       wordListSizeMultiplier,
-      cellSizeMultiplier
+      cellSizeMultiplier: 1.0
     };
     
-    // Calculate page-specific font sizes
     const pageFontSizes = calculateFontSizes({
       titleSizeMultiplier: pageSettings.titleSizeMultiplier,
       subtitleSizeMultiplier: pageSettings.subtitleSizeMultiplier,
@@ -343,10 +327,8 @@ export const PuzzlePDFPreview = ({
       wordListSizeMultiplier: pageSettings.wordListSizeMultiplier
     });
     
-    // Create styles for this specific page
     const pageStyles = createPDFStyles(pageFontSizes, pageSettings.letterSizeMultiplier);
     
-    // Create the page with the appropriate display settings
     pages.push(createPuzzlePage(
       puzzleItem, 
       index, 
@@ -359,7 +341,6 @@ export const PuzzlePDFPreview = ({
     pageCounter++;
   });
   
-  // Function to create a puzzle page with the given showSolution setting and page settings
   function createPuzzlePage(
     puzzleToRender: CombinedPuzzleGrid, 
     index: number, 
@@ -412,7 +393,6 @@ export const PuzzlePDFPreview = ({
                           <Text style={pdfStyles.letter}>{cell}</Text>
                           
                           {isAnswer && wordPlacements.map((placement, index) => {
-                            // Type guard for the direction object
                             if (typeof placement.direction === 'string') {
                               return null;
                             }
@@ -425,7 +405,6 @@ export const PuzzlePDFPreview = ({
                             } else if (direction.x === 0 && direction.y === 1) {
                               lineStyle = pdfStyles.verticalLine;
                             } else if (direction.x === 0 && direction.y === -1) {
-                              // This is for bottom-to-top words (0, -1)
                               lineStyle = pdfStyles.verticalLine;
                             } else if (direction.x === 1 && direction.y === 1) {
                               lineStyle = pdfStyles.diagonalLineDown;
@@ -461,7 +440,6 @@ export const PuzzlePDFPreview = ({
           )}
         </View>
         
-        {/* Page number */}
         <Text style={pdfStyles.pageNumber}>{pageLabel}</Text>
       </Page>
     );

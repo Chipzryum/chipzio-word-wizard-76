@@ -5,4 +5,4 @@ export { VisualPreview } from './VisualPreview';
 export { PuzzlePDFPreview } from './PuzzlePDFPreview';
 export { CrosswordPDFPreview } from './CrosswordPDFPreview';
 export { PageEditToggle } from './PageEditToggle';
-export type { CombinedPuzzleGrid } from './types';
+export type { CombinedPuzzleGrid, PageSettings } from './types';
