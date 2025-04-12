@@ -2,28 +2,6 @@ import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { CombinedPuzzleGrid, PageSettings } from "./types";
 
-interface PageSettings {
-  title: string;
-  subtitle: string;
-  instruction: string;
-  showTitle: boolean;
-  showSubtitle: boolean;
-  showInstruction: boolean;
-  showGrid: boolean;
-  showWordList: boolean;
-  titleOffset: number;
-  subtitleOffset: number;
-  instructionOffset: number;
-  gridOffset: number;
-  wordListOffset: number;
-  letterSizeMultiplier: number;
-  titleSizeMultiplier: number;
-  subtitleSizeMultiplier: number;
-  instructionSizeMultiplier: number;
-  wordListSizeMultiplier: number;
-  cellSizeMultiplier: number;
-}
-
 interface PuzzlePDFPreviewProps {
   puzzle: CombinedPuzzleGrid | null;
   allPuzzles?: (CombinedPuzzleGrid & { pageSettings?: PageSettings })[];
@@ -37,7 +15,6 @@ interface PuzzlePDFPreviewProps {
   showWordList: boolean;
   titleOffset: number;
   subtitleOffset: number;
-  instructionOffset: number;
   gridOffset: number;
   wordListOffset: number;
   currentWidth: number;
