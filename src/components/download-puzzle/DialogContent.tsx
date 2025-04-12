@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
@@ -9,6 +10,7 @@ import { ActionButtons } from "./ActionButtons";
 import { MultiPuzzleGrid } from "./MultiPuzzleGrid";
 import { CombinedPuzzleGrid } from "./types";
 import { PageSize, Unit } from "./types";
+import { PageEditToggle } from "./PageEditToggle";
 
 const PreviewSection = ({ renderPreview, handleSaveLayout, handleDownload, isGenerating, isPDFReady, puzzles, activePuzzleIndex, includeSolution, pdfBlob }) => (
   <div className="space-y-4">
@@ -101,6 +103,11 @@ interface DialogContentProps {
   isGenerating: boolean;
   isPDFReady: boolean;
   pdfBlob: Blob | null;
+  
+  // New props for page editing mode
+  editAllPages: boolean;
+  setEditAllPages: (value: boolean) => void;
+  savePageSettings: () => void;
 }
 
 export const DialogContent = ({
@@ -112,7 +119,8 @@ export const DialogContent = ({
   letterSizeMultiplier, setLetterSizeMultiplier, titleSizeMultiplier, setTitleSizeMultiplier, subtitleSizeMultiplier, setSubtitleSizeMultiplier,
   instructionSizeMultiplier, setInstructionSizeMultiplier, wordListSizeMultiplier, setWordListSizeMultiplier, cellSizeMultiplier, setCellSizeMultiplier,
   getPositionValue, formatSliderValue, puzzles, activePuzzleIndex, handleSelectPuzzle, includeSolution, displayPages,
-  renderPreview, handleSaveLayout, handleDownload, isGenerating, isPDFReady, pdfBlob
+  renderPreview, handleSaveLayout, handleDownload, isGenerating, isPDFReady, pdfBlob,
+  editAllPages, setEditAllPages, savePageSettings
 }: DialogContentProps) => {
   const currentPage = displayPages && displayPages[activePuzzleIndex];
   const isAnswerPage = currentPage?.isAnswer || false;
@@ -137,6 +145,15 @@ export const DialogContent = ({
           {displayPages && displayPages.length > 0 && (
             <div className="glass-card rounded-lg p-4 bg-white/50 border shadow-sm">
               <h3 className="font-medium mb-3">Pages ({displayPages.length})</h3>
+              
+              {/* Add page edit toggle */}
+              {displayPages.length > 1 && (
+                <PageEditToggle 
+                  editAllPages={editAllPages}
+                  onToggleEditMode={setEditAllPages}
+                />
+              )}
+              
               <MultiPuzzleGrid 
                 puzzles={puzzles}
                 activePuzzleIndex={activePuzzleIndex}
@@ -188,6 +205,15 @@ export const DialogContent = ({
             <p className="text-xs text-muted-foreground">
               Click "Save Layout" after making changes to update the PDF preview.
             </p>
+          )}
+          
+          {!editAllPages && displayPages.length > 1 && (
+            <button
+              onClick={savePageSettings}
+              className="w-full mt-2 py-2 bg-green-50 text-green-700 border border-green-200 rounded-md hover:bg-green-100 transition-colors text-sm"
+            >
+              Save Changes to Selected Page
+            </button>
           )}
         </div>
       </TabsContent>

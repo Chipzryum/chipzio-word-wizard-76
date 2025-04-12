@@ -1,4 +1,3 @@
-
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 
@@ -51,6 +50,7 @@ export const SizesSettings = ({
             min={50}
             max={150}
             step={1}
+            // Changed from onValueChange to onValueCommit to match other sliders behavior
             onValueChange={(value) => setLetterSizeMultiplier(value[0] / 100)}
           />
           <div className="flex justify-between text-xs text-muted-foreground">

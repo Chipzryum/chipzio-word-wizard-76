@@ -33,6 +33,29 @@ import {
   MAX_LETTER_SIZE
 } from "./constants";
 
+// Define the structure for page-specific settings
+interface PageSettings {
+  title: string;
+  subtitle: string;
+  instruction: string;
+  showTitle: boolean;
+  showSubtitle: boolean;
+  showInstruction: boolean;
+  showGrid: boolean;
+  showWordList: boolean;
+  titleOffset: number;
+  subtitleOffset: number;
+  instructionOffset: number;
+  gridOffset: number;
+  wordListOffset: number;
+  letterSizeMultiplier: number;
+  titleSizeMultiplier: number;
+  subtitleSizeMultiplier: number;
+  instructionSizeMultiplier: number;
+  wordListSizeMultiplier: number;
+  cellSizeMultiplier: number;
+}
+
 interface DownloadPuzzleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -63,6 +86,7 @@ export function DownloadPuzzleDialog({
   allPuzzles = []
 }: DownloadPuzzleDialogProps) {
 
+  // Global settings (used when editAllPages is true)
   const [title, setTitle] = useState(defaultValues.title);
   const [subtitle, setSubtitle] = useState(defaultValues.subtitle);
   const [instruction, setInstruction] = useState(defaultValues.instruction);
@@ -102,11 +126,16 @@ export function DownloadPuzzleDialog({
   const [activePuzzleIndex, setActivePuzzleIndex] = useState(0);
   const [puzzles, setPuzzles] = useState<CombinedPuzzleGrid[]>([]);
   const [displayPages, setDisplayPages] = useState<any[]>([]);
+  
+  // New state for per-page settings
+  const [pageSettings, setPageSettings] = useState<PageSettings[]>([]);
+  const [editAllPages, setEditAllPages] = useState(true);
 
   const { toast } = useToast();
 
   const previewScaleFactor = 0.3;
 
+  // Initialize puzzle pages and settings
   useEffect(() => {
     if (open) {
       // Initialize with provided puzzles when dialog opens
@@ -120,8 +149,42 @@ export function DownloadPuzzleDialog({
       setPuzzles(orderedPuzzles);
       createDisplayPages(orderedPuzzles);
       setActivePuzzleIndex(0);
+      
+      // Initialize page settings for each page
+      initializePageSettings(orderedPuzzles.length);
     }
   }, [open, puzzle, allPuzzles]);
+
+  // Initialize page settings with default values
+  const initializePageSettings = (numPages: number) => {
+    const initialSettings: PageSettings[] = [];
+    
+    for (let i = 0; i < numPages; i++) {
+      initialSettings.push({
+        title,
+        subtitle,
+        instruction,
+        showTitle,
+        showSubtitle,
+        showInstruction,
+        showGrid,
+        showWordList,
+        titleOffset,
+        subtitleOffset,
+        instructionOffset,
+        gridOffset,
+        wordListOffset,
+        letterSizeMultiplier,
+        titleSizeMultiplier,
+        subtitleSizeMultiplier,
+        instructionSizeMultiplier,
+        wordListSizeMultiplier,
+        cellSizeMultiplier
+      });
+    }
+    
+    setPageSettings(initialSettings);
+  };
 
   // Modified function to properly create display pages
   const createDisplayPages = (puzzlesArray: CombinedPuzzleGrid[]) => {
@@ -155,6 +218,104 @@ export function DownloadPuzzleDialog({
       setActivePuzzleIndex(0);
     }
   }, [includeSolution]);
+
+  // Apply global settings to all pages
+  useEffect(() => {
+    if (editAllPages && pageSettings.length > 0) {
+      const updatedSettings = pageSettings.map(setting => ({
+        ...setting,
+        title,
+        subtitle,
+        instruction,
+        showTitle,
+        showSubtitle,
+        showInstruction,
+        showGrid,
+        showWordList,
+        titleOffset,
+        subtitleOffset,
+        instructionOffset,
+        gridOffset,
+        wordListOffset,
+        letterSizeMultiplier,
+        titleSizeMultiplier,
+        subtitleSizeMultiplier,
+        instructionSizeMultiplier,
+        wordListSizeMultiplier,
+        cellSizeMultiplier
+      }));
+      
+      setPageSettings(updatedSettings);
+    }
+  }, [
+    editAllPages,
+    title, subtitle, instruction,
+    showTitle, showSubtitle, showInstruction, showGrid, showWordList,
+    titleOffset, subtitleOffset, instructionOffset, gridOffset, wordListOffset,
+    letterSizeMultiplier, titleSizeMultiplier, subtitleSizeMultiplier,
+    instructionSizeMultiplier, wordListSizeMultiplier, cellSizeMultiplier
+  ]);
+
+  // Save the current page's settings
+  const savePageSettings = () => {
+    if (pageSettings.length > activePuzzleIndex) {
+      const newSettings = [...pageSettings];
+      newSettings[activePuzzleIndex] = {
+        title,
+        subtitle,
+        instruction,
+        showTitle,
+        showSubtitle,
+        showInstruction,
+        showGrid,
+        showWordList,
+        titleOffset,
+        subtitleOffset,
+        instructionOffset,
+        gridOffset,
+        wordListOffset,
+        letterSizeMultiplier,
+        titleSizeMultiplier,
+        subtitleSizeMultiplier,
+        instructionSizeMultiplier,
+        wordListSizeMultiplier,
+        cellSizeMultiplier
+      };
+      
+      setPageSettings(newSettings);
+      toast({ title: "Saved", description: `Settings saved for page ${activePuzzleIndex + 1}` });
+    }
+  };
+
+  // Load settings for the selected page
+  useEffect(() => {
+    if (!editAllPages && pageSettings.length > activePuzzleIndex) {
+      const currentPageSettings = pageSettings[activePuzzleIndex];
+      
+      // Only update if we have settings for this page
+      if (currentPageSettings) {
+        setTitle(currentPageSettings.title);
+        setSubtitle(currentPageSettings.subtitle);
+        setInstruction(currentPageSettings.instruction);
+        setShowTitle(currentPageSettings.showTitle);
+        setShowSubtitle(currentPageSettings.showSubtitle);
+        setShowInstruction(currentPageSettings.showInstruction);
+        setShowGrid(currentPageSettings.showGrid);
+        setShowWordList(currentPageSettings.showWordList);
+        setTitleOffset(currentPageSettings.titleOffset);
+        setSubtitleOffset(currentPageSettings.subtitleOffset);
+        setInstructionOffset(currentPageSettings.instructionOffset);
+        setGridOffset(currentPageSettings.gridOffset);
+        setWordListOffset(currentPageSettings.wordListOffset);
+        setLetterSizeMultiplier(currentPageSettings.letterSizeMultiplier);
+        setTitleSizeMultiplier(currentPageSettings.titleSizeMultiplier);
+        setSubtitleSizeMultiplier(currentPageSettings.subtitleSizeMultiplier);
+        setInstructionSizeMultiplier(currentPageSettings.instructionSizeMultiplier);
+        setWordListSizeMultiplier(currentPageSettings.wordListSizeMultiplier);
+        setCellSizeMultiplier(currentPageSettings.cellSizeMultiplier);
+      }
+    }
+  }, [activePuzzleIndex, editAllPages]);
 
   const handleUnitChange = (unit: Unit) => setSelectedUnit(unit);
 
@@ -257,9 +418,23 @@ export function DownloadPuzzleDialog({
       return;
     }
 
+    // Save current page settings if in single page mode
+    if (!editAllPages) {
+      savePageSettings();
+    }
+
     setIsGenerating(true);
 
     try {
+      // Create a new array of puzzles with their respective settings
+      const puzzlesWithSettings = puzzles.map((puzzleItem, index) => {
+        const settings = pageSettings[index] || pageSettings[0];
+        return {
+          ...puzzleItem,
+          pageSettings: settings
+        };
+      });
+
       const pdfDocument = puzzleType === "crossword" ? (
         <CrosswordPDFPreview
           puzzle={puzzles[activePuzzleIndex] as CrosswordGrid}
@@ -293,7 +468,7 @@ export function DownloadPuzzleDialog({
       ) : (
         <PuzzlePDFPreview
           puzzle={puzzles[activePuzzleIndex] as PuzzleGrid}
-          allPuzzles={puzzles as PuzzleGrid[]}
+          allPuzzles={puzzlesWithSettings as PuzzleGrid[]}
           title={title}
           subtitle={subtitle}
           instruction={instruction}
@@ -368,6 +543,11 @@ export function DownloadPuzzleDialog({
 
   const handleSelectPuzzle = (index: number) => {
     if (index >= 0 && index < displayPages.length) {
+      // If not in "edit all pages" mode, save the current page settings
+      if (!editAllPages) {
+        savePageSettings();
+      }
+      
       setActivePuzzleIndex(index);
     }
   };
@@ -378,35 +558,59 @@ export function DownloadPuzzleDialog({
     const { puzzle, isAnswer, pageNumber } = displayPages[activePuzzleIndex];
     const PreviewComponent = visualPreviewComponent === "crossword" ? CrosswordVisualPreview : VisualPreview;
 
+    // Get settings for the current page
+    const currentSettings = !editAllPages && pageSettings[activePuzzleIndex] 
+      ? pageSettings[activePuzzleIndex] 
+      : {
+          title,
+          subtitle,
+          instruction,
+          showTitle,
+          showSubtitle,
+          showInstruction: !isAnswer && showInstruction,
+          showGrid,
+          showWordList,
+          titleOffset,
+          subtitleOffset,
+          instructionOffset,
+          gridOffset,
+          wordListOffset,
+          letterSizeMultiplier,
+          titleSizeMultiplier,
+          subtitleSizeMultiplier,
+          instructionSizeMultiplier,
+          wordListSizeMultiplier,
+        };
+
     return (
       <PreviewComponent
         puzzle={puzzle}
         showLivePreview={showLivePreview}
         isPDFReady={isPDFReady}
-        title={title}
-        subtitle={subtitle}
-        instruction={instruction}
-        showTitle={showTitle}
-        showSubtitle={showSubtitle}
-        showInstruction={!isAnswer && showInstruction}
-        showGrid={showGrid}
-        showWordList={showWordList}
-        titleOffset={titleOffset}
-        subtitleOffset={subtitleOffset}
-        instructionOffset={instructionOffset}
-        gridOffset={gridOffset}
-        wordListOffset={wordListOffset}
+        title={currentSettings.title}
+        subtitle={currentSettings.subtitle}
+        instruction={currentSettings.instruction}
+        showTitle={currentSettings.showTitle}
+        showSubtitle={currentSettings.showSubtitle}
+        showInstruction={!isAnswer && currentSettings.showInstruction}
+        showGrid={currentSettings.showGrid}
+        showWordList={currentSettings.showWordList}
+        titleOffset={currentSettings.titleOffset}
+        subtitleOffset={currentSettings.subtitleOffset}
+        instructionOffset={currentSettings.instructionOffset}
+        gridOffset={currentSettings.gridOffset}
+        wordListOffset={currentSettings.wordListOffset}
         currentWidth={currentWidth}
         currentHeight={currentHeight}
         contentWidth={contentWidth}
         contentHeight={contentHeight}
         cellSize={cellSize}
         letterSize={letterSize}
-        letterSizeMultiplier={letterSizeMultiplier}
-        titleSizeMultiplier={titleSizeMultiplier}
-        subtitleSizeMultiplier={subtitleSizeMultiplier}
-        instructionSizeMultiplier={instructionSizeMultiplier}
-        wordListSizeMultiplier={wordListSizeMultiplier}
+        letterSizeMultiplier={currentSettings.letterSizeMultiplier}
+        titleSizeMultiplier={currentSettings.titleSizeMultiplier}
+        subtitleSizeMultiplier={currentSettings.subtitleSizeMultiplier}
+        instructionSizeMultiplier={currentSettings.instructionSizeMultiplier}
+        wordListSizeMultiplier={currentSettings.wordListSizeMultiplier}
         previewScaleFactor={previewScaleFactor}
         fontSizes={fontSizes}
         getVerticalOffset={getVerticalOffset}
@@ -508,6 +712,11 @@ export function DownloadPuzzleDialog({
           isGenerating={isGenerating}
           isPDFReady={isPDFReady}
           pdfBlob={pdfBlob}
+          
+          // New props for page editing mode
+          editAllPages={editAllPages}
+          setEditAllPages={setEditAllPages}
+          savePageSettings={savePageSettings}
         />
       </DialogContent>
     </Dialog>

@@ -1,11 +1,32 @@
-
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { PuzzleGrid } from "@/utils/wordSearchUtils";
 import { CombinedPuzzleGrid } from "./types";
 
+interface PageSettings {
+  title: string;
+  subtitle: string;
+  instruction: string;
+  showTitle: boolean;
+  showSubtitle: boolean;
+  showInstruction: boolean;
+  showGrid: boolean;
+  showWordList: boolean;
+  titleOffset: number;
+  subtitleOffset: number;
+  instructionOffset: number;
+  gridOffset: number;
+  wordListOffset: number;
+  letterSizeMultiplier: number;
+  titleSizeMultiplier: number;
+  subtitleSizeMultiplier: number;
+  instructionSizeMultiplier: number;
+  wordListSizeMultiplier: number;
+  cellSizeMultiplier: number;
+}
+
 interface PuzzlePDFPreviewProps {
   puzzle: CombinedPuzzleGrid | null;
-  allPuzzles?: CombinedPuzzleGrid[];
+  allPuzzles?: (CombinedPuzzleGrid & { pageSettings?: PageSettings })[];
   title: string;
   subtitle: string;
   instruction: string;
@@ -68,21 +89,32 @@ export const PuzzlePDFPreview = ({
   const puzzlesToRender = allPuzzles && allPuzzles.length > 0 ? allPuzzles : [puzzle];
   
   // Calculate font sizes based on page dimensions and multipliers
-  const calculateFontSizes = () => {
+  const calculateFontSizes = (multipliers: {
+    titleSizeMultiplier: number;
+    subtitleSizeMultiplier: number;
+    instructionSizeMultiplier: number;
+    wordListSizeMultiplier: number;
+  }) => {
     // Base sizes for A4
     const a4Width = 595.28;
     const a4Height = 841.89;
     const sizeRatio = Math.sqrt((currentWidth * currentHeight) / (a4Width * a4Height));
     
     return {
-      titleSize: Math.max(20, Math.min(48, Math.floor(36 * sizeRatio * titleSizeMultiplier))),
-      subtitleSize: Math.max(14, Math.min(36, Math.floor(24 * sizeRatio * subtitleSizeMultiplier))),
-      instructionSize: Math.max(8, Math.min(24, Math.floor(14 * sizeRatio * instructionSizeMultiplier))),
-      wordListSize: Math.max(6, Math.min(28, Math.floor(12 * sizeRatio * wordListSizeMultiplier))),
+      titleSize: Math.max(20, Math.min(48, Math.floor(36 * sizeRatio * multipliers.titleSizeMultiplier))),
+      subtitleSize: Math.max(14, Math.min(36, Math.floor(24 * sizeRatio * multipliers.subtitleSizeMultiplier))),
+      instructionSize: Math.max(8, Math.min(24, Math.floor(14 * sizeRatio * multipliers.instructionSizeMultiplier))),
+      wordListSize: Math.max(6, Math.min(28, Math.floor(12 * sizeRatio * multipliers.wordListSizeMultiplier))),
     };
   };
 
-  const fontSizes = calculateFontSizes();
+  // Default font sizes if we don't have per-page settings
+  const defaultFontSizes = calculateFontSizes({
+    titleSizeMultiplier,
+    subtitleSizeMultiplier,
+    instructionSizeMultiplier,
+    wordListSizeMultiplier
+  });
   
   // Create styles for PDF that match the preview exactly
   function createPDFStyles(fontSizes: { 
@@ -90,7 +122,7 @@ export const PuzzlePDFPreview = ({
     subtitleSize: number; 
     instructionSize: number; 
     wordListSize: number;
-  }) {
+  }, letterSizeMultiplier: number) {
     // Apply the exact multipliers as in the preview
     // The letter size calculation remains based on cell size
     const cappedLetterSizeMultiplier = Math.min(letterSizeMultiplier, 1.3);
@@ -265,7 +297,8 @@ export const PuzzlePDFPreview = ({
     return false;
   }
 
-  const pdfStyles = createPDFStyles(fontSizes);
+  // Default PDF styles
+  const defaultPdfStyles = createPDFStyles(defaultFontSizes, letterSizeMultiplier);
   
   // Create pages array based on existing puzzle properties
   const pages = [];
@@ -279,19 +312,62 @@ export const PuzzlePDFPreview = ({
     // Check if the puzzle is an answer page
     const isAnswer = 'isAnswer' in puzzleItem && puzzleItem.isAnswer === true;
     
+    // Get page-specific settings if available
+    const pageSettings = puzzleItem.pageSettings || {
+      title,
+      subtitle,
+      instruction,
+      showTitle,
+      showSubtitle,
+      showInstruction,
+      showGrid,
+      showWordList,
+      titleOffset,
+      subtitleOffset,
+      instructionOffset,
+      gridOffset,
+      wordListOffset,
+      letterSizeMultiplier,
+      titleSizeMultiplier,
+      subtitleSizeMultiplier,
+      instructionSizeMultiplier,
+      wordListSizeMultiplier,
+      cellSizeMultiplier
+    };
+    
+    // Calculate page-specific font sizes
+    const pageFontSizes = calculateFontSizes({
+      titleSizeMultiplier: pageSettings.titleSizeMultiplier,
+      subtitleSizeMultiplier: pageSettings.subtitleSizeMultiplier,
+      instructionSizeMultiplier: pageSettings.instructionSizeMultiplier,
+      wordListSizeMultiplier: pageSettings.wordListSizeMultiplier
+    });
+    
+    // Create styles for this specific page
+    const pageStyles = createPDFStyles(pageFontSizes, pageSettings.letterSizeMultiplier);
+    
     // Create the page with the appropriate display settings
     pages.push(createPuzzlePage(
       puzzleItem, 
       index, 
       isAnswer, 
-      isAnswer ? answerPageCounter++ : questionPageCounter++
+      isAnswer ? answerPageCounter++ : questionPageCounter++,
+      pageSettings,
+      pageStyles
     ));
     
     pageCounter++;
   });
   
-  // Function to create a puzzle page with the given showSolution setting
-  function createPuzzlePage(puzzleToRender: CombinedPuzzleGrid, index: number, isAnswer: boolean, pageNum: number) {
+  // Function to create a puzzle page with the given showSolution setting and page settings
+  function createPuzzlePage(
+    puzzleToRender: CombinedPuzzleGrid, 
+    index: number, 
+    isAnswer: boolean, 
+    pageNum: number,
+    pageSettings: PageSettings,
+    pdfStyles: any
+  ) {
     const pageLabel = isAnswer ? `Answer ${pageNum}` : `Page ${pageNum}`;
     
     return (
@@ -301,28 +377,28 @@ export const PuzzlePDFPreview = ({
         style={pdfStyles.page}
       >
         <View style={pdfStyles.container}>
-          {showTitle && (
-            <View style={[pdfStyles.titleContainer, {marginTop: getVerticalOffset(titleOffset)}]}>
+          {pageSettings.showTitle && (
+            <View style={[pdfStyles.titleContainer, {marginTop: getVerticalOffset(pageSettings.titleOffset)}]}>
               <Text style={pdfStyles.title}>
-                {isAnswer ? `${title.toUpperCase()} - SOLUTION` : title.toUpperCase()}
+                {isAnswer ? `${pageSettings.title.toUpperCase()} - SOLUTION` : pageSettings.title.toUpperCase()}
               </Text>
             </View>
           )}
           
-          {showSubtitle && (
-            <View style={[pdfStyles.subtitleContainer, {marginTop: getVerticalOffset(subtitleOffset)}]}>
-              <Text style={pdfStyles.subtitle}>{subtitle.toLowerCase()}</Text>
+          {pageSettings.showSubtitle && (
+            <View style={[pdfStyles.subtitleContainer, {marginTop: getVerticalOffset(pageSettings.subtitleOffset)}]}>
+              <Text style={pdfStyles.subtitle}>{pageSettings.subtitle.toLowerCase()}</Text>
             </View>
           )}
           
-          {showInstruction && !isAnswer && (
-            <View style={[pdfStyles.instructionContainer, {marginTop: getVerticalOffset(instructionOffset)}]}>
-              <Text style={pdfStyles.instruction}>{instruction}</Text>
+          {pageSettings.showInstruction && !isAnswer && (
+            <View style={[pdfStyles.instructionContainer, {marginTop: getVerticalOffset(pageSettings.instructionOffset)}]}>
+              <Text style={pdfStyles.instruction}>{pageSettings.instruction}</Text>
             </View>
           )}
           
-          {showGrid && (
-            <View style={[pdfStyles.gridContainer, {marginTop: getVerticalOffset(gridOffset)}]}>
+          {pageSettings.showGrid && (
+            <View style={[pdfStyles.gridContainer, {marginTop: getVerticalOffset(pageSettings.gridOffset)}]}>
               <View style={pdfStyles.grid}>
                 {puzzleToRender.grid.map((row, i) => (
                   <View key={i} style={pdfStyles.row}>
@@ -374,8 +450,8 @@ export const PuzzlePDFPreview = ({
             </View>
           )}
           
-          {showWordList && (
-            <View style={[pdfStyles.wordListContainer, {marginTop: getVerticalOffset(wordListOffset)}]}>
+          {pageSettings.showWordList && (
+            <View style={[pdfStyles.wordListContainer, {marginTop: getVerticalOffset(pageSettings.wordListOffset)}]}>
               <View style={pdfStyles.wordList}>
                 {puzzleToRender.wordPlacements.map(({ word }, index) => (
                   <Text key={index} style={pdfStyles.wordItem}>{word.toLowerCase()}</Text>
