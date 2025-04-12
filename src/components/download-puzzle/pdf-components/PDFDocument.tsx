@@ -1,10 +1,11 @@
 
 import { Document } from "@react-pdf/renderer";
-import { CrosswordGrid } from "@/utils/crosswordUtils";
+import { CombinedPuzzleGrid } from "../types";
 import { PDFPage } from "./PDFPage";
+import { calculateFontSizes, getVerticalOffset } from "./PDFUtils";
 
 interface PDFDocumentProps {
-  puzzlesToRender: CrosswordGrid[];
+  puzzlesToRender: CombinedPuzzleGrid[];
   title: string;
   subtitle: string;
   instruction: string;
@@ -28,13 +29,6 @@ interface PDFDocumentProps {
   subtitleSizeMultiplier: number;
   instructionSizeMultiplier: number;
   wordListSizeMultiplier: number;
-  fontSizes: {
-    titleSize: number;
-    subtitleSize: number;
-    instructionSize: number;
-    wordListSize: number;
-  };
-  getVerticalOffset: (offset: number) => number;
   uploadedImages?: string[];
   imageOpacity?: number;
   imageGridSize?: number;
@@ -68,8 +62,6 @@ export const PDFDocument = ({
   subtitleSizeMultiplier,
   instructionSizeMultiplier,
   wordListSizeMultiplier,
-  fontSizes,
-  getVerticalOffset,
   uploadedImages = [],
   imageOpacity = 0.3,
   imageGridSize = 100,
@@ -77,12 +69,23 @@ export const PDFDocument = ({
   imageSpacing = 0,
   includeSolution = true,
 }: PDFDocumentProps) => {
-  // Create all pages
-  const pages = [];
+  // Calculate font sizes based on page dimensions
+  const fontSizes = calculateFontSizes(currentWidth, currentHeight, {
+    titleSizeMultiplier,
+    subtitleSizeMultiplier,
+    instructionSizeMultiplier,
+    wordListSizeMultiplier
+  });
+  
+  // Create offset calculator function with contentHeight
+  const offsetCalculator = (offset: number) => getVerticalOffset(offset, contentHeight);
   
   // Separate questions and answers
   const questionPuzzles = puzzlesToRender.filter(p => p.isAnswer !== true);
   const answerPuzzles = puzzlesToRender.filter(p => p.isAnswer === true);
+  
+  // Create all pages
+  const pages = [];
   
   // Process question puzzles first
   questionPuzzles.forEach((currentPuzzle, i) => {
@@ -114,13 +117,13 @@ export const PDFDocument = ({
         instructionSizeMultiplier={instructionSizeMultiplier}
         wordListSizeMultiplier={wordListSizeMultiplier}
         fontSizes={fontSizes}
-        getVerticalOffset={getVerticalOffset}
+        getVerticalOffset={offsetCalculator}
         uploadedImages={uploadedImages}
         imageOpacity={imageOpacity}
         imageGridSize={imageGridSize}
         imageAngle={imageAngle}
         imageSpacing={imageSpacing}
-        showSolution={false}
+        isAnswer={false}
         pageNumber={i + 1}
         totalPuzzles={questionPuzzles.length}
       />
@@ -157,13 +160,13 @@ export const PDFDocument = ({
         instructionSizeMultiplier={instructionSizeMultiplier}
         wordListSizeMultiplier={wordListSizeMultiplier}
         fontSizes={fontSizes}
-        getVerticalOffset={getVerticalOffset}
+        getVerticalOffset={offsetCalculator}
         uploadedImages={uploadedImages}
         imageOpacity={imageOpacity}
         imageGridSize={imageGridSize}
         imageAngle={imageAngle}
         imageSpacing={imageSpacing}
-        showSolution={true}
+        isAnswer={true}
         pageNumber={i + 1}
         totalPuzzles={answerPuzzles.length}
       />

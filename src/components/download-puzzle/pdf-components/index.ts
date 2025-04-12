@@ -1,7 +1,7 @@
 
-export { PDFDocument } from './PDFDocument';
-export { PDFPage } from './PDFPage';
 export { PDFTiledBackground } from './PDFTiledBackground';
-export { PDFCrosswordGrid } from './PDFCrosswordGrid';
-export { PDFCrosswordClueList } from './PDFCrosswordClueList';
+export { PDFWordSearchGrid } from './PDFWordSearchGrid';
+export { PDFWordSearchWordList } from './PDFWordSearchWordList';
+export { PDFPage } from './PDFPage';
 export { PDFPageNumber } from './PDFPageNumber';
+export { calculateFontSizes, getVerticalOffset } from './PDFUtils';

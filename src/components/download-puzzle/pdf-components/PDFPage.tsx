@@ -1,13 +1,14 @@
 
 import { Page, View, Text, StyleSheet } from "@react-pdf/renderer";
-import { CrosswordGrid } from "@/utils/crosswordUtils";
+import { PuzzleGrid } from "@/utils/wordSearchUtils";
+import { CombinedPuzzleGrid, PageSettings } from "../types";
 import { PDFTiledBackground } from "./PDFTiledBackground";
-import { PDFCrosswordGrid } from "./PDFCrosswordGrid";
-import { PDFCrosswordClueList } from "./PDFCrosswordClueList";
+import { PDFWordSearchGrid } from "./PDFWordSearchGrid";
+import { PDFWordSearchWordList } from "./PDFWordSearchWordList";
 import { PDFPageNumber } from "./PDFPageNumber";
 
 interface PDFPageProps {
-  puzzle: CrosswordGrid;
+  puzzle: CombinedPuzzleGrid;
   title: string;
   subtitle: string;
   instruction: string;
@@ -43,7 +44,7 @@ interface PDFPageProps {
   imageGridSize?: number;
   imageAngle?: number;
   imageSpacing?: number;
-  showSolution: boolean;
+  isAnswer: boolean;
   pageNumber: number;
   totalPuzzles: number;
 }
@@ -80,7 +81,7 @@ export const PDFPage = ({
   imageGridSize = 100,
   imageAngle = 0,
   imageSpacing = 0,
-  showSolution,
+  isAnswer,
   pageNumber,
   totalPuzzles,
 }: PDFPageProps) => {
@@ -88,12 +89,12 @@ export const PDFPage = ({
   const styles = createPDFStyles(fontSizes, cellSize, letterSizeMultiplier);
   
   // Format page numbers with proper numbering
-  const pageLabel = showSolution ? 
+  const pageLabel = isAnswer ? 
     `Answer ${pageNumber}` : 
     `Page ${pageNumber}`;
   
   // Determine title text with solution indicator if needed
-  const titleText = showSolution 
+  const titleText = isAnswer 
     ? `${title.toUpperCase()} - SOLUTION` 
     : totalPuzzles > 1 
       ? `${title.toUpperCase()}` 
@@ -127,7 +128,7 @@ export const PDFPage = ({
           </View>
         )}
         
-        {showInstruction && !showSolution && (
+        {showInstruction && !isAnswer && (
           <View style={[styles.instructionContainer, {marginTop: getVerticalOffset(instructionOffset)}]}>
             <Text style={styles.instruction}>{instruction}</Text>
           </View>
@@ -136,11 +137,11 @@ export const PDFPage = ({
         {showGrid && (
           <View style={[styles.gridContainer, {marginTop: getVerticalOffset(gridOffset)}]}>
             <View style={styles.grid}>
-              <PDFCrosswordGrid 
+              <PDFWordSearchGrid 
                 puzzle={puzzle} 
                 cellSize={cellSize} 
                 letterSize={cellSize * 0.6 * Math.min(letterSizeMultiplier, 1.3)}
-                showSolution={showSolution} 
+                showSolution={isAnswer} 
               />
             </View>
           </View>
@@ -148,9 +149,9 @@ export const PDFPage = ({
         
         {showWordList && (
           <View style={[styles.wordListContainer, {marginTop: getVerticalOffset(wordListOffset)}]}>
-            <PDFCrosswordClueList 
+            <PDFWordSearchWordList 
               puzzle={puzzle} 
-              styles={styles} 
+              wordListSize={fontSizes.wordListSize} 
             />
           </View>
         )}
@@ -233,74 +234,6 @@ function createPDFStyles(fontSizes: {
       flexDirection: 'column',
       alignItems: 'center',
       marginBottom: 20,
-    },
-    row: {
-      display: 'flex',
-      flexDirection: 'row',
-    },
-    cell: {
-      width: cellSize,
-      height: cellSize,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: 'rgba(255, 255, 255, 0.6)',
-      borderWidth: 0.5,
-      borderColor: '#d1d5db',
-    },
-    blackCell: {
-      width: cellSize,
-      height: cellSize,
-      backgroundColor: 'rgba(0, 0, 0, 1)',
-      borderWidth: 0.5,
-      borderColor: '#d1d5db',
-    },
-    letter: {
-      textAlign: 'center',
-      alignSelf: 'center',
-      fontSize: letterSize,
-    },
-    cellNumber: {
-      position: 'absolute',
-      top: 1,
-      left: 1,
-      fontSize: letterSize * 0.4,
-    },
-    wordList: {
-      display: 'flex',
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-    },
-    clueList: {
-      display: 'flex',
-      flexDirection: 'row',
-      width: '100%',
-    },
-    acrossClues: {
-      width: '50%',
-      paddingRight: 10,
-    },
-    downClues: {
-      width: '50%', 
-      paddingLeft: 10,
-    },
-    clueHeading: {
-      fontWeight: 'bold',
-      marginBottom: 5,
-      fontSize: fontSizes.wordListSize * 1.2,
-    },
-    clueItem: {
-      fontSize: fontSizes.wordListSize,
-      marginBottom: 3,
-    },
-    solutionHighlight: {
-      position: 'absolute',
-      backgroundColor: 'rgba(239, 68, 68, 0.3)',
-      width: '100%',
-      height: '2px',
-      top: '50%',
-      transform: 'translateY(-50%)',
     },
   });
 }
